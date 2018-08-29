@@ -1,6 +1,6 @@
 package com.createchance.mediastreambase;
 
-import android.graphics.SurfaceTexture;
+import android.view.Surface;
 
 /**
  * ${DESC}
@@ -12,8 +12,8 @@ public abstract class AbstractStreamGenerator extends AbstractStreamNode {
 
     protected AbstractStreamProcessor mProcessor;
 
-    protected final SurfaceTexture getVideoSurfaceTexture() {
-        return mProcessor.mSurfaceTexture;
+    protected final Surface getVideoSurface() {
+        return mProcessor.mVideoInputSurface;
     }
 
     protected abstract void run();

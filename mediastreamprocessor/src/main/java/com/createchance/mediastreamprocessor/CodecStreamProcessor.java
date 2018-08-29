@@ -1,16 +1,14 @@
 package com.createchance.mediastreamprocessor;
 
 import android.graphics.SurfaceTexture;
-import android.opengl.GLES11Ext;
-import android.opengl.GLES20;
 import android.util.Log;
+import android.view.Surface;
 
 import com.createchance.mediastreambase.AVFrame;
 import com.createchance.mediastreambase.AbstractStreamProcessor;
-
-import javax.microedition.khronos.opengles.GL10;
-
-import static android.opengl.GLES20.glTexParameterf;
+import com.createchance.mediastreamprocessor.gles.EglCore;
+import com.createchance.mediastreamprocessor.gles.WindowSurface;
+import com.createchance.mediastreamprocessor.gpuimage.OpenGlUtils;
 
 /**
  * ${DESC}
@@ -22,10 +20,28 @@ public final class CodecStreamProcessor extends AbstractStreamProcessor {
 
     private static final String TAG = "CodecStreamProcessor";
 
+    private SurfaceTexture mSurfaceTexture;
+    private OutputSurface mSaveOutputSurface;
+    private InputSurface mInputSurface;
+
+    private EglCore mEglCore;
+    private WindowSurface mDisplaySurface;
+
     @Override
     protected boolean init() {
         Log.d(TAG, "init: ");
-        mSurfaceTexture = new SurfaceTexture(createOesTexture());
+
+        // init egl
+        mEglCore = new EglCore(null, EglCore.FLAG_RECORDABLE);
+        mDisplaySurface = new WindowSurface(mEglCore, holder.getSurface(), false);
+        mDisplaySurface.makeCurrent();
+
+        mSaveOutputSurface = new OutputSurface(getSaveSurface());
+
+//        mInputSurface = new InputSurface()
+
+        mSurfaceTexture = new SurfaceTexture(OpenGlUtils.createOesTexture());
+        mVideoInputSurface = new Surface(mSurfaceTexture);
 
         return true;
     }
@@ -33,20 +49,6 @@ public final class CodecStreamProcessor extends AbstractStreamProcessor {
     @Override
     protected void shutdown() {
         Log.d(TAG, "shutdown: ");
-    }
-
-    private int createOesTexture() {
-        int texture[] = new int[1];
-        GLES20.glGenTextures(1, texture, 0);
-        if (texture[0] == 0) {
-            return 0;
-        }
-        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, texture[0]);
-        glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
-                GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
-        glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
-                GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
-        return texture[0];
     }
 
     @Override

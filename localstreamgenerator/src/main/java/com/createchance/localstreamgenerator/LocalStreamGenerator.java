@@ -5,7 +5,6 @@ import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.os.Build;
 import android.util.Log;
-import android.view.Surface;
 
 import com.createchance.mediastreambase.AVFrame;
 import com.createchance.mediastreambase.AbstractStreamGenerator;
@@ -65,7 +64,7 @@ public final class LocalStreamGenerator extends AbstractStreamGenerator {
                     mVideoTrackId = i;
                     mVideoExtractor.selectTrack(mVideoTrackId);
                     mVideoDecoder = MediaCodec.createDecoderByType(mime);
-                    mVideoDecoder.configure(mediaFormat, new Surface(getVideoSurfaceTexture()), null, 0);
+                    mVideoDecoder.configure(mediaFormat, getVideoSurface(), null, 0);
                     mVideoDecoder.start();
                 }
 

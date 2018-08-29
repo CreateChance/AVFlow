@@ -23,13 +23,13 @@ class AVFlowManager {
     }
 
     void run(AVFlowSession session) {
-        session.mProcessor.init();
         if (session.mPreviewer != null) {
             session.mPreviewer.init();
         }
         if (session.mSaver != null) {
             session.mSaver.init();
         }
+        session.mProcessor.init();
         session.mGenerator.init();
 
         session.mGenerator.run();

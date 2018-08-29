@@ -1,6 +1,6 @@
 package com.createchance.mediastreambase;
 
-import android.graphics.SurfaceTexture;
+import android.view.Surface;
 
 /**
  * ${DESC}
@@ -9,7 +9,7 @@ import android.graphics.SurfaceTexture;
  * @date 2018/8/27
  */
 public abstract class AbstractStreamSaver extends AbstractStreamNode {
-    SurfaceTexture mSurfaceTexture;
+    Surface mSurface;
 
     protected abstract void onAudioFrame(AVFrame audioFrame);
 

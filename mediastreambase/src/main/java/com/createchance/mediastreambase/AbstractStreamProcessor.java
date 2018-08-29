@@ -1,6 +1,6 @@
 package com.createchance.mediastreambase;
 
-import android.graphics.SurfaceTexture;
+import android.view.Surface;
 
 /**
  * ${DESC}
@@ -9,16 +9,16 @@ import android.graphics.SurfaceTexture;
  * @date 2018/8/27
  */
 public abstract class AbstractStreamProcessor extends AbstractStreamNode {
-    protected SurfaceTexture mSurfaceTexture;
+    protected Surface mVideoInputSurface;
     AbstractStreamPreviewer mPreviewer;
     AbstractStreamSaver mSaver;
 
-    protected SurfaceTexture getPreviewTexture() {
-        return mPreviewer == null ? null : mPreviewer.mSurfaceTexture;
+    protected Surface getPreviewSurface() {
+        return mPreviewer == null ? null : mPreviewer.mSurface;
     }
 
-    protected SurfaceTexture getSaveTexture() {
-        return mSaver == null ? null : mSaver.mSurfaceTexture;
+    protected Surface getSaveSurface() {
+        return mSaver == null ? null : mSaver.mSurface;
     }
 
     protected abstract void onAudioFrame(AVFrame audioFrame);
