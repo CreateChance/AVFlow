@@ -1,0 +1,1 @@
+include ':app', ':mediastreambase', ':mediastreamprocessor', ':mediastreampreviewer', ':mediastreamsaver', ':camerastreamgenerator', ':localstreamgenerator'
