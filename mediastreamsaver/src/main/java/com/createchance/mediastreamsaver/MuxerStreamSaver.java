@@ -16,13 +16,18 @@ public final class MuxerStreamSaver extends AbstractStreamSaver {
     private static final String TAG = "MuxerStreamSaver";
 
     @Override
-    protected void save(AVFrame avFrame) {
-        Log.d(TAG, "save: " + avFrame);
+    protected void onAudioFrame(AVFrame audioFrame) {
+
     }
 
     @Override
-    protected void init() {
-        Log.d(TAG, "init: ");
+    protected void onVideoFrame(AVFrame videoFrame) {
+
+    }
+
+    @Override
+    protected boolean init() {
+        return true;
     }
 
     @Override

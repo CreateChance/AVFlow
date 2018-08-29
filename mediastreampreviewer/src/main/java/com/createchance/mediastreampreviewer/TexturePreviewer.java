@@ -16,17 +16,22 @@ public final class TexturePreviewer extends AbstractStreamPreviewer {
     private static final String TAG = "TexturePreviewer";
 
     @Override
-    protected void preview(AVFrame avFrame) {
-        Log.d(TAG, "preview: " + avFrame);
-    }
-
-    @Override
-    protected void init() {
-        Log.d(TAG, "init: ");
+    protected boolean init() {
+        return false;
     }
 
     @Override
     protected void shutdown() {
         Log.d(TAG, "shutdown: ");
+    }
+
+    @Override
+    protected void onAudioFrame(AVFrame audioFrame) {
+
+    }
+
+    @Override
+    protected void onVideoFrame(AVFrame videoFrame) {
+
     }
 }

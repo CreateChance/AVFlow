@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/AVFlow.iml" filepath="$PROJECT_DIR$/AVFlow.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/camerastreamgenerator/camerastreamgenerator.iml" filepath="$PROJECT_DIR$/camerastreamgenerator/camerastreamgenerator.iml" />
+      <module fileurl="file://$PROJECT_DIR$/localstreamgenerator/localstreamgenerator.iml" filepath="$PROJECT_DIR$/localstreamgenerator/localstreamgenerator.iml" />
+      <module fileurl="file://$PROJECT_DIR$/mediastreambase/mediastreambase.iml" filepath="$PROJECT_DIR$/mediastreambase/mediastreambase.iml" />
+      <module fileurl="file://$PROJECT_DIR$/mediastreampreviewer/mediastreampreviewer.iml" filepath="$PROJECT_DIR$/mediastreampreviewer/mediastreampreviewer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/mediastreamprocessor/mediastreamprocessor.iml" filepath="$PROJECT_DIR$/mediastreamprocessor/mediastreamprocessor.iml" />
+      <module fileurl="file://$PROJECT_DIR$/mediastreamsaver/mediastreamsaver.iml" filepath="$PROJECT_DIR$/mediastreamsaver/mediastreamsaver.iml" />
+    </modules>
+  </component>
+</project>
