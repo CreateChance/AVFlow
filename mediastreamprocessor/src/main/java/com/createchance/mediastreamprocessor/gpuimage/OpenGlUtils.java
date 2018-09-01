@@ -22,18 +22,37 @@ import android.hardware.Camera.Size;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
+import android.opengl.Matrix;
 import android.util.Log;
 
+import com.createchance.mediastreambase.Logger;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
 
+import static android.opengl.GLES20.GL_VALIDATE_STATUS;
+import static android.opengl.GLES20.glGetProgramInfoLog;
+import static android.opengl.GLES20.glGetProgramiv;
 import static android.opengl.GLES20.glTexParameterf;
+import static android.opengl.GLES20.glValidateProgram;
 
 public class OpenGlUtils {
     public static final int NO_TEXTURE = -1;
 
     private static final String TAG = "OpenGlUtils";
+
+    public static final int SIZEOF_FLOAT = 4;
+
+    public static final float[] IDENTITY_MATRIX;
+
+    static {
+        IDENTITY_MATRIX = new float[16];
+        Matrix.setIdentityM(IDENTITY_MATRIX, 0);
+    }
 
     public static int loadTexture(final Bitmap img, final int usedTexId) {
         return loadTexture(img, usedTexId, true);
@@ -141,9 +160,27 @@ public class OpenGlUtils {
         return iProgId;
     }
 
+    public static boolean validateProgram(int programObjectId) {
+        glValidateProgram(programObjectId);
+
+        int[] validateStatus = new int[1];
+        glGetProgramiv(programObjectId, GL_VALIDATE_STATUS, validateStatus, 0);
+        Logger.d(TAG, "validateProgram, validating program, result: " + validateStatus[0]
+                + ", log: " + glGetProgramInfoLog(programObjectId));
+
+        return validateStatus[0] != 0;
+    }
+
     public static float rnd(final float min, final float max) {
         float fRandNum = (float) Math.random();
         return min + (max - min) * fRandNum;
+    }
+
+    public static float[] flip(float[] m, boolean x, boolean y) {
+        if (x || y) {
+            Matrix.scaleM(m, 0, x ? -1 : 1, y ? -1 : 1, 1);
+        }
+        return m;
     }
 
     public static int createOesTexture() {
@@ -158,6 +195,31 @@ public class OpenGlUtils {
         glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
                 GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
         return texture[0];
+    }
+
+    /**
+     * Allocates a direct float buffer, and populates it with the float array data.
+     */
+    public static FloatBuffer createFloatBuffer(float[] coords) {
+        // Allocate a direct ByteBuffer, using 4 bytes per float, and copy coords into it.
+        ByteBuffer bb = ByteBuffer.allocateDirect(coords.length * SIZEOF_FLOAT);
+        bb.order(ByteOrder.nativeOrder());
+        FloatBuffer fb = bb.asFloatBuffer();
+        fb.put(coords);
+        fb.position(0);
+        return fb;
+    }
+
+    /**
+     * Checks to see if the location we obtained is valid.  GLES returns -1 if a label
+     * could not be found, but does not set the GL error.
+     * <p>
+     * Throws a RuntimeException if the location is invalid.
+     */
+    public static void checkLocation(int location, String label) {
+        if (location < 0) {
+            throw new RuntimeException("Unable to locate '" + label + "' in program");
+        }
     }
 
     /**

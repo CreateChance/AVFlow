@@ -1,9 +1,15 @@
 package com.createchance.mediastreampreviewer;
 
+import android.content.Context;
+import android.util.AttributeSet;
 import android.util.Log;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 
 import com.createchance.mediastreambase.AVFrame;
-import com.createchance.mediastreambase.AbstractStreamPreviewer;
+import com.createchance.mediastreambase.IVideoInputSurfaceListener;
+import com.createchance.mediastreambase.IVideoStreamConsumer;
+import com.createchance.mediastreambase.VideoInputSurface;
 
 /**
  * ${DESC}
@@ -11,27 +17,65 @@ import com.createchance.mediastreambase.AbstractStreamPreviewer;
  * @author createchance
  * @date 2018/8/27
  */
-public final class SurfacePreviewer extends AbstractStreamPreviewer {
+public final class SurfacePreviewer extends SurfaceView implements IVideoStreamConsumer,
+        SurfaceHolder.Callback {
 
     private static final String TAG = "SurfacePreviewer";
 
-    @Override
-    protected boolean init() {
-        return false;
+    private Context mContext;
+
+    private VideoInputSurface mVideoInputSurface;
+
+    private IVideoInputSurfaceListener mListener;
+
+    public SurfacePreviewer(Context context) {
+        super(context);
+        onCreate(context);
+    }
+
+    public SurfacePreviewer(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        onCreate(context);
+    }
+
+    public SurfacePreviewer(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        onCreate(context);
     }
 
     @Override
-    protected void shutdown() {
-        Log.d(TAG, "shutdown: ");
+    public void surfaceCreated(SurfaceHolder holder) {
+        mVideoInputSurface = new VideoInputSurface();
+        mVideoInputSurface.mSurfaceHolder = holder;
+        mVideoInputSurface.mSurface = holder.getSurface();
+        if (mListener != null) {
+            mListener.onConsumerSurfaceInitDone(this, mVideoInputSurface);
+        }
     }
 
     @Override
-    protected void onAudioFrame(AVFrame audioFrame) {
-
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+        Log.d(TAG, "surfaceChanged: " + width + ", " + height);
     }
 
     @Override
-    protected void onVideoFrame(AVFrame videoFrame) {
+    public void surfaceDestroyed(SurfaceHolder holder) {
+
+    }
+
+    private void onCreate(Context context) {
+        this.mContext = context;
+        SurfaceHolder surfaceHolder = getHolder();
+        surfaceHolder.addCallback(this);
+    }
+
+    @Override
+    public void setInputSurfaceListener(IVideoInputSurfaceListener listener) {
+        this.mListener = listener;
+    }
+
+    @Override
+    public void onNewVideoFrame(AVFrame videoFrame) {
 
     }
 }

@@ -1,9 +1,8 @@
 package com.createchance.mediastreamsaver;
 
-import android.util.Log;
-
 import com.createchance.mediastreambase.AVFrame;
-import com.createchance.mediastreambase.AbstractStreamSaver;
+import com.createchance.mediastreambase.IVideoInputSurfaceListener;
+import com.createchance.mediastreambase.IVideoStreamConsumer;
 
 /**
  * ${DESC}
@@ -11,27 +10,17 @@ import com.createchance.mediastreambase.AbstractStreamSaver;
  * @author createchance
  * @date 2018/8/27
  */
-public final class MuxerStreamSaver extends AbstractStreamSaver {
+public final class MuxerStreamSaver implements IVideoStreamConsumer {
 
     private static final String TAG = "MuxerStreamSaver";
 
     @Override
-    protected void onAudioFrame(AVFrame audioFrame) {
+    public void setInputSurfaceListener(IVideoInputSurfaceListener listener) {
 
     }
 
     @Override
-    protected void onVideoFrame(AVFrame videoFrame) {
+    public void onNewVideoFrame(AVFrame videoFrame) {
 
-    }
-
-    @Override
-    protected boolean init() {
-        return true;
-    }
-
-    @Override
-    protected void shutdown() {
-        Log.d(TAG, "shutdown: ");
     }
 }

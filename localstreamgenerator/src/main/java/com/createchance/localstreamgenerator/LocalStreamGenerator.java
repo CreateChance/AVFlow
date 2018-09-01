@@ -1,17 +1,14 @@
 package com.createchance.localstreamgenerator;
 
-import android.media.MediaCodec;
-import android.media.MediaExtractor;
-import android.media.MediaFormat;
-import android.os.Build;
 import android.util.Log;
 
-import com.createchance.mediastreambase.AVFrame;
-import com.createchance.mediastreambase.AbstractStreamGenerator;
-import com.createchance.mediastreambase.Constants;
+import com.createchance.mediastreambase.IVideoInputSurfaceListener;
+import com.createchance.mediastreambase.IVideoStreamConsumer;
+import com.createchance.mediastreambase.IVideoStreamGenerator;
+import com.createchance.mediastreambase.VideoInputSurface;
 
 import java.io.File;
-import java.nio.ByteBuffer;
+import java.io.IOException;
 
 /**
  * ${DESC}
@@ -19,238 +16,64 @@ import java.nio.ByteBuffer;
  * @author createchance
  * @date 2018/8/27
  */
-public final class LocalStreamGenerator extends AbstractStreamGenerator {
+public final class LocalStreamGenerator implements IVideoStreamGenerator, IVideoInputSurfaceListener {
 
     private static final String TAG = "LocalStreamGenerator";
 
-    private final long WAIT_TIMEOUT = 5000;
-
     private File mSourceFile;
 
-    private MediaExtractor mAudioExtractor, mVideoExtractor;
-    private MediaCodec mAudioDecoder, mVideoDecoder;
-    private int mAudioTrackId = -1, mVideoTrackId = -1;
-    private boolean reachAudioEos = false;
-    private boolean reachVideoEos = false;
-    private ByteBuffer mAudioBuffer, mVideoBuffer;
+    private IVideoStreamConsumer mConsumer;
+
+    private VideoPlayer mPlayer;
 
     private LocalStreamGenerator() {
 
     }
 
     @Override
-    protected boolean init() {
-        Log.d(TAG, "init: ");
-
+    public void start() {
         // alloc buffer
-        mAudioBuffer = ByteBuffer.allocate(512 * 1024);
-        mVideoBuffer = ByteBuffer.allocate(512 * 1024);
-
-        try {
-            mAudioExtractor = new MediaExtractor();
-            mAudioExtractor.setDataSource(mSourceFile.getAbsolutePath());
-            mVideoExtractor = new MediaExtractor();
-            mVideoExtractor.setDataSource(mSourceFile.getAbsolutePath());
-            for (int i = 0; i < mAudioExtractor.getTrackCount(); i++) {
-                MediaFormat mediaFormat = mAudioExtractor.getTrackFormat(i);
-                String mime = mediaFormat.getString(MediaFormat.KEY_MIME);
-                if (mime.startsWith(Constants.AUDIO_PREFIX)) {
-                    mAudioTrackId = i;
-                    mAudioExtractor.selectTrack(mAudioTrackId);
-                    mAudioDecoder = MediaCodec.createDecoderByType(mime);
-                    mAudioDecoder.configure(mediaFormat, null, null, 0);
-                    mAudioDecoder.start();
-                } else if (mime.startsWith(Constants.VIDEO_PREFIX)) {
-                    mVideoTrackId = i;
-                    mVideoExtractor.selectTrack(mVideoTrackId);
-                    mVideoDecoder = MediaCodec.createDecoderByType(mime);
-                    mVideoDecoder.configure(mediaFormat, getVideoSurface(), null, 0);
-                    mVideoDecoder.start();
-                }
-
-                if (mAudioTrackId != -1 && mVideoTrackId != -1) {
-                    break;
-                }
+        new VideoPlayer.PlayTask(mPlayer, new VideoPlayer.PlayerFeedback() {
+            @Override
+            public void playbackStopped() {
+                Log.d(TAG, "playbackStopped: ");
             }
-
-            if (mAudioTrackId == -1 && mVideoTrackId == -1) {
-                return false;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-
-        return true;
+        }).execute();
     }
 
     @Override
-    protected void run() {
-        generateAudioFrame();
-        generateVideoFrame();
-    }
-
-    @Override
-    protected void shutdown() {
+    public void stop() {
         Log.d(TAG, "shutdown: ");
-        if (mAudioExtractor != null) {
-            mAudioExtractor.release();
-        }
-
-        if (mVideoExtractor != null) {
-            mVideoExtractor.release();
-        }
-
-        if (mAudioDecoder != null) {
-            mAudioDecoder.stop();
-            mAudioDecoder.release();
-        }
-
-        if (mVideoDecoder != null) {
-            mVideoDecoder.stop();
-            mVideoDecoder.release();
-        }
     }
 
-    private void generateAudioFrame() {
-        int sampleSize = -1;
-        int inputBufferId, outputBufferId;
-        ByteBuffer buffer;
-        MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
-        AVFrame audioFrame = new AVFrame();
-
-        if (mAudioTrackId == -1) {
-            return;
-        }
-
-        while (!reachAudioEos) {
-            inputBufferId = mAudioDecoder.dequeueInputBuffer(WAIT_TIMEOUT);
-            if (inputBufferId != -1) {
-                if (Build.VERSION.SDK_INT >= 21) {
-                    buffer = mAudioDecoder.getInputBuffer(inputBufferId);
-                } else {
-                    buffer = mAudioDecoder.getInputBuffers()[inputBufferId];
-                }
-
-                sampleSize = mAudioExtractor.readSampleData(buffer, 0);
-                if (sampleSize < 0) {
-                    mAudioDecoder.queueInputBuffer(
-                            inputBufferId,
-                            0,
-                            0,
-                            mAudioExtractor.getSampleTime(),
-                            MediaCodec.BUFFER_FLAG_END_OF_STREAM);
-                    reachAudioEos = true;
-                } else {
-                    mAudioDecoder.queueInputBuffer(
-                            inputBufferId,
-                            0,
-                            sampleSize,
-                            mAudioExtractor.getSampleTime(),
-                            0);
-                    mAudioExtractor.advance();
-                }
-
-                // clear buffer
-                buffer.clear();
-
-                while (true) {
-                    outputBufferId = mAudioDecoder.dequeueOutputBuffer(bufferInfo, WAIT_TIMEOUT);
-                    if (outputBufferId >= 0) {
-                        if ((bufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-                            audioFrame.mIsLast = true;
-                            audioFrame.mFlag = bufferInfo.flags;
-                            audioFrame.mPresentTime = bufferInfo.presentationTimeUs;
-                            audioFrame.mSampleSize = bufferInfo.size;
-                            audioFrame.mBuffer = buffer;
-                            outputAudioFrame(audioFrame);
-                            break;
-                        }
-                        if (Build.VERSION.SDK_INT >= 21) {
-                            buffer = mAudioDecoder.getOutputBuffer(outputBufferId);
-                        } else {
-                            buffer = mAudioDecoder.getOutputBuffers()[outputBufferId];
-                        }
-                        audioFrame.mFlag = bufferInfo.flags;
-                        audioFrame.mPresentTime = bufferInfo.presentationTimeUs;
-                        audioFrame.mSampleSize = bufferInfo.size;
-                        audioFrame.mBuffer = buffer;
-                        outputAudioFrame(audioFrame);
-                        mAudioDecoder.releaseOutputBuffer(outputBufferId, false);
-                    }
-                }
-            }
-        }
+    @Override
+    public void setConsumer(IVideoStreamConsumer consumer) {
+        this.mConsumer = consumer;
+        mConsumer.setInputSurfaceListener(this);
     }
 
-    private void generateVideoFrame() {
-        int sampleSize = -1;
-        int inputBufferId, outputBufferId;
-        ByteBuffer buffer;
-        MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
-        AVFrame videoFrame = new AVFrame();
-
-        if (mVideoTrackId == -1) {
-            return;
-        }
-
-        while (!reachVideoEos) {
-            inputBufferId = mVideoDecoder.dequeueInputBuffer(WAIT_TIMEOUT);
-            if (inputBufferId != -1) {
-                if (Build.VERSION.SDK_INT >= 21) {
-                    buffer = mVideoDecoder.getInputBuffer(inputBufferId);
-                } else {
-                    buffer = mVideoDecoder.getInputBuffers()[inputBufferId];
+    @Override
+    public void onConsumerSurfaceInitDone(IVideoStreamConsumer consumer,
+                                          VideoInputSurface inputSurface) {
+        try {
+            mPlayer = new VideoPlayer(mSourceFile, inputSurface.mSurface, new VideoPlayer.FrameCallback() {
+                @Override
+                public void preRender(long presentationTimeUsec) {
+                    Log.d(TAG, "preRender: " + presentationTimeUsec);
                 }
 
-                sampleSize = mVideoExtractor.readSampleData(buffer, 0);
-                if (sampleSize < 0) {
-                    mVideoDecoder.queueInputBuffer(
-                            inputBufferId,
-                            0,
-                            0,
-                            mVideoExtractor.getSampleTime(),
-                            MediaCodec.BUFFER_FLAG_END_OF_STREAM);
-                    reachVideoEos = true;
-                } else {
-                    mVideoDecoder.queueInputBuffer(
-                            inputBufferId,
-                            0,
-                            sampleSize,
-                            mVideoExtractor.getSampleTime(),
-                            0);
-                    mVideoExtractor.advance();
+                @Override
+                public void postRender() {
+                    Log.d(TAG, "postRender: ");
                 }
 
-                // clear buffer
-                buffer.clear();
-
-                while (true) {
-                    outputBufferId = mVideoDecoder.dequeueOutputBuffer(bufferInfo, WAIT_TIMEOUT);
-                    if (outputBufferId >= 0) {
-                        if ((bufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-                            videoFrame.mIsLast = true;
-                            videoFrame.mFlag = bufferInfo.flags;
-                            videoFrame.mPresentTime = bufferInfo.presentationTimeUs;
-                            videoFrame.mSampleSize = bufferInfo.size;
-                            videoFrame.mBuffer = buffer;
-                            outputVideoFrame(videoFrame);
-                            break;
-                        }
-                        if (Build.VERSION.SDK_INT >= 21) {
-                            buffer = mVideoDecoder.getOutputBuffer(outputBufferId);
-                        } else {
-                            buffer = mVideoDecoder.getOutputBuffers()[outputBufferId];
-                        }
-                        videoFrame.mFlag = bufferInfo.flags;
-                        videoFrame.mPresentTime = bufferInfo.presentationTimeUs;
-                        videoFrame.mSampleSize = bufferInfo.size;
-                        videoFrame.mBuffer = buffer;
-                        outputVideoFrame(videoFrame);
-                        mVideoDecoder.releaseOutputBuffer(outputBufferId, true);
-                    }
+                @Override
+                public void loopReset() {
+                    Log.d(TAG, "loopReset: ");
                 }
-            }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
