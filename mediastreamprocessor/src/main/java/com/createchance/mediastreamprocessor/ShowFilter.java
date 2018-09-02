@@ -67,10 +67,8 @@ public class ShowFilter {
     private int mSurfaceWidth, mSurfaceHeight;
 
     private int mProgramId;
-    private int mInputTextureId;
 
-    ShowFilter(int inputTextureId, int surfaceWidth, int surfaceHeight) {
-        mInputTextureId = inputTextureId;
+    ShowFilter(int surfaceWidth, int surfaceHeight) {
         mSurfaceWidth = surfaceWidth;
         mSurfaceHeight = surfaceHeight;
         init();
@@ -117,13 +115,13 @@ public class ShowFilter {
                 0);
     }
 
-    public void draw() {
+    public void draw(int inputTexture) {
         glUseProgram(mProgramId);
         glViewport(0, 0, mSurfaceWidth, mSurfaceHeight);
 
         // bind texture
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, mInputTextureId);
+        glBindTexture(GL_TEXTURE_2D, inputTexture);
         glUniform1i(mTextureUnitLocation, 0);
 
         glEnableVertexAttribArray(mPositionLocaiton);

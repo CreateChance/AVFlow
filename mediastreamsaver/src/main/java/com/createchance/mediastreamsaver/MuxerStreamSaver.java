@@ -5,6 +5,9 @@ import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
 
 import com.createchance.mediastreambase.AVFrame;
 import com.createchance.mediastreambase.IVideoInputSurfaceListener;
@@ -23,7 +26,7 @@ import java.nio.ByteBuffer;
  * @author createchance
  * @date 2018/8/27
  */
-public final class MuxerStreamSaver implements IVideoStreamConsumer {
+public final class MuxerStreamSaver implements IVideoStreamConsumer, Handler.Callback {
 
     private static final String TAG = "MuxerStreamSaver";
 
@@ -34,20 +37,50 @@ public final class MuxerStreamSaver implements IVideoStreamConsumer {
 
     private VideoInputSurface mInputSurface;
 
-    private MuxerStreamSaver() {
+    private Handler mHandler;
+    private final int MSG_INIT_DONE = 100;
 
+    private SaverThread mSaveThread;
+
+    private MuxerStreamSaver() {
+        mHandler = new Handler(this);
     }
 
     @Override
     public void setInputSurfaceListener(IVideoInputSurfaceListener listener) {
         mListener = listener;
 
-        WorkRunner.addTaskToBackground(new SaverThread());
+        mSaveThread = new SaverThread();
+        WorkRunner.addTaskToBackground(mSaveThread);
     }
 
     @Override
     public void onNewVideoFrame(AVFrame videoFrame) {
 
+    }
+
+    @Override
+    public boolean handleMessage(Message msg) {
+        switch (msg.what) {
+            case MSG_INIT_DONE:
+                if (mListener != null) {
+                    mListener.onConsumerSurfaceCreated(MuxerStreamSaver.this, mInputSurface);
+                    mListener.onConsumerSurfaceChanged(MuxerStreamSaver.this, mInputSurface, mVideoWidth, mVideoHeight);
+                }
+                break;
+            default:
+                break;
+        }
+
+        return true;
+    }
+
+    public void startSave() {
+        mSaveThread.startSave();
+    }
+
+    public void stopSave() {
+        mSaveThread.stopSave();
     }
 
     private class SaverThread implements Runnable {
@@ -57,6 +90,8 @@ public final class MuxerStreamSaver implements IVideoStreamConsumer {
         private MediaMuxer mMuxer;
         private MediaCodec mEncoder;
         private int mVideoTrackId;
+
+        private boolean mSave;
 
         @Override
         public void run() {
@@ -70,6 +105,16 @@ public final class MuxerStreamSaver implements IVideoStreamConsumer {
             }
         }
 
+        public void startSave() {
+            mMuxer.start();
+            mSave = true;
+        }
+
+        public void stopSave() {
+            mSave = false;
+            mMuxer.stop();
+        }
+
         private void prepare() throws IOException {
             // init video format
             MediaFormat videoFormat = MediaFormat.createVideoFormat("video/avc", mVideoWidth, mVideoHeight);
@@ -81,8 +126,6 @@ public final class MuxerStreamSaver implements IVideoStreamConsumer {
             // init muxer
             mMuxer = new MediaMuxer(mOutputFile.getAbsolutePath(),
                     MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
-            mVideoTrackId = mMuxer.addTrack(videoFormat);
-            mMuxer.start();
 
             // init encoder
             mEncoder = MediaCodec.createEncoderByType("video/avc");
@@ -91,9 +134,7 @@ public final class MuxerStreamSaver implements IVideoStreamConsumer {
             mInputSurface.mSurface = mEncoder.createInputSurface();
             mEncoder.start();
 
-            if (mListener != null) {
-                mListener.onConsumerSurfaceCreated(MuxerStreamSaver.this, mInputSurface);
-            }
+            mHandler.sendEmptyMessage(MSG_INIT_DONE);
         }
 
         private void doMux() {
@@ -102,7 +143,6 @@ public final class MuxerStreamSaver implements IVideoStreamConsumer {
             ByteBuffer buffer;
             while (true) {
                 outputBufferId = mEncoder.dequeueOutputBuffer(bufferInfo, TIME_OUT);
-                Logger.i(TAG, "Output buffer id: " + outputBufferId);
                 if (outputBufferId >= 0) {
                     if ((bufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
                         Logger.d(TAG, "Reach video eos.");
@@ -116,8 +156,16 @@ public final class MuxerStreamSaver implements IVideoStreamConsumer {
                         buffer = mEncoder.getOutputBuffers()[outputBufferId];
                     }
 
-                    mMuxer.writeSampleData(mVideoTrackId, buffer, bufferInfo);
+                    if (mSave) {
+                        mMuxer.writeSampleData(mVideoTrackId, buffer, bufferInfo);
+                    }
                     mEncoder.releaseOutputBuffer(outputBufferId, false);
+                    Log.d(TAG, "doMux...........");
+                } else if (outputBufferId == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+                    MediaFormat encodeFormat = mEncoder.getOutputFormat();
+                    Logger.d(TAG, "Encode format: " + encodeFormat);
+                    // init muxer
+                    mVideoTrackId = mMuxer.addTrack(encodeFormat);
                 }
             }
 

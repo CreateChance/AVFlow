@@ -10,12 +10,11 @@ import com.createchance.mediastreambase.IVideoStreamGenerator;
 import com.createchance.mediastreambase.Logger;
 import com.createchance.mediastreambase.VideoInputSurface;
 import com.createchance.mediastreamprocessor.gles.EglCore;
-import com.createchance.mediastreamprocessor.gles.WindowSurface;
 import com.createchance.mediastreamprocessor.gpuimage.GPUImageFilter;
 import com.createchance.mediastreamprocessor.gpuimage.OpenGlUtils;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * ${DESC}
@@ -24,7 +23,9 @@ import java.util.Set;
  * @date 2018/8/27
  */
 public final class CodecStreamProcessor implements IVideoStreamConsumer,
-        IVideoStreamGenerator, SurfaceTexture.OnFrameAvailableListener, IVideoInputSurfaceListener {
+        IVideoStreamGenerator,
+        SurfaceTexture.OnFrameAvailableListener,
+        VideoFrameDrawer.DrawerListener {
 
     private static final String TAG = "CodecStreamProcessor";
 
@@ -32,30 +33,24 @@ public final class CodecStreamProcessor implements IVideoStreamConsumer,
 
     private EglCore mEglCore;
 
-    private VideoFrameDrawer mVideoFrameDrawer;
+    private final List<VideoFrameDrawer> mVideoFrameDrawers;
 
-    private Set<VideoStreamConsumerRecord> mConsumers = new HashSet<>();
     private IVideoInputSurfaceListener mListener;
 
-    private GPUImageFilter mGPUImageFilter;
-
-    private int mSurfaceWidth, mSurfaceHeight;
+    private int mOesTextureId = -1;
 
     private CodecStreamProcessor() {
-
+        mVideoFrameDrawers = new ArrayList<>();
+        // init egl
+        mEglCore = new EglCore(null, EglCore.FLAG_RECORDABLE);
     }
 
     @Override
     public void onFrameAvailable(SurfaceTexture surfaceTexture) {
         Logger.i(TAG, "onFrameAvailable");
         mVideoInputSurface.mSurfaceTexture.updateTexImage();
-        for (VideoStreamConsumerRecord record : mConsumers) {
-            if (record.mDestroyed) {
-                continue;
-            }
-            record.mDrawSurface.makeCurrent();
-            mVideoFrameDrawer.draw();
-            record.mDrawSurface.swapBuffers();
+        for (VideoFrameDrawer drawer : mVideoFrameDrawers) {
+            drawer.draw();
         }
     }
 
@@ -71,21 +66,59 @@ public final class CodecStreamProcessor implements IVideoStreamConsumer,
 
     @Override
     public void start() {
-        // init egl
-        mEglCore = new EglCore(null, EglCore.FLAG_RECORDABLE);
 
-        for (VideoStreamConsumerRecord consumer : mConsumers) {
-            if (consumer.mInputSurface != null && !consumer.mDestroyed) {
-                Logger.d(TAG, "init consumer");
-                consumer.mDrawSurface = new WindowSurface(mEglCore,
-                        consumer.mInputSurface.mSurface,
-                        false);
-                consumer.mDrawSurface.makeCurrent();
-            } else {
-                Logger.e(TAG, "Consumer not init!");
+    }
+
+    @Override
+    public void stop() {
+        for (VideoFrameDrawer drawer : mVideoFrameDrawers) {
+            drawer.release();
+        }
+
+        mEglCore.release();
+    }
+
+    @Override
+    public void setConsumer(IVideoStreamConsumer consumer) {
+        if (consumer == null) {
+            Logger.e(TAG, "Consumer can not be null!");
+            return;
+        }
+
+        VideoFrameDrawer drawer = new VideoFrameDrawer(mEglCore, consumer, this);
+        mVideoFrameDrawers.add(drawer);
+    }
+
+    @Override
+    public void onSurfaceConfigDone(VideoFrameDrawer drawer) {
+        if (mOesTextureId == -1) {
+            createOesTexture();
+        }
+
+        for (VideoFrameDrawer videoFrameDrawer : mVideoFrameDrawers) {
+            videoFrameDrawer.setOesTextureId(mOesTextureId, 1080, 1920);
+        }
+    }
+
+    @Override
+    public void onDestroyed(VideoFrameDrawer drawer) {
+        synchronized (mVideoFrameDrawers) {
+            mVideoFrameDrawers.remove(drawer);
+        }
+    }
+
+    public boolean setFilter(IVideoStreamConsumer consumer, GPUImageFilter filter) {
+        for (VideoFrameDrawer drawer : mVideoFrameDrawers) {
+            if (drawer.getConsumer() == consumer) {
+                drawer.setGpuImageFilter(filter);
+                return true;
             }
         }
 
+        return false;
+    }
+
+    private void createOesTexture() {
         mVideoInputSurface = new VideoInputSurface();
         int oesTextureId = OpenGlUtils.createOesTexture();
         mVideoInputSurface.mSurfaceTexture = new SurfaceTexture(oesTextureId);
@@ -94,63 +127,10 @@ public final class CodecStreamProcessor implements IVideoStreamConsumer,
         if (mListener != null) {
             mListener.onConsumerSurfaceCreated(this, mVideoInputSurface);
         }
-
-        mVideoFrameDrawer = new VideoFrameDrawer(oesTextureId);
-        mVideoFrameDrawer.setGpuImageFilter(mGPUImageFilter);
-        mVideoFrameDrawer.setSurfaceSize(mSurfaceWidth, mSurfaceHeight);
-    }
-
-    @Override
-    public void stop() {
-
-    }
-
-    @Override
-    public void setConsumer(IVideoStreamConsumer consumer) {
-        VideoStreamConsumerRecord record = new VideoStreamConsumerRecord();
-        record.mConsumer = consumer;
-        mConsumers.add(record);
-        consumer.setInputSurfaceListener(this);
-    }
-
-    @Override
-    public void onConsumerSurfaceCreated(IVideoStreamConsumer consumer,
-                                         VideoInputSurface inputSurface) {
-        for (VideoStreamConsumerRecord record : mConsumers) {
-            if (record.mConsumer == consumer) {
-                record.mInputSurface = inputSurface;
-                break;
-            }
-        }
-    }
-
-    @Override
-    public void onConsumerSurfaceChanged(IVideoStreamConsumer consumer,
-                                         VideoInputSurface inputSurface,
-                                         int width,
-                                         int height) {
-        mSurfaceWidth = width;
-        mSurfaceHeight = height;
-    }
-
-    @Override
-    public void onConsumerSurfaceDestroyed(IVideoStreamConsumer consumer,
-                                           VideoInputSurface inputSurface) {
-        for (VideoStreamConsumerRecord record : mConsumers) {
-            if (record.mConsumer == consumer) {
-                record.mDestroyed = true;
-            }
-        }
     }
 
     public static class Builder {
         private CodecStreamProcessor processor = new CodecStreamProcessor();
-
-        public Builder gpuImageFilter(GPUImageFilter gpuImageFilter) {
-            processor.mGPUImageFilter = gpuImageFilter;
-
-            return this;
-        }
 
         public CodecStreamProcessor build() {
             return processor;

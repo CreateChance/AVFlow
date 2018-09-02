@@ -3,7 +3,7 @@ package com.createchance.mediastreambase;
 /**
  * ${DESC}
  *
- * @author gaochao1-iri
+ * @author createchance
  * @date 2018/9/1
  */
 public interface IVideoInputSurfaceListener {

@@ -14,8 +14,9 @@ import com.createchance.localstreamgenerator.LocalStreamGenerator;
 import com.createchance.mediastreambase.IVideoStreamConsumer;
 import com.createchance.mediastreambase.IVideoStreamGenerator;
 import com.createchance.mediastreamprocessor.CodecStreamProcessor;
-import com.createchance.mediastreamprocessor.gpuimage.GPUImage3x3ConvolutionFilter;
+import com.createchance.mediastreamprocessor.gpuimage.GPUImageFilter;
 import com.createchance.mediastreamprocessor.gpuimage.GPUImageLookupFilter;
+import com.createchance.mediastreamprocessor.gpuimage.GPUImageSwirlFilter;
 import com.createchance.mediastreamsaver.MuxerStreamSaver;
 
 import java.io.File;
@@ -27,7 +28,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private IVideoStreamGenerator mGenerator;
     private CodecStreamProcessor mProcessor;
     private IVideoStreamConsumer mPreviewer;
-    private IVideoStreamConsumer mSaver;
+    private MuxerStreamSaver mSaver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,12 +49,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         mPreviewer = findViewById(R.id.vw_preview);
         mProcessor = getProcessor();
-        mGenerator = getLocalGenerator();
+        mGenerator = getCameraGenerator();
         mSaver = getSaver();
 
         mGenerator.setConsumer(mProcessor);
         mProcessor.setConsumer(mPreviewer);
         mProcessor.setConsumer(mSaver);
+        mProcessor.setFilter(mPreviewer, getFilter());
+        mProcessor.setFilter(mSaver, getFilter());
     }
 
     @Override
@@ -65,12 +68,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        mProcessor.start();
-        mGenerator.start();
+        switch (v.getId()) {
+            case R.id.btn_start_generator:
+                mGenerator.start();
+                break;
+            case R.id.btn_start_saver:
+                mSaver.startSave();
+                break;
+            case R.id.btn_stop_saver:
+                mSaver.stopSave();
+                break;
+            default:
+                break;
+        }
+
     }
 
-    private IVideoStreamConsumer getSaver() {
-        IVideoStreamConsumer saver = new MuxerStreamSaver.Builder()
+    private MuxerStreamSaver getSaver() {
+        MuxerStreamSaver saver = new MuxerStreamSaver.Builder()
                 .output(new File(Environment.getExternalStorageDirectory(), "videoeditor/test.mp4"))
                 .videoSize(1080, 1920)
                 .build();
@@ -103,8 +118,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                -1.0f, 0.0f, 1.0f
 //        });
         CodecStreamProcessor processor = new CodecStreamProcessor.Builder()
-                .gpuImageFilter(lookupFilter)
                 .build();
         return processor;
+    }
+
+    private GPUImageFilter getFilter() {
+//        GPUImageLookupFilter lookupFilter = new GPUImageLookupFilter();
+//        lookupFilter.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.lookup_filter9));
+        GPUImageSwirlFilter swirlFilter = new GPUImageSwirlFilter();
+
+        return swirlFilter;
     }
 }

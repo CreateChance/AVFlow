@@ -7,7 +7,7 @@ import android.view.SurfaceHolder;
 /**
  * ${DESC}
  *
- * @author gaochao1-iri
+ * @author createchance
  * @date 2018/9/1
  */
 public class VideoInputSurface {

@@ -33,26 +33,6 @@ public final class CameraStreamGenerator implements IVideoStreamGenerator, IVide
             Logger.e(TAG, "Can not start during init.");
             return;
         }
-    }
-
-    @Override
-    public void stop() {
-        if (mCamera != null) {
-            mCamera.stopPreview();
-            mCamera.release();
-        }
-    }
-
-    @Override
-    public void setConsumer(IVideoStreamConsumer consumer) {
-        this.mConsumer = consumer;
-        mConsumer.setInputSurfaceListener(this);
-    }
-
-    @Override
-    public void onConsumerSurfaceCreated(IVideoStreamConsumer consumer,
-                                         VideoInputSurface inputSurface) {
-        this.mInputSurface = inputSurface;
 
         Camera.CameraInfo info = new Camera.CameraInfo();
 
@@ -77,6 +57,26 @@ public final class CameraStreamGenerator implements IVideoStreamGenerator, IVide
             throw new RuntimeException(ioe);
         }
         mCamera.startPreview();
+    }
+
+    @Override
+    public void stop() {
+        if (mCamera != null) {
+            mCamera.stopPreview();
+            mCamera.release();
+        }
+    }
+
+    @Override
+    public void setConsumer(IVideoStreamConsumer consumer) {
+        this.mConsumer = consumer;
+        mConsumer.setInputSurfaceListener(this);
+    }
+
+    @Override
+    public void onConsumerSurfaceCreated(IVideoStreamConsumer consumer,
+                                         VideoInputSurface inputSurface) {
+        this.mInputSurface = inputSurface;
     }
 
     @Override

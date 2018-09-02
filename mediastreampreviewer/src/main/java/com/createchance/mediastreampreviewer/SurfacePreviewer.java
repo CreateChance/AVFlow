@@ -2,7 +2,6 @@ package com.createchance.mediastreampreviewer;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -55,7 +54,6 @@ public final class SurfacePreviewer extends SurfaceView implements IVideoStreamC
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        Log.d(TAG, "surfaceChanged: " + width + ", " + height);
         if (mListener != null) {
             mListener.onConsumerSurfaceChanged(this, mVideoInputSurface, width, height);
         }
