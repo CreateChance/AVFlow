@@ -26,6 +26,8 @@ import android.hardware.Camera.Size;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView.Renderer;
 
+import com.createchance.mediastreamprocessor.gpuimage.util.TextureRotationUtil;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -36,8 +38,6 @@ import java.util.Queue;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
-
-import com.createchance.mediastreamprocessor.gpuimage.util.TextureRotationUtil;
 
 import static com.createchance.mediastreamprocessor.gpuimage.util.TextureRotationUtil.TEXTURE_NO_ROTATION;
 
@@ -128,9 +128,9 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
     /**
      * Sets the background color
      *
-     * @param red red color value
+     * @param red   red color value
      * @param green green color value
-     * @param blue red color value
+     * @param blue  red color value
      */
     public void setBackgroundColor(float red, float green, float blue) {
         mBackgroundRed = red;
@@ -316,7 +316,7 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
     }
 
     public void setRotationCamera(final Rotation rotation, final boolean flipHorizontal,
-            final boolean flipVertical) {
+                                  final boolean flipVertical) {
         setRotation(rotation, flipVertical, flipHorizontal);
     }
 

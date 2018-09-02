@@ -49,18 +49,23 @@ public final class SurfacePreviewer extends SurfaceView implements IVideoStreamC
         mVideoInputSurface.mSurfaceHolder = holder;
         mVideoInputSurface.mSurface = holder.getSurface();
         if (mListener != null) {
-            mListener.onConsumerSurfaceInitDone(this, mVideoInputSurface);
+            mListener.onConsumerSurfaceCreated(this, mVideoInputSurface);
         }
     }
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
         Log.d(TAG, "surfaceChanged: " + width + ", " + height);
+        if (mListener != null) {
+            mListener.onConsumerSurfaceChanged(this, mVideoInputSurface, width, height);
+        }
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-
+        if (mListener != null) {
+            mListener.onConsumerSurfaceDestroyed(this, mVideoInputSurface);
+        }
     }
 
     private void onCreate(Context context) {

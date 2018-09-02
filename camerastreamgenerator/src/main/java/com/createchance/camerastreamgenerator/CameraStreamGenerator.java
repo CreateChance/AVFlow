@@ -50,8 +50,8 @@ public final class CameraStreamGenerator implements IVideoStreamGenerator, IVide
     }
 
     @Override
-    public void onConsumerSurfaceInitDone(IVideoStreamConsumer consumer,
-                                          VideoInputSurface inputSurface) {
+    public void onConsumerSurfaceCreated(IVideoStreamConsumer consumer,
+                                         VideoInputSurface inputSurface) {
         this.mInputSurface = inputSurface;
 
         Camera.CameraInfo info = new Camera.CameraInfo();
@@ -77,5 +77,19 @@ public final class CameraStreamGenerator implements IVideoStreamGenerator, IVide
             throw new RuntimeException(ioe);
         }
         mCamera.startPreview();
+    }
+
+    @Override
+    public void onConsumerSurfaceChanged(IVideoStreamConsumer consumer,
+                                         VideoInputSurface inputSurface,
+                                         int width,
+                                         int height) {
+
+    }
+
+    @Override
+    public void onConsumerSurfaceDestroyed(IVideoStreamConsumer consumer,
+                                           VideoInputSurface inputSurface) {
+
     }
 }

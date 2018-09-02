@@ -14,6 +14,7 @@ class VideoStreamConsumerRecord {
     IVideoStreamConsumer mConsumer;
     VideoInputSurface mInputSurface;
     WindowSurface mDrawSurface;
+    boolean mDestroyed;
 
     @Override
     public boolean equals(Object o) {

@@ -53,8 +53,8 @@ public final class LocalStreamGenerator implements IVideoStreamGenerator, IVideo
     }
 
     @Override
-    public void onConsumerSurfaceInitDone(IVideoStreamConsumer consumer,
-                                          VideoInputSurface inputSurface) {
+    public void onConsumerSurfaceCreated(IVideoStreamConsumer consumer,
+                                         VideoInputSurface inputSurface) {
         try {
             mPlayer = new VideoPlayer(mSourceFile, inputSurface.mSurface, new VideoPlayer.FrameCallback() {
                 @Override
@@ -75,6 +75,20 @@ public final class LocalStreamGenerator implements IVideoStreamGenerator, IVideo
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void onConsumerSurfaceChanged(IVideoStreamConsumer consumer,
+                                         VideoInputSurface inputSurface,
+                                         int width,
+                                         int height) {
+
+    }
+
+    @Override
+    public void onConsumerSurfaceDestroyed(IVideoStreamConsumer consumer,
+                                           VideoInputSurface inputSurface) {
+
     }
 
     public static class Builder {

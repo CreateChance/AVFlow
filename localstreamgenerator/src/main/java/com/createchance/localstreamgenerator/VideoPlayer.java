@@ -351,13 +351,19 @@ public class VideoPlayer {
                 int decoderStatus = decoder.dequeueOutputBuffer(mBufferInfo, TIMEOUT_USEC);
                 if (decoderStatus == MediaCodec.INFO_TRY_AGAIN_LATER) {
                     // no output available yet
-                    if (VERBOSE) Log.d(TAG, "no output from decoder available");
+                    if (VERBOSE) {
+                        Log.d(TAG, "no output from decoder available");
+                    }
                 } else if (decoderStatus == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
                     // not important for us, since we're using Surface
-                    if (VERBOSE) Log.d(TAG, "decoder output buffers changed");
+                    if (VERBOSE) {
+                        Log.d(TAG, "decoder output buffers changed");
+                    }
                 } else if (decoderStatus == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
                     MediaFormat newFormat = decoder.getOutputFormat();
-                    if (VERBOSE) Log.d(TAG, "decoder output format changed: " + newFormat);
+                    if (VERBOSE) {
+                        Log.d(TAG, "decoder output format changed: " + newFormat);
+                    }
                 } else if (decoderStatus < 0) {
                     throw new RuntimeException(
                             "unexpected result from decoder.dequeueOutputBuffer: " +
@@ -371,10 +377,14 @@ public class VideoPlayer {
                         firstInputTimeNsec = 0;
                     }
                     boolean doLoop = false;
-                    if (VERBOSE) Log.d(TAG, "surface decoder given buffer " + decoderStatus +
-                            " (size=" + mBufferInfo.size + ")");
+                    if (VERBOSE) {
+                        Log.d(TAG, "surface decoder given buffer " + decoderStatus +
+                                " (size=" + mBufferInfo.size + ")");
+                    }
                     if ((mBufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-                        if (VERBOSE) Log.d(TAG, "output EOS");
+                        if (VERBOSE) {
+                            Log.d(TAG, "output EOS");
+                        }
                         if (mLoop) {
                             doLoop = true;
                         } else {

@@ -23,7 +23,7 @@ import static android.opengl.GLES20.glViewport;
  * @author createchance
  * @date 2018/5/19
  */
-class OesFilter {
+class OesTextureReader {
     private final String BASE_OES_VERTEX_SHADER =
             "attribute vec4 a_Position;\n" +
                     "attribute vec2 a_TextureCoordinates;\n" +
@@ -63,7 +63,7 @@ class OesFilter {
 
     private int mOesTextureId;
 
-    OesFilter(int oesTextureId, int surfaceWidth, int surfaceHeight) {
+    OesTextureReader(int oesTextureId, int surfaceWidth, int surfaceHeight) {
         mOesTextureId = oesTextureId;
         mSurfaceWidth = surfaceWidth;
         mSurfaceHeight = surfaceHeight;
@@ -110,15 +110,16 @@ class OesFilter {
                 mMartixLocation,
                 1,
                 false,
-                OpenGlUtils.IDENTITY_MATRIX,
+                OpenGlUtils.flip(OpenGlUtils.getIdentityMatrix(), true, true),
                 0);
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, mOesTextureId);
         GLES20.glUniform1i(mTextureUnitLocation, 0);
-        setRotation(90);
+        setRotation(270);
     }
 
-    void draw() {
+    void read() {
+        glUseProgram(mProgramId);
         glViewport(0, 0, mSurfaceWidth, mSurfaceHeight);
         glEnableVertexAttribArray(mPositionLocaiton);
         glVertexAttribPointer(
