@@ -5,33 +5,12 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <com.createchance.mediastreampreviewer.SurfacePreviewer
-        android:id="@+id/vw_preview"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
     <Button
-        android:id="@+id/btn_start_generator"
+        android:id="@+id/btn_start_take"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="50dp"
+        android:layout_centerInParent="true"
         android:onClick="onClick"
-        android:text="start generator" />
-
-    <Button
-        android:id="@+id/btn_start_saver"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/btn_start_generator"
-        android:onClick="onClick"
-        android:text="start saver" />
-
-    <Button
-        android:id="@+id/btn_stop_saver"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/btn_start_saver"
-        android:onClick="onClick"
-        android:text="stop saver" />
+        android:text="start take" />
 
 </RelativeLayout>

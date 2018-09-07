@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">AVFlow</string>
+
+    <string name="template_default_mode_title">分段模式</string>
+    <string name="template_default_mode_desc">10秒, 4段</string>
 </resources>

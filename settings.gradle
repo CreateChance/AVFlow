@@ -1,1 +1,2 @@
-include ':app',':mediastreambase', ':mediastreamprocessor', ':mediastreampreviewer', ':mediastreamsaver', ':camerastreamgenerator', ':localstreamgenerator'
+include ':app'
+include ':avflowengine'
