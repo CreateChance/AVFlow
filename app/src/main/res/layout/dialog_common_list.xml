@@ -27,7 +27,7 @@
         android:layout_below="@id/vw_close"
         android:layout_centerHorizontal="true"
         android:text="Make your choice"
-        android:textColor="#1F1D35"
+        android:textColor="@color/font_grey"
         android:textSize="15sp" />
 
     <android.support.v7.widget.RecyclerView

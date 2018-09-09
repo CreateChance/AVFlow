@@ -3,4 +3,20 @@
 
     <string name="template_default_mode_title">分段模式</string>
     <string name="template_default_mode_desc">10秒, 4段</string>
+    <string name="choose_ratio">选择画幅</string>
+    <string name="ratio_9_16">竖屏</string>
+    <string name="ratio_16_9">宽屏</string>
+    <string name="ratio_239_1">超宽屏</string>
+    <string name="ratio_1_1">方形</string>
+    <string name="ratio_3_4">淘宝主图</string>
+    <string name="ratio_circle">圆形</string>
+    <string name="choose_filter">选择滤镜</string>
+    <string name="scene_speed">镜头速度</string>
+    <string name="scene_speed_normal">正常</string>
+    <string name="scene_speed_fast">快动作</string>
+    <string name="scene_speed_slow">慢动作</string>
+    <string name="beauty_effect">美肤</string>
+    <string name="beauty_effect_none">无</string>
+    <string name="beauty_effect_medium">中</string>
+    <string name="beauty_effect_strong">强</string>
 </resources>

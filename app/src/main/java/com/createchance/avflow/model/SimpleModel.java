@@ -3,6 +3,12 @@ package com.createchance.avflow.model;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Model to provide data access.
+ *
+ * @author createchance
+ * @date 2018-09-05
+ */
 public class SimpleModel {
     private static SimpleModel sInstance;
 
@@ -10,9 +16,10 @@ public class SimpleModel {
 
     private SimpleModel() {
         mSceneList = new ArrayList<>();
+        initSceneList();
     }
 
-    public synchronized static SimpleModel getInstrance() {
+    public synchronized static SimpleModel getInstance() {
         if (sInstance == null) {
             sInstance = new SimpleModel();
         }
@@ -31,5 +38,11 @@ public class SimpleModel {
 
     public List<Scene> getSceneList() {
         return mSceneList;
+    }
+
+    private void initSceneList() {
+        for (int i = 0; i < 4; i++) {
+            mSceneList.add(new Scene());
+        }
     }
 }

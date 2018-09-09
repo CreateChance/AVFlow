@@ -18,8 +18,8 @@ public class CameraStreamGenerator {
 
     private SurfaceTexture mOutputSurface;
 
-    public void setOutputTexture(int texture) {
-        mOutputSurface = new SurfaceTexture(texture);
+    public void setOutputTexture(SurfaceTexture surfaceTexture) {
+        mOutputSurface = surfaceTexture;
     }
 
     public void start() {

@@ -64,13 +64,10 @@ public class TextureWriter {
 
     private int mMartixLocation, mTextureUnitLocation, mPositionLocaiton, mTextureCoorLocation;
 
-    private int mSurfaceWidth, mSurfaceHeight;
 
     private int mProgramId;
 
-    TextureWriter(int surfaceWidth, int surfaceHeight) {
-        mSurfaceWidth = surfaceWidth;
-        mSurfaceHeight = surfaceHeight;
+    TextureWriter() {
         init();
     }
 
@@ -115,9 +112,9 @@ public class TextureWriter {
                 0);
     }
 
-    public void write(int inputTexture) {
+    public void write(int inputTexture, int x, int y, int surfaceWidth, int surfaceHeight) {
         glUseProgram(mProgramId);
-        glViewport(0, 0, mSurfaceWidth, mSurfaceHeight);
+        glViewport(x, y, surfaceWidth, surfaceHeight);
 
         // bind texture
         glActiveTexture(GL_TEXTURE0);

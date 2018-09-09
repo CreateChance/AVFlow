@@ -76,6 +76,7 @@ class CameraV1 extends CameraImpl {
             mCamera = Camera.open((Integer) targetDevice.mCameraId);
             mCamera.setPreviewTexture(mSurface);
             mCamera.startPreview();
+            setFocusMode(FOCUS_MODE_CONTINUOUS_VIDEO);
             mCurrentDevicePos = mDeviceList.indexOf(targetDevice);
             mIsPreviewing = true;
         } catch (IOException ioe) {
@@ -98,6 +99,7 @@ class CameraV1 extends CameraImpl {
         mCamera.release();
         mCamera = null;
         mCurrentDevicePos = -1;
+        mIsPreviewing = false;
 
         return RESULT_OK;
     }

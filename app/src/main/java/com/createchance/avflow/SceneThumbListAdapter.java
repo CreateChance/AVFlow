@@ -8,7 +8,11 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.CenterCrop;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
+import com.bumptech.glide.request.RequestOptions;
 import com.createchance.avflow.model.Scene;
+import com.createchance.avflow.utils.DensityUtil;
 
 import java.util.List;
 
@@ -41,8 +45,12 @@ public class SceneThumbListAdapter extends RecyclerView.Adapter<SceneThumbListAd
         Scene scene = mSceneList.get(position);
 
         if (scene.mVideo != null && scene.mVideo.exists() && scene.mVideo.isFile()) {
-            Glide.with(mContext).
-                    load(scene)
+            RequestOptions requestOptions = new RequestOptions();
+            requestOptions = requestOptions.transforms(new CenterCrop(),
+                    new RoundedCorners(DensityUtil.dip2px(mContext, 4)));
+            Glide.with(mContext)
+                    .load(scene.mVideo)
+                    .apply(requestOptions)
                     .into(holder.thumb);
         }
     }
@@ -63,6 +71,8 @@ public class SceneThumbListAdapter extends RecyclerView.Adapter<SceneThumbListAd
 
         public ViewHolder(View itemView) {
             super(itemView);
+
+            thumb = itemView.findViewById(R.id.iv_scene_thumb);
         }
     }
 }

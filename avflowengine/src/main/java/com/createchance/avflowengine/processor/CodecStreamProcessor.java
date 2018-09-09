@@ -2,6 +2,7 @@ package com.createchance.avflowengine.processor;
 
 import android.graphics.SurfaceTexture;
 import android.opengl.GLES20;
+import android.util.Log;
 import android.view.Surface;
 
 import com.createchance.avflowengine.base.Logger;
@@ -38,6 +39,7 @@ public final class CodecStreamProcessor implements SurfaceTexture.OnFrameAvailab
     public CodecStreamProcessor() {
         // init egl
         mEglCore = new EglCore(null, EglCore.FLAG_RECORDABLE);
+        mOutputSurfaceDrawer = new VideoFrameDrawer();
     }
 
     @Override
@@ -46,31 +48,52 @@ public final class CodecStreamProcessor implements SurfaceTexture.OnFrameAvailab
         if (mVideoInputSurface != null) {
             mVideoInputSurface.updateTexImage();
             mOutputSurfaceDrawer.draw(mOesReader, mPreviewDrawSurface, mPreviewFilter, mTextureWriter);
-            mOutputSurfaceDrawer.draw(mOesReader, mSaveDrawSurface, mPreviewFilter, mTextureWriter);
+            if (mSaveSurface != null) {
+                mOutputSurfaceDrawer.draw(mOesReader, mSaveDrawSurface, mPreviewFilter, mTextureWriter);
+            }
         }
     }
 
     public void setPreviewSurface(Surface surface) {
         if (surface == null) {
-            Logger.e(TAG, "Surface can not be null!");
+            Logger.e(TAG, "Preview surface can not be null!");
             return;
         }
 
         mPreviewSurface = surface;
+        mPreviewDrawSurface = new WindowSurface(mEglCore, mPreviewSurface, false);
+        mPreviewDrawSurface.makeCurrent();
+        mOutputSurfaceDrawer.createFrameBuffer();
     }
 
-    public void setSaveSurface(Surface surface) {
+    public void setSaveSurface(Surface surface, int clipTop, int clipLeft, int clipBottom, int clipRight) {
         if (surface == null) {
-            Logger.e(TAG, "Saver can not be null!");
+            Logger.e(TAG, "Saver surface can not be null!");
             return;
         }
 
         mSaveSurface = surface;
+        mSaveDrawSurface = new WindowSurface(mEglCore, mSaveSurface, false);
+        mSaveDrawSurface.createTexture(
+                0,
+                mOesHeight - clipBottom,
+                clipRight - clipLeft,
+                clipBottom - clipTop);
+    }
+
+    public void clearSaveSurface() {
+        mSaveSurface = null;
     }
 
     public void setSurfaceSize(int width, int height) {
         mOesWidth = width;
         mOesHeight = height;
+        createOesTexture();
+        mPreviewDrawSurface.createTexture(
+                0,
+                0,
+                mOesWidth,
+                mOesHeight);
     }
 
     public void setPreviewFilter(GPUImageFilter filter) {
@@ -85,10 +108,7 @@ public final class CodecStreamProcessor implements SurfaceTexture.OnFrameAvailab
      * All setting is done, start it!
      */
     public void start() {
-        mPreviewDrawSurface = new WindowSurface(mEglCore, mPreviewSurface, false);
-        mSaveDrawSurface = new WindowSurface(mEglCore, mSaveSurface, false);
         mPreviewDrawSurface.makeCurrent();
-        mOutputSurfaceDrawer = new VideoFrameDrawer(mOesWidth, mOesHeight);
         if (mPreviewFilter != null) {
             mPreviewFilter.init();
             GLES20.glUseProgram(mPreviewFilter.getProgram());
@@ -99,26 +119,28 @@ public final class CodecStreamProcessor implements SurfaceTexture.OnFrameAvailab
             GLES20.glUseProgram(mSaveFilter.getProgram());
             mSaveFilter.onOutputSizeChanged(mOesWidth, mOesHeight);
         }
-        createOesTexture();
     }
 
-    public int getOesTextureId() {
-        return mOesTextureId;
+    public SurfaceTexture getOesTextureId() {
+        return mVideoInputSurface;
     }
 
     public void stop() {
         mOutputSurfaceDrawer.stop();
         mEglCore.release();
         mVideoInputSurface.release();
+        mPreviewDrawSurface.release();
+        if (mSaveDrawSurface != null) {
+            mSaveDrawSurface.release();
+        }
         mVideoInputSurface = null;
     }
 
     private void createOesTexture() {
-        Logger.d(TAG, "createOesTexture, " + mOesWidth + ", " + mOesHeight);
-        int oesTextureId = OpenGlUtils.createOesTexture();
-        mVideoInputSurface = new SurfaceTexture(oesTextureId);
+        mOesTextureId = OpenGlUtils.createOesTexture();
+        mVideoInputSurface = new SurfaceTexture(mOesTextureId);
         mVideoInputSurface.setOnFrameAvailableListener(this);
-        mOesReader = new OesTextureReader(oesTextureId, mOesWidth, mOesHeight);
-        mTextureWriter = new TextureWriter(mOesWidth, mOesHeight);
+        mOesReader = new OesTextureReader(mOesTextureId);
+        mTextureWriter = new TextureWriter();
     }
 }

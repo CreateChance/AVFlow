@@ -154,6 +154,10 @@ public class RoundProgressbar extends ProgressBar {
         this.text = text;
     }
 
+    public void setCenterColor(int color) {
+        centerColor = color;
+    }
+
     private void obtainStyledAttributes(Context context, AttributeSet attrs, int defStyleAttr) {
         TypedArray a = context.getTheme().obtainStyledAttributes(attrs, R.styleable.RoundProgressbar, defStyleAttr, 0);
 

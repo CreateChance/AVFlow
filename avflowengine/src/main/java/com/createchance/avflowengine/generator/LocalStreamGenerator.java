@@ -23,8 +23,8 @@ public class LocalStreamGenerator {
 
     private VideoPlayer mPlayer;
 
-    public void setOutputTexture(int texture) {
-        mOutputSurface = new Surface(new SurfaceTexture(texture));
+    public void setOutputTexture(SurfaceTexture surfaceTexture) {
+        mOutputSurface = new Surface(surfaceTexture);
     }
 
     public void setInputFile(File inputFile) {

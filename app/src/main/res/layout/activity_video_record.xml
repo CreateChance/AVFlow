@@ -9,7 +9,22 @@
     <TextureView
         android:id="@+id/vw_previewer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:layout_centerVertical="true" />
+
+    <View
+        android:id="@+id/vw_upper_mask"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_alignParentTop="true"
+        android:background="@color/theme_dark" />
+
+    <View
+        android:id="@+id/vw_bottom_mask"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_alignParentBottom="true"
+        android:background="@color/theme_dark" />
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -35,46 +50,48 @@
     </RelativeLayout>
 
     <LinearLayout
+        android:id="@+id/vw_record_control"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="60dp"
+        android:layout_marginBottom="80dp"
         android:gravity="center"
         android:orientation="horizontal">
 
         <ImageView
             android:id="@+id/iv_choose_ratio"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="30dp"
             android:layout_weight="1"
             android:src="@drawable/icon_ratio_btn_image_9_16" />
 
         <ImageView
             android:id="@+id/iv_choose_filter"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="30dp"
             android:layout_weight="1"
             android:src="@drawable/icon_filter_white" />
 
         <com.createchance.avflow.RoundProgressbar
             android:id="@+id/vw_count_down"
             android:layout_width="0dp"
-            android:layout_height="60dp"
+            android:layout_height="80dp"
             android:layout_weight="1"
             android:progress="0"
             app:ballColor="#ffffff"
-            app:ballSize="1dp"
-            app:centerColor="#00000000"
+            app:ballSize="0dp"
+            app:centerColor="#FF4240"
             app:centerText="1.0s"
             app:reachedColor="#00000000"
+            app:strokeWidth="1dp"
             app:textColor="#ffffff"
             app:unreachedColor="#ffffff" />
 
         <ImageView
             android:id="@+id/iv_switch_camera"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="30dp"
             android:layout_weight="1"
             android:padding="3dp"
             android:src="@drawable/icon_shoot_switch_camera" />
@@ -82,7 +99,7 @@
         <ImageView
             android:id="@+id/iv_more"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="30dp"
             android:layout_weight="1"
             android:padding="3dp"
             android:src="@drawable/icon_shoot_more" />
@@ -93,7 +110,7 @@
         android:layout_width="match_parent"
         android:layout_height="30dp"
         android:layout_alignParentBottom="true"
-        android:layout_marginBottom="20dp"
+        android:layout_marginBottom="40dp"
         android:orientation="horizontal">
 
         <ImageView
@@ -151,5 +168,296 @@
         </LinearLayout>
 
     </RelativeLayout>
+
+    <LinearLayout
+        android:id="@+id/vw_choose_ratio"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/vw_record_control"
+        android:background="@color/theme_dark"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
+            android:text="@string/choose_ratio"
+            android:textColor="@color/font_grey" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:id="@+id/vw_ratio_9_16"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/icon_ratio_btn_image_9_16" />
+
+                <TextView
+                    android:id="@+id/tv_ratio_9_16"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/ratio_9_16"
+                    tools:textColor="@color/font_red" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/vw_ratio_16_9"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/icon_ratio_btn_image_16_9" />
+
+                <TextView
+                    android:id="@+id/tv_ratio_16_9"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/ratio_16_9" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/vw_ratio_239_1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/icon_ratio_btn_image_239_1" />
+
+                <TextView
+                    android:id="@+id/tv_ratio_239_1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/ratio_239_1" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/vw_ratio_1_1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/icon_ratio_btn_image_1_1" />
+
+                <TextView
+                    android:id="@+id/tv_ratio_1_1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/ratio_1_1" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/vw_ratio_3_4"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/icon_ratio_btn_image_3_4" />
+
+                <TextView
+                    android:id="@+id/tv_ratio_3_4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/ratio_3_4" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/vw_ratio_circle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/icon_ratio_btn_image_circle" />
+
+                <TextView
+                    android:id="@+id/tv_ratio_circle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/ratio_circle" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/vw_choose_filter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/vw_record_control"
+        android:background="@color/theme_dark"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
+            android:text="@string/choose_filter"
+            android:textColor="@color/font_grey" />
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/rcv_filter_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="40dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="20dp"
+            android:orientation="horizontal"
+            app:layoutManager="android.support.v7.widget.LinearLayoutManager" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/vw_more"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/vw_record_control"
+        android:background="@color/theme_dark"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="30dp"
+                android:text="@string/scene_speed"
+                android:textColor="@color/font_grey" />
+
+            <TextView
+                android:id="@+id/tv_scene_speed_slow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="10dp"
+                android:text="@string/scene_speed_slow"
+                android:textColor="@color/font_white" />
+
+            <TextView
+                android:id="@+id/tv_scene_speed_fast"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="10dp"
+                android:layout_toStartOf="@id/tv_scene_speed_slow"
+                android:text="@string/scene_speed_fast"
+                android:textColor="@color/font_white" />
+
+            <TextView
+                android:id="@+id/tv_scene_speed_normal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="10dp"
+                android:layout_toStartOf="@id/tv_scene_speed_fast"
+                android:text="@string/scene_speed_normal"
+                android:textColor="@color/font_white"
+                tools:textColor="@color/font_red" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="30dp"
+                android:text="@string/beauty_effect"
+                android:textColor="@color/font_grey" />
+
+            <TextView
+                android:id="@+id/tv_beauty_strong"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="25dp"
+                android:text="@string/beauty_effect_strong"
+                android:textColor="@color/font_white" />
+
+            <TextView
+                android:id="@+id/tv_beauty_medium"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="35dp"
+                android:layout_toStartOf="@id/tv_beauty_strong"
+                android:text="@string/beauty_effect_medium"
+                android:textColor="@color/font_white" />
+
+            <TextView
+                android:id="@+id/tv_beauty_none"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="35dp"
+                android:layout_toStartOf="@id/tv_beauty_medium"
+                android:text="@string/beauty_effect_none"
+                android:textColor="@color/font_white"
+                tools:textColor="@color/font_red" />
+
+        </RelativeLayout>
+
+    </LinearLayout>
 
 </RelativeLayout>

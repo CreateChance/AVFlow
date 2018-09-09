@@ -57,16 +57,12 @@ class OesTextureReader {
     private FloatBuffer vertexPositionBuffer;
     private FloatBuffer textureCoordinateBuffer;
 
-    private int mSurfaceWidth, mSurfaceHeight;
-
     private int mProgramId;
 
     private int mOesTextureId;
 
-    OesTextureReader(int oesTextureId, int surfaceWidth, int surfaceHeight) {
+    OesTextureReader(int oesTextureId) {
         mOesTextureId = oesTextureId;
-        mSurfaceWidth = surfaceWidth;
-        mSurfaceHeight = surfaceHeight;
         init();
     }
 
@@ -118,9 +114,9 @@ class OesTextureReader {
         setRotation(270);
     }
 
-    void read() {
+    void read(int x, int y, int width, int height) {
         glUseProgram(mProgramId);
-        glViewport(0, 0, mSurfaceWidth, mSurfaceHeight);
+        glViewport(x, y, width, height);
         glEnableVertexAttribArray(mPositionLocaiton);
         glVertexAttribPointer(
                 mPositionLocaiton,
