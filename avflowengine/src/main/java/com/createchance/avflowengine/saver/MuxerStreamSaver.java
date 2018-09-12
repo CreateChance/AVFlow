@@ -142,7 +142,7 @@ public class MuxerStreamSaver {
                         buffer = mEncoder.getOutputBuffers()[outputBufferId];
                     }
 
-                    Log.i(TAG, "doMux...........");
+                    Log.i(TAG, "doMux..........., pts: " + bufferInfo.presentationTimeUs);
                     mMuxer.writeSampleData(mVideoTrackId, buffer, bufferInfo);
                     mEncoder.releaseOutputBuffer(outputBufferId, false);
                 } else if (outputBufferId == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {

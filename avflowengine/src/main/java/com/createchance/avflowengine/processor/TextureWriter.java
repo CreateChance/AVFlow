@@ -67,11 +67,11 @@ public class TextureWriter {
 
     private int mProgramId;
 
-    TextureWriter() {
-        init();
+    TextureWriter(FloatBuffer vertexBuffer, FloatBuffer textureBuffer) {
+        init(vertexBuffer, textureBuffer);
     }
 
-    private void init() {
+    private void init(FloatBuffer vertexBuffer, FloatBuffer textureBuffer) {
         mProgramId = OpenGlUtils.loadProgram(
                 BASE_VERTEX_SHADER,
                 BASE_FRAGMENT_SHADER
@@ -85,22 +85,30 @@ public class TextureWriter {
 
         glUseProgram(mProgramId);
 
-        vertexPositionBuffer = OpenGlUtils.createFloatBuffer(
-                new float[]{
-                        -1.0f, 1.0f,
-                        -1.0f, -1.0f,
-                        1.0f, 1.0f,
-                        1.0f, -1.0f,
-                }
-        );
-        textureCoordinateBuffer = OpenGlUtils.createFloatBuffer(
-                new float[]{
-                        0.0f, 0.0f,
-                        0.0f, 1.0f,
-                        1.0f, 0.0f,
-                        1.0f, 1.0f,
-                }
-        );
+        if (vertexBuffer == null) {
+            vertexPositionBuffer = OpenGlUtils.createFloatBuffer(
+                    new float[]{
+                            -1.0f, 1.0f,
+                            -1.0f, -1.0f,
+                            1.0f, 1.0f,
+                            1.0f, -1.0f,
+                    }
+            );
+        } else {
+            vertexPositionBuffer = vertexBuffer;
+        }
+        if (textureBuffer == null) {
+            textureCoordinateBuffer = OpenGlUtils.createFloatBuffer(
+                    new float[]{
+                            0.0f, 0.0f,
+                            0.0f, 1.0f,
+                            1.0f, 0.0f,
+                            1.0f, 1.0f,
+                    }
+            );
+        } else {
+            textureCoordinateBuffer = textureBuffer;
+        }
 
         // set matrix
         // set uniform vars

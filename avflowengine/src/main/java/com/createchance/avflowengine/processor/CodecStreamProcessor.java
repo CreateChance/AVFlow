@@ -2,7 +2,6 @@ package com.createchance.avflowengine.processor;
 
 import android.graphics.SurfaceTexture;
 import android.opengl.GLES20;
-import android.util.Log;
 import android.view.Surface;
 
 import com.createchance.avflowengine.base.Logger;
@@ -10,6 +9,8 @@ import com.createchance.avflowengine.processor.gles.EglCore;
 import com.createchance.avflowengine.processor.gles.WindowSurface;
 import com.createchance.avflowengine.processor.gpuimage.GPUImageFilter;
 import com.createchance.avflowengine.processor.gpuimage.OpenGlUtils;
+
+import java.nio.FloatBuffer;
 
 /**
  * ${DESC}
@@ -32,7 +33,7 @@ public final class CodecStreamProcessor implements SurfaceTexture.OnFrameAvailab
 
     private int mOesTextureId = -1;
     private OesTextureReader mOesReader;
-    private TextureWriter mTextureWriter;
+    private TextureWriter mPreviewTextureWriter, mSaveTextureWriter;
 
     private int mOesWidth, mOesHeight;
 
@@ -47,9 +48,9 @@ public final class CodecStreamProcessor implements SurfaceTexture.OnFrameAvailab
         Logger.v(TAG, "onFrameAvailable");
         if (mVideoInputSurface != null) {
             mVideoInputSurface.updateTexImage();
-            mOutputSurfaceDrawer.draw(mOesReader, mPreviewDrawSurface, mPreviewFilter, mTextureWriter);
+            mOutputSurfaceDrawer.draw(mOesReader, mPreviewDrawSurface, mPreviewFilter, mPreviewTextureWriter);
             if (mSaveSurface != null) {
-                mOutputSurfaceDrawer.draw(mOesReader, mSaveDrawSurface, mPreviewFilter, mTextureWriter);
+                mOutputSurfaceDrawer.draw(mOesReader, mSaveDrawSurface, mPreviewFilter, mSaveTextureWriter);
             }
         }
     }
@@ -72,13 +73,17 @@ public final class CodecStreamProcessor implements SurfaceTexture.OnFrameAvailab
             return;
         }
 
+        Logger.d(TAG, "Save start!!!!!!!! clip top: " + clipTop + ", clip left: " + clipLeft + ", clip bottom: " + clipBottom + ", clip right: " + clipRight);
+        mSaveTextureWriter = new TextureWriter(
+                getVertexBuffer(clipTop, clipLeft, clipBottom, clipRight),
+                getTextureBuffer(clipTop, clipLeft, clipBottom, clipRight));
         mSaveSurface = surface;
         mSaveDrawSurface = new WindowSurface(mEglCore, mSaveSurface, false);
         mSaveDrawSurface.createTexture(
                 0,
-                mOesHeight - clipBottom,
-                clipRight - clipLeft,
-                clipBottom - clipTop);
+                -700,
+                mOesWidth,
+                mOesHeight);
     }
 
     public void clearSaveSurface() {
@@ -141,6 +146,55 @@ public final class CodecStreamProcessor implements SurfaceTexture.OnFrameAvailab
         mVideoInputSurface = new SurfaceTexture(mOesTextureId);
         mVideoInputSurface.setOnFrameAvailableListener(this);
         mOesReader = new OesTextureReader(mOesTextureId);
-        mTextureWriter = new TextureWriter();
+        mPreviewTextureWriter = new TextureWriter(null, null);
+    }
+
+    private FloatBuffer getVertexBuffer(int clipTop, int clipLeft, int clipBottom, int clipRight) {
+        float top = (clipTop - mOesHeight / 2) * 1.0f / (mOesHeight / 2);
+        float left = (clipLeft - mOesWidth / 2) * 1.0f / (mOesWidth / 2);
+        float bottom = (clipBottom - mOesHeight / 2) * 1.0f / (mOesHeight / 2);
+        float right = (clipRight - mOesWidth / 2) * 1.0f / (mOesWidth / 2);
+
+        Logger.d(TAG, "getVertexBuffer, clipTop: " + clipTop
+                + ", clipLeft: " + clipLeft
+                + ", clipBottom: " + clipBottom
+                + ", clipRight: " + clipRight);
+        Logger.d(TAG, "getVertexBuffer, top: " + top
+                + ", left: " + left
+                + ", bottom: " + bottom
+                + ", right: " + right);
+
+        return OpenGlUtils.createFloatBuffer(
+                new float[]{
+                        left, bottom,
+                        left, top,
+                        right, bottom,
+                        right, top,
+                }
+        );
+    }
+
+    private FloatBuffer getTextureBuffer(int clipTop, int clipLeft, int clipBottom, int clipRight) {
+        float top = (mOesHeight - clipTop) * 1.0f / mOesHeight;
+        float left = clipLeft * 1.0f / mOesWidth;
+        float bottom = (mOesHeight - clipBottom) * 1.0f / mOesHeight;
+        float right = clipRight * 1.0f / mOesWidth;
+
+        Logger.d(TAG, "getTextureBuffer, clipTop: " + clipTop
+                + ", clipLeft: " + clipLeft
+                + ", clipBottom: " + clipBottom
+                + ", clipRight: " + clipRight);
+        Logger.d(TAG, "getTextureBuffer, top: " + top
+                + ", left: " + left
+                + ", bottom: " + bottom
+                + ", right: " + right);
+
+        return OpenGlUtils.createFloatBuffer(
+                new float[]{
+                        left, bottom,
+                        left, top,
+                        right, bottom,
+                        right, top,
+                });
     }
 }

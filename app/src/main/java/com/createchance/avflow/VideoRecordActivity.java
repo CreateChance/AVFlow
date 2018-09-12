@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.graphics.SurfaceTexture;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
@@ -401,8 +402,8 @@ public class VideoRecordActivity extends AppCompatActivity implements
     }
 
     private File getOutputFile() {
-        String fileName = System.currentTimeMillis() + ".mp4";
-        return new File(getFilesDir(), fileName);
+        String fileName = "avflow/output.mp4";
+        return new File(Environment.getExternalStorageDirectory(), fileName);
     }
 
     private void initPanelChooseRatio() {
