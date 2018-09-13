@@ -122,7 +122,7 @@ public class TextureWriter {
 
     public void write(int inputTexture, int x, int y, int surfaceWidth, int surfaceHeight) {
         glUseProgram(mProgramId);
-        glViewport(x, y, surfaceWidth, surfaceHeight);
+        glViewport(x, -surfaceHeight / 4, surfaceWidth, surfaceHeight);
 
         // bind texture
         glActiveTexture(GL_TEXTURE0);
