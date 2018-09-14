@@ -267,7 +267,7 @@ public class OpenGlUtils {
 
         Bitmap bitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
         bitmap.copyPixelsFromBuffer(IntBuffer.wrap(pixelMirroredArray));
-        saveBitmap(bitmap, new File(Environment.getExternalStorageDirectory(), "videoeditor/tmp.png"));
+        saveBitmap(bitmap, new File(Environment.getExternalStorageDirectory(), "avflow/captured.png"));
     }
 
     private static void saveBitmap(Bitmap bitmap, File picFile) {

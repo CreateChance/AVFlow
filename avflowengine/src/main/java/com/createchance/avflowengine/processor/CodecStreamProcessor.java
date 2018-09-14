@@ -48,9 +48,9 @@ public final class CodecStreamProcessor implements SurfaceTexture.OnFrameAvailab
         Logger.v(TAG, "onFrameAvailable");
         if (mVideoInputSurface != null) {
             mVideoInputSurface.updateTexImage();
-            mOutputSurfaceDrawer.draw(mOesReader, mPreviewDrawSurface, mPreviewFilter, mPreviewTextureWriter);
+            mOutputSurfaceDrawer.draw(mOesReader, mPreviewDrawSurface, mPreviewFilter, mPreviewTextureWriter, false);
             if (mSaveSurface != null) {
-                mOutputSurfaceDrawer.draw(mOesReader, mSaveDrawSurface, mPreviewFilter, mSaveTextureWriter);
+                mOutputSurfaceDrawer.draw(mOesReader, mSaveDrawSurface, mPreviewFilter, mSaveTextureWriter, true);
             }
         }
     }
@@ -73,15 +73,22 @@ public final class CodecStreamProcessor implements SurfaceTexture.OnFrameAvailab
             return;
         }
 
-        Logger.d(TAG, "Save start!!!!!!!! clip top: " + clipTop + ", clip left: " + clipLeft + ", clip bottom: " + clipBottom + ", clip right: " + clipRight);
+        Logger.d(TAG, "Save start!!!!!!!! clip top: " + clipTop
+                + ", clip left: " + clipLeft
+                + ", clip bottom: " + clipBottom
+                + ", clip right: " + clipRight);
         mSaveTextureWriter = new TextureWriter(
-                getVertexBuffer(clipTop, clipLeft, clipBottom, clipRight),
-                getTextureBuffer(clipTop, clipLeft, clipBottom, clipRight));
+                getVertexBuffer(),
+                getTextureBuffer(clipTop, clipLeft, clipBottom, clipRight),
+                mOesWidth,
+                mOesHeight);
         mSaveSurface = surface;
         mSaveDrawSurface = new WindowSurface(mEglCore, mSaveSurface, false);
         mSaveDrawSurface.createTexture(
+                clipLeft,
                 0,
-                -700,
+                clipRight - clipLeft,
+                clipBottom - clipTop,
                 mOesWidth,
                 mOesHeight);
     }
@@ -97,6 +104,8 @@ public final class CodecStreamProcessor implements SurfaceTexture.OnFrameAvailab
         mPreviewDrawSurface.createTexture(
                 0,
                 0,
+                mOesWidth,
+                mOesHeight,
                 mOesWidth,
                 mOesHeight);
     }
@@ -145,31 +154,17 @@ public final class CodecStreamProcessor implements SurfaceTexture.OnFrameAvailab
         mOesTextureId = OpenGlUtils.createOesTexture();
         mVideoInputSurface = new SurfaceTexture(mOesTextureId);
         mVideoInputSurface.setOnFrameAvailableListener(this);
-        mOesReader = new OesTextureReader(mOesTextureId);
-        mPreviewTextureWriter = new TextureWriter(null, null);
+        mOesReader = new OesTextureReader(mOesTextureId, mOesWidth, mOesHeight);
+        mPreviewTextureWriter = new TextureWriter(null, null, mOesWidth, mOesHeight);
     }
 
-    private FloatBuffer getVertexBuffer(int clipTop, int clipLeft, int clipBottom, int clipRight) {
-        float top = (clipTop - mOesHeight / 2) * 1.0f / (mOesHeight / 2);
-        float left = (clipLeft - mOesWidth / 2) * 1.0f / (mOesWidth / 2);
-        float bottom = (clipBottom - mOesHeight / 2) * 1.0f / (mOesHeight / 2);
-        float right = (clipRight - mOesWidth / 2) * 1.0f / (mOesWidth / 2);
-
-        Logger.d(TAG, "getVertexBuffer, clipTop: " + clipTop
-                + ", clipLeft: " + clipLeft
-                + ", clipBottom: " + clipBottom
-                + ", clipRight: " + clipRight);
-        Logger.d(TAG, "getVertexBuffer, top: " + top
-                + ", left: " + left
-                + ", bottom: " + bottom
-                + ", right: " + right);
-
+    private FloatBuffer getVertexBuffer() {
         return OpenGlUtils.createFloatBuffer(
                 new float[]{
-                        left, bottom,
-                        left, top,
-                        right, bottom,
-                        right, top,
+                        -1, 1f,
+                        -1, -1f,
+                        1f, 1f,
+                        1f, -1f,
                 }
         );
     }

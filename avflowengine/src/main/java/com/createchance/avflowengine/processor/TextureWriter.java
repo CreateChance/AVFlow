@@ -1,6 +1,7 @@
 package com.createchance.avflowengine.processor;
 
 import android.opengl.GLES20;
+import android.opengl.Matrix;
 
 import com.createchance.avflowengine.processor.gpuimage.OpenGlUtils;
 
@@ -20,6 +21,9 @@ import static android.opengl.GLES20.glUniform1i;
 import static android.opengl.GLES20.glUniformMatrix4fv;
 import static android.opengl.GLES20.glUseProgram;
 import static android.opengl.GLES20.glVertexAttribPointer;
+import static android.opengl.Matrix.multiplyMM;
+import static android.opengl.Matrix.setIdentityM;
+import static android.opengl.Matrix.translateM;
 
 /**
  * ${DESC}
@@ -67,11 +71,15 @@ public class TextureWriter {
 
     private int mProgramId;
 
-    TextureWriter(FloatBuffer vertexBuffer, FloatBuffer textureBuffer) {
-        init(vertexBuffer, textureBuffer);
+    TextureWriter(FloatBuffer vertexBuffer,
+                  FloatBuffer textureBuffer,
+                  int surfaceWidth,
+                  int surfaceHeight) {
+        init(vertexBuffer, textureBuffer, surfaceWidth, surfaceHeight);
     }
 
-    private void init(FloatBuffer vertexBuffer, FloatBuffer textureBuffer) {
+    private void init(FloatBuffer vertexBuffer, FloatBuffer textureBuffer, int surfaceWidth,
+                      int surfaceHeight) {
         mProgramId = OpenGlUtils.loadProgram(
                 BASE_VERTEX_SHADER,
                 BASE_FRAGMENT_SHADER
@@ -112,17 +120,42 @@ public class TextureWriter {
 
         // set matrix
         // set uniform vars
+        float[] projectionMatrix = new float[16];
+        float[] modelMatrix = new float[16];
+//        perspectiveM(projectionMatrix,45, (float) surfaceWidth
+//                / (float) surfaceHeight, 1f, 10f);
+        Matrix.orthoM(
+                projectionMatrix,
+                0,
+                -1f,
+                1f,
+                1f,
+                -1f,
+                0.1f,
+                100f
+        );
+
+        setIdentityM(modelMatrix, 0);
+        translateM(modelMatrix, 0, 0f, 0f, -2.5f);
+//        rotateM(modelMatrix, 0, -60f, 1f, 0f, 0f);
+
+        final float[] temp = new float[16];
+        multiplyMM(temp, 0, projectionMatrix, 0, modelMatrix, 0);
+        System.arraycopy(temp, 0, projectionMatrix, 0, temp.length);
+
         glUniformMatrix4fv(
                 mMartixLocation,
                 1,
                 false,
-                OpenGlUtils.flip(OpenGlUtils.getIdentityMatrix(), false, true),
+                projectionMatrix,
                 0);
     }
 
     public void write(int inputTexture, int x, int y, int surfaceWidth, int surfaceHeight) {
         glUseProgram(mProgramId);
-        glViewport(x, -surfaceHeight / 4, surfaceWidth, surfaceHeight);
+        glViewport(x, y, surfaceWidth, surfaceHeight);
+
+        GLES20.glClearColor(1, 0, 0, 1);
 
         // bind texture
         glActiveTexture(GL_TEXTURE0);
@@ -150,5 +183,31 @@ public class TextureWriter {
         glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
         glDisableVertexAttribArray(mPositionLocaiton);
         glDisableVertexAttribArray(mTextureCoorLocation);
+    }
+
+    private void perspectiveM(float[] m, float yFovInDegrees, float aspect,
+                              float n, float f) {
+        final float angleInRadians = (float) (yFovInDegrees * Math.PI / 180.0);
+
+        final float a = (float) (1.0 / Math.tan(angleInRadians / 2.0));
+        m[0] = a / aspect;
+        m[1] = 0f;
+        m[2] = 0f;
+        m[3] = 0f;
+
+        m[4] = 0f;
+        m[5] = a;
+        m[6] = 0f;
+        m[7] = 0f;
+
+        m[8] = 0f;
+        m[9] = 0f;
+        m[10] = -((f + n) / (f - n));
+        m[11] = -1f;
+
+        m[12] = 0f;
+        m[13] = 0f;
+        m[14] = -((2f * f * n) / (f - n));
+        m[15] = 0f;
     }
 }

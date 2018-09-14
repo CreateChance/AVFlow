@@ -29,7 +29,7 @@ public class WindowSurface extends EglSurfaceBase {
     private Surface mSurface;
     private boolean mReleaseSurface;
     private int[] mOutputTextureIds = new int[2];
-    private int mWidth, mHeight;
+    private int mTextureWidth, mTextureHeight;
     private int mX, mY;
 
     /**
@@ -95,16 +95,16 @@ public class WindowSurface extends EglSurfaceBase {
         createWindowSurface(mSurface);
     }
 
-    public void createTexture(int x, int y, int width, int height) {
+    public void createTexture(int x, int y, int textureWidth, int textureHeight, int surfaceWidth, int surfaceHeight) {
         mX = x;
         mY = y;
-        mWidth = width;
-        mHeight = height;
+        mTextureWidth = textureWidth;
+        mTextureHeight = textureHeight;
         GLES20.glGenTextures(mOutputTextureIds.length, mOutputTextureIds, 0);
         for (int mTextureId : mOutputTextureIds) {
             // bind to fbo texture cause we are going to do setting.
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureId);
-            GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, mWidth, mHeight,
+            GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, surfaceWidth, surfaceHeight,
                     0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, null);
             // 设置缩小过滤为使用纹理中坐标最接近的一个像素的颜色作为需要绘制的像素颜色
             GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
@@ -124,11 +124,11 @@ public class WindowSurface extends EglSurfaceBase {
     }
 
     public int getTextureWidth() {
-        return mWidth;
+        return mTextureWidth;
     }
 
     public int getTextureHeight() {
-        return mHeight;
+        return mTextureHeight;
     }
 
     public int getX() {

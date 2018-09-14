@@ -49,7 +49,7 @@ public class MuxerStreamSaver {
 
     public void setOutputSize(int width, int height) {
         mVideoWidth = width;
-        mVideoHeight = width;
+        mVideoHeight = height;
     }
 
     public void prepare() {

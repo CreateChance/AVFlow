@@ -1,9 +1,11 @@
 package com.createchance.avflowengine.processor;
 
 import android.opengl.GLES20;
+import android.util.Log;
 
 import com.createchance.avflowengine.processor.gles.WindowSurface;
 import com.createchance.avflowengine.processor.gpuimage.GPUImageFilter;
+import com.createchance.avflowengine.processor.gpuimage.OpenGlUtils;
 import com.createchance.avflowengine.processor.gpuimage.Rotation;
 import com.createchance.avflowengine.processor.gpuimage.util.TextureRotationUtil;
 
@@ -32,6 +34,8 @@ class VideoFrameDrawer {
     private FloatBuffer mGLCubeBuffer;
     private FloatBuffer mGLTextureBuffer;
 
+    int frames;
+    boolean captured;
 
     VideoFrameDrawer() {
         mGLCubeBuffer = ByteBuffer.allocateDirect(CUBE.length * 4)
@@ -50,13 +54,10 @@ class VideoFrameDrawer {
         deleteOffScreenFrameBuffer();
     }
 
-    void draw(OesTextureReader reader, WindowSurface drawSurface, GPUImageFilter filter, TextureWriter writer) {
+    void draw(OesTextureReader reader, WindowSurface drawSurface, GPUImageFilter filter, TextureWriter writer, boolean need) {
         drawSurface.makeCurrent();
         bindOffScreenFrameBuffer(drawSurface.getOutputTextureIds()[0]);
-        reader.read(drawSurface.getX(),
-                drawSurface.getY(),
-                drawSurface.getTextureWidth(),
-                drawSurface.getTextureHeight());
+        reader.read();
         bindDefaultFrameBuffer();
 
         if (filter != null) {
@@ -77,6 +78,21 @@ class VideoFrameDrawer {
                     drawSurface.getY(),
                     drawSurface.getTextureWidth(),
                     drawSurface.getTextureHeight());
+        }
+        try {
+            if (need) {
+                Log.d(TAG, "draw: " + frames);
+                if (frames > 60) {
+                    if (!captured) {
+                        captured = true;
+                        OpenGlUtils.captureImage(drawSurface.getTextureWidth(), drawSurface.getTextureHeight());
+                    }
+                } else {
+                    frames++;
+                }
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
         drawSurface.swapBuffers();
     }
