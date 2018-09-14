@@ -39,6 +39,9 @@ public class MuxerStreamSaver {
     private boolean mNeedDelete;
     private SaveListener mListener;
 
+    private int mBitRate = 3000000;
+    private int mFrameRate = 30;
+
     public MuxerStreamSaver() {
         mSaveThread = new SaverThread();
     }
@@ -55,8 +58,8 @@ public class MuxerStreamSaver {
     public void prepare() {
         // init video format
         MediaFormat videoFormat = MediaFormat.createVideoFormat("video/avc", mVideoWidth, mVideoHeight);
-        videoFormat.setInteger(MediaFormat.KEY_BIT_RATE, 3000000);
-        videoFormat.setInteger(MediaFormat.KEY_FRAME_RATE, 30);
+        videoFormat.setInteger(MediaFormat.KEY_BIT_RATE, mBitRate);
+        videoFormat.setInteger(MediaFormat.KEY_FRAME_RATE, mFrameRate);
         videoFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface);
         videoFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1);
 
@@ -121,6 +124,8 @@ public class MuxerStreamSaver {
             int outputBufferId;
             MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
             ByteBuffer buffer;
+            long framePts = 1000 * 1000 / mFrameRate;
+            long nowPts = 0;
             while (true) {
                 if (mRequestStop) {
                     mRequestStop = false;
@@ -142,6 +147,8 @@ public class MuxerStreamSaver {
                         buffer = mEncoder.getOutputBuffers()[outputBufferId];
                     }
 
+                    bufferInfo.presentationTimeUs = nowPts;
+                    nowPts += framePts;
                     Log.i(TAG, "doMux..........., pts: " + bufferInfo.presentationTimeUs);
                     mMuxer.writeSampleData(mVideoTrackId, buffer, bufferInfo);
                     mEncoder.releaseOutputBuffer(outputBufferId, false);

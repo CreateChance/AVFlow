@@ -62,8 +62,9 @@ public class VideoRecordActivity extends AppCompatActivity implements
     private Handler mHandler;
 
     // scenes
-    private long mDurationOfScene = 5 * 1000;
+    private long mDurationOfScene = 10 * 1000;
     private long mCountStartTime;
+    private boolean mIsRecording;
 
     private int mScreenWidth, mScreenHeight;
 
@@ -242,14 +243,6 @@ public class VideoRecordActivity extends AppCompatActivity implements
                 mCountDownView.setClickable(false);
                 mCountStartTime = System.currentTimeMillis();
                 mHandler.sendEmptyMessage(MSG_UPDATE_COUNT);
-                AVFlowEngine.getInstance().startSave(getOutputFile(), new SaveListener() {
-                    @Override
-                    public void onSaved(File file) {
-                        SimpleModel.getInstance().getSceneList().get(mCurrentScenePos).mVideo = file;
-                        mCurrentScenePos++;
-                        mListAdapter.refresh(SimpleModel.getInstance().getSceneList());
-                    }
-                });
                 break;
             case R.id.iv_import_video:
 
@@ -365,6 +358,17 @@ public class VideoRecordActivity extends AppCompatActivity implements
     public boolean handleMessage(Message msg) {
         switch (msg.what) {
             case MSG_UPDATE_COUNT:
+                if (!mIsRecording) {
+                    mIsRecording = true;
+                    AVFlowEngine.getInstance().startSave(getOutputFile(), new SaveListener() {
+                        @Override
+                        public void onSaved(File file) {
+                            SimpleModel.getInstance().getSceneList().get(mCurrentScenePos).mVideo = file;
+                            mCurrentScenePos++;
+                            mListAdapter.refresh(SimpleModel.getInstance().getSceneList());
+                        }
+                    });
+                }
                 long now = System.currentTimeMillis();
                 float progress = (now - mCountStartTime) * 1.0f / mDurationOfScene;
                 if (progress > 1.0f) {
@@ -381,6 +385,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
                     mHandler.sendEmptyMessageDelayed(MSG_UPDATE_COUNT, 16);
                 } else {
                     AVFlowEngine.getInstance().finishSave();
+                    mIsRecording = false;
                     mBack.setVisibility(View.VISIBLE);
                     mNext.setVisibility(View.VISIBLE);
                     mChooseFilterView.setVisibility(View.VISIBLE);

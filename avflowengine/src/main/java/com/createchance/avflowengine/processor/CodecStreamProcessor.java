@@ -48,9 +48,9 @@ public final class CodecStreamProcessor implements SurfaceTexture.OnFrameAvailab
         Logger.v(TAG, "onFrameAvailable");
         if (mVideoInputSurface != null) {
             mVideoInputSurface.updateTexImage();
-            mOutputSurfaceDrawer.draw(mOesReader, mPreviewDrawSurface, mPreviewFilter, mPreviewTextureWriter, false);
+            mOutputSurfaceDrawer.draw(mOesReader, mPreviewDrawSurface, mPreviewFilter, mPreviewTextureWriter);
             if (mSaveSurface != null) {
-                mOutputSurfaceDrawer.draw(mOesReader, mSaveDrawSurface, mPreviewFilter, mSaveTextureWriter, true);
+                mOutputSurfaceDrawer.draw(mOesReader, mSaveDrawSurface, mPreviewFilter, mSaveTextureWriter);
             }
         }
     }
