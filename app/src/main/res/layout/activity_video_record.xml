@@ -210,7 +210,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/ratio_9_16"
-                    tools:textColor="@color/font_red" />
+                    android:textColor="@color/font_red" />
 
             </LinearLayout>
 
@@ -330,7 +330,7 @@
         android:layout_above="@id/vw_record_control"
         android:background="@color/theme_dark"
         android:orientation="vertical"
-        android:visibility="gone">
+        android:visibility="visible">
 
         <TextView
             android:layout_width="wrap_content"
@@ -344,12 +344,19 @@
             android:id="@+id/rcv_filter_list"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="40dp"
             android:layout_marginEnd="10dp"
             android:layout_marginStart="10dp"
             android:layout_marginTop="20dp"
             android:orientation="horizontal"
             app:layoutManager="android.support.v7.widget.LinearLayoutManager" />
+
+        <SeekBar
+            android:id="@+id/sb_filter_adjust"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:layout_marginTop="20dp"
+            android:max="100" />
 
     </LinearLayout>
 
@@ -457,6 +464,34 @@
                 tools:textColor="@color/font_red" />
 
         </RelativeLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/vw_filter_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_marginStart="18dp"
+        android:orientation="vertical"
+        android:visibility="invisible">
+
+        <TextView
+            android:id="@+id/tv_filter_code"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/font_white"
+            android:textSize="16sp"
+            tools:text="F1" />
+
+        <TextView
+            android:id="@+id/tv_filter_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textColor="@color/font_white"
+            android:textSize="16sp"
+            tools:text="夏日的阳光" />
 
     </LinearLayout>
 

@@ -1,7 +1,6 @@
 package com.createchance.avflowengine.processor;
 
 import android.graphics.SurfaceTexture;
-import android.opengl.GLES20;
 import android.view.Surface;
 
 import com.createchance.avflowengine.base.Logger;
@@ -50,7 +49,7 @@ public final class CodecStreamProcessor implements SurfaceTexture.OnFrameAvailab
             mVideoInputSurface.updateTexImage();
             mOutputSurfaceDrawer.draw(mOesReader, mPreviewDrawSurface, mPreviewFilter, mPreviewTextureWriter);
             if (mSaveSurface != null) {
-                mOutputSurfaceDrawer.draw(mOesReader, mSaveDrawSurface, mPreviewFilter, mSaveTextureWriter);
+                mOutputSurfaceDrawer.draw(mOesReader, mSaveDrawSurface, mSaveFilter, mSaveTextureWriter);
             }
         }
     }
@@ -111,10 +110,16 @@ public final class CodecStreamProcessor implements SurfaceTexture.OnFrameAvailab
     }
 
     public void setPreviewFilter(GPUImageFilter filter) {
+        if (mPreviewFilter != null) {
+            mPreviewFilter.destroy();
+        }
         mPreviewFilter = filter;
     }
 
     public void setSaveFilter(GPUImageFilter filter) {
+        if (mSaveFilter != null) {
+            mSaveFilter.destroy();
+        }
         mSaveFilter = filter;
     }
 
@@ -123,16 +128,6 @@ public final class CodecStreamProcessor implements SurfaceTexture.OnFrameAvailab
      */
     public void start() {
         mPreviewDrawSurface.makeCurrent();
-        if (mPreviewFilter != null) {
-            mPreviewFilter.init();
-            GLES20.glUseProgram(mPreviewFilter.getProgram());
-            mPreviewFilter.onOutputSizeChanged(mOesWidth, mOesHeight);
-        }
-        if (mSaveFilter != null) {
-            mSaveFilter.init();
-            GLES20.glUseProgram(mSaveFilter.getProgram());
-            mSaveFilter.onOutputSizeChanged(mOesWidth, mOesHeight);
-        }
     }
 
     public SurfaceTexture getOesTextureId() {

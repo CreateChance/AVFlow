@@ -2,6 +2,8 @@ package com.createchance.avflow;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.Intent;
@@ -22,18 +24,31 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.SeekBar;
+import android.widget.TextView;
 
+import com.createchance.avflow.model.Filter;
 import com.createchance.avflow.model.Scene;
 import com.createchance.avflow.model.SimpleModel;
+import com.createchance.avflow.utils.AssetsUtil;
 import com.createchance.avflow.utils.DensityUtil;
 import com.createchance.avflowengine.AVFlowEngine;
 import com.createchance.avflowengine.base.Logger;
 import com.createchance.avflowengine.generator.CameraImpl;
+import com.createchance.avflowengine.processor.gpuimage.GPUImageColorInvertFilter;
+import com.createchance.avflowengine.processor.gpuimage.GPUImageHalftoneFilter;
 import com.createchance.avflowengine.saver.SaveListener;
 
 import java.io.File;
+import java.util.List;
 import java.util.Locale;
 
+/**
+ * Video record activity.
+ *
+ * @author createchance
+ * @date 2018-08-29
+ */
 public class VideoRecordActivity extends AppCompatActivity implements
         View.OnClickListener,
         TextureView.SurfaceTextureListener,
@@ -57,7 +72,13 @@ public class VideoRecordActivity extends AppCompatActivity implements
     private View mCurrentModeView;
     private RoundProgressbar mCountDownView;
     private View mPanelChooseRatio, mPanelChooseFilter, mPanelMore;
+    private SeekBar mFilterAdjustView;
     private View mUpperMask, mBottomMask;
+    private View mFilterInfoView;
+    private TextView mFilterCode, mFilterName;
+    private Animator mShowAnim, mFadeAnim;
+
+    private FilterListAdapter mFilterListAdapter;
 
     private Handler mHandler;
 
@@ -65,6 +86,9 @@ public class VideoRecordActivity extends AppCompatActivity implements
     private long mDurationOfScene = 10 * 1000;
     private long mCountStartTime;
     private boolean mIsRecording;
+
+    private List<Filter> mFilterList;
+    private Filter mCurrentFilter;
 
     private int mScreenWidth, mScreenHeight;
 
@@ -119,6 +143,10 @@ public class VideoRecordActivity extends AppCompatActivity implements
         mPanelChooseRatio = findViewById(R.id.vw_choose_ratio);
         mPanelChooseFilter = findViewById(R.id.vw_choose_filter);
         mPanelMore = findViewById(R.id.vw_more);
+        mFilterInfoView = findViewById(R.id.vw_filter_name);
+        mFilterCode = findViewById(R.id.tv_filter_code);
+        mFilterName = findViewById(R.id.tv_filter_name);
+        mFilterAdjustView = findViewById(R.id.sb_filter_adjust);
         initPanelChooseRatio();
         initPanelChooseFilter();
         initPanelMore();
@@ -129,6 +157,25 @@ public class VideoRecordActivity extends AppCompatActivity implements
         mMoreView.setOnClickListener(this);
         mImportView.setOnClickListener(this);
         mCurrentModeView.setOnClickListener(this);
+        if (!mCurrentFilter.canAdjust()) {
+            mFilterAdjustView.setEnabled(false);
+        }
+        mFilterAdjustView.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                mCurrentFilter.adjust(progress);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
     }
 
     @Override
@@ -245,63 +292,115 @@ public class VideoRecordActivity extends AppCompatActivity implements
                 mHandler.sendEmptyMessage(MSG_UPDATE_COUNT);
                 break;
             case R.id.iv_import_video:
-
+                long now = System.currentTimeMillis();
+                if (now % 2 == 0) {
+                    AVFlowEngine.getInstance().setPreviewFilter(new GPUImageColorInvertFilter());
+                    AVFlowEngine.getInstance().setSaveFilter(new GPUImageColorInvertFilter());
+                } else {
+                    AVFlowEngine.getInstance().setPreviewFilter(new GPUImageHalftoneFilter());
+                    AVFlowEngine.getInstance().setSaveFilter(new GPUImageHalftoneFilter());
+                }
                 break;
             case R.id.vw_current_mode:
 
                 break;
             // Panel click
             case R.id.vw_ratio_9_16:
-                animToHeight(0, 0);
+                animMaskToHeight(0, 0);
                 AVFlowEngine.getInstance().setClipArea(
                         0,
                         0,
                         mScreenHeight,
                         mScreenWidth
                 );
+                mFilterInfoView.setTranslationY(0);
+                ((TextView) findViewById(R.id.tv_ratio_9_16)).setTextColor(getResources().getColor(R.color.font_red));
+                ((TextView) findViewById(R.id.tv_ratio_16_9)).setTextColor(getResources().getColor(R.color.font_grey));
+                ((TextView) findViewById(R.id.tv_ratio_239_1)).setTextColor(getResources().getColor(R.color.font_grey));
+                ((TextView) findViewById(R.id.tv_ratio_1_1)).setTextColor(getResources().getColor(R.color.font_grey));
+                ((TextView) findViewById(R.id.tv_ratio_3_4)).setTextColor(getResources().getColor(R.color.font_grey));
+                ((TextView) findViewById(R.id.tv_ratio_circle)).setTextColor(getResources().getColor(R.color.font_grey));
                 break;
             case R.id.vw_ratio_16_9:
                 animHeight = mScreenHeight - (int) (mScreenWidth * 9.0f / 16);
-                animToHeight((int) (animHeight * 0.4f), (int) (animHeight * 0.6f));
+                animMaskToHeight((int) (animHeight * 0.4f), (int) (animHeight * 0.6f));
                 AVFlowEngine.getInstance().setClipArea(
                         (int) (animHeight * 0.4f),
                         0,
                         mScreenHeight - (int) (animHeight * 0.6f),
                         mScreenWidth
                 );
+                mFilterInfoView.setTranslationY(
+                        (int) (animHeight * 0.4f) + (int) (mScreenWidth * 9.0f / 16) / 2 - mScreenHeight / 2);
+                ((TextView) findViewById(R.id.tv_ratio_9_16)).setTextColor(getResources().getColor(R.color.font_grey));
+                ((TextView) findViewById(R.id.tv_ratio_16_9)).setTextColor(getResources().getColor(R.color.font_red));
+                ((TextView) findViewById(R.id.tv_ratio_239_1)).setTextColor(getResources().getColor(R.color.font_grey));
+                ((TextView) findViewById(R.id.tv_ratio_1_1)).setTextColor(getResources().getColor(R.color.font_grey));
+                ((TextView) findViewById(R.id.tv_ratio_3_4)).setTextColor(getResources().getColor(R.color.font_grey));
+                ((TextView) findViewById(R.id.tv_ratio_circle)).setTextColor(getResources().getColor(R.color.font_grey));
                 break;
             case R.id.vw_ratio_239_1:
                 animHeight = mScreenHeight - (int) (mScreenWidth * 5.0f / 12);
-                animToHeight((int) (animHeight * 0.4f), (int) (animHeight * 0.6f));
+                animMaskToHeight((int) (animHeight * 0.4f), (int) (animHeight * 0.6f));
                 AVFlowEngine.getInstance().setClipArea(
                         (int) (animHeight * 0.4f),
                         0,
                         mScreenHeight - (int) (animHeight * 0.6f),
                         mScreenWidth
                 );
+                mFilterInfoView.setTranslationY(
+                        (int) (animHeight * 0.4f) + (int) (mScreenWidth * 5.0f / 12) / 2 - mScreenHeight / 2);
+                ((TextView) findViewById(R.id.tv_ratio_9_16)).setTextColor(getResources().getColor(R.color.font_grey));
+                ((TextView) findViewById(R.id.tv_ratio_16_9)).setTextColor(getResources().getColor(R.color.font_grey));
+                ((TextView) findViewById(R.id.tv_ratio_239_1)).setTextColor(getResources().getColor(R.color.font_red));
+                ((TextView) findViewById(R.id.tv_ratio_1_1)).setTextColor(getResources().getColor(R.color.font_grey));
+                ((TextView) findViewById(R.id.tv_ratio_3_4)).setTextColor(getResources().getColor(R.color.font_grey));
+                ((TextView) findViewById(R.id.tv_ratio_circle)).setTextColor(getResources().getColor(R.color.font_grey));
                 break;
             case R.id.vw_ratio_3_4:
                 animHeight = mScreenHeight - (int) (mScreenWidth * 4.0f / 3);
-                animToHeight((int) (animHeight * 0.4f), (int) (animHeight * 0.6f));
+                animMaskToHeight((int) (animHeight * 0.4f), (int) (animHeight * 0.6f));
                 AVFlowEngine.getInstance().setClipArea(
                         (int) (animHeight * 0.4f),
                         0,
                         mScreenHeight - (int) (animHeight * 0.6f),
                         mScreenWidth
                 );
+                mFilterInfoView.setTranslationY(
+                        (int) (animHeight * 0.4f) + (int) (mScreenWidth * 4.0f / 3) / 2 - mScreenHeight / 2);
+                ((TextView) findViewById(R.id.tv_ratio_9_16)).setTextColor(getResources().getColor(R.color.font_grey));
+                ((TextView) findViewById(R.id.tv_ratio_16_9)).setTextColor(getResources().getColor(R.color.font_grey));
+                ((TextView) findViewById(R.id.tv_ratio_239_1)).setTextColor(getResources().getColor(R.color.font_grey));
+                ((TextView) findViewById(R.id.tv_ratio_1_1)).setTextColor(getResources().getColor(R.color.font_grey));
+                ((TextView) findViewById(R.id.tv_ratio_3_4)).setTextColor(getResources().getColor(R.color.font_red));
+                ((TextView) findViewById(R.id.tv_ratio_circle)).setTextColor(getResources().getColor(R.color.font_grey));
                 break;
             case R.id.vw_ratio_1_1:
                 animHeight = mScreenHeight - mScreenWidth;
-                animToHeight((int) (animHeight * 0.4f), (int) (animHeight * 0.6f));
+                animMaskToHeight((int) (animHeight * 0.4f), (int) (animHeight * 0.6f));
                 AVFlowEngine.getInstance().setClipArea(
                         (int) (animHeight * 0.4f),
                         0,
                         mScreenHeight - (int) (animHeight * 0.6f),
                         mScreenWidth
                 );
+                mFilterInfoView.setTranslationY(
+                        (int) (animHeight * 0.4f) + mScreenWidth / 2 - mScreenHeight / 2);
+                ((TextView) findViewById(R.id.tv_ratio_9_16)).setTextColor(getResources().getColor(R.color.font_grey));
+                ((TextView) findViewById(R.id.tv_ratio_16_9)).setTextColor(getResources().getColor(R.color.font_grey));
+                ((TextView) findViewById(R.id.tv_ratio_239_1)).setTextColor(getResources().getColor(R.color.font_grey));
+                ((TextView) findViewById(R.id.tv_ratio_1_1)).setTextColor(getResources().getColor(R.color.font_red));
+                ((TextView) findViewById(R.id.tv_ratio_3_4)).setTextColor(getResources().getColor(R.color.font_grey));
+                ((TextView) findViewById(R.id.tv_ratio_circle)).setTextColor(getResources().getColor(R.color.font_grey));
                 break;
             case R.id.vw_ratio_circle:
 
+                ((TextView) findViewById(R.id.tv_ratio_9_16)).setTextColor(getResources().getColor(R.color.font_grey));
+                ((TextView) findViewById(R.id.tv_ratio_16_9)).setTextColor(getResources().getColor(R.color.font_grey));
+                ((TextView) findViewById(R.id.tv_ratio_239_1)).setTextColor(getResources().getColor(R.color.font_grey));
+                ((TextView) findViewById(R.id.tv_ratio_1_1)).setTextColor(getResources().getColor(R.color.font_grey));
+                ((TextView) findViewById(R.id.tv_ratio_3_4)).setTextColor(getResources().getColor(R.color.font_grey));
+                ((TextView) findViewById(R.id.tv_ratio_circle)).setTextColor(getResources().getColor(R.color.font_red));
                 break;
             case R.id.tv_scene_speed_normal:
 
@@ -337,6 +436,12 @@ public class VideoRecordActivity extends AppCompatActivity implements
         AVFlowEngine.getInstance().configure(config);
         AVFlowEngine.getInstance().prepare();
         AVFlowEngine.getInstance().startCameraGenerator();
+
+        // show filter info.
+        mFilterInfoView.setVisibility(View.VISIBLE);
+        mFilterCode.setText(mCurrentFilter.mCode);
+        mFilterName.setText(mCurrentFilter.mName);
+        animFilterName();
     }
 
     @Override
@@ -421,7 +526,31 @@ public class VideoRecordActivity extends AppCompatActivity implements
     }
 
     private void initPanelChooseFilter() {
+        getFilterList();
+        mCurrentFilter = mFilterList.get(0);
         RecyclerView filterListView = findViewById(R.id.rcv_filter_list);
+        mFilterListAdapter = new FilterListAdapter(this, mFilterList, new FilterListAdapter.Callback() {
+            @Override
+            public void onClick(int position) {
+                mCurrentFilter = mFilterList.get(position);
+                AVFlowEngine.getInstance().setPreviewFilter(mCurrentFilter.get(VideoRecordActivity.this));
+                mFilterInfoView.setVisibility(View.VISIBLE);
+                mFilterCode.setText(mCurrentFilter.mCode);
+                mFilterName.setText(mCurrentFilter.mName);
+                animFilterName();
+
+                if (mCurrentFilter.canAdjust()) {
+                    mFilterAdjustView.setEnabled(true);
+                    mFilterAdjustView.setProgress(0);
+                } else {
+                    mFilterAdjustView.setEnabled(false);
+                    mFilterAdjustView.setProgress(0);
+                }
+            }
+        }, 0);
+        filterListView.setLayoutManager(
+                new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        filterListView.setAdapter(mFilterListAdapter);
     }
 
     private void initPanelMore() {
@@ -433,8 +562,8 @@ public class VideoRecordActivity extends AppCompatActivity implements
         findViewById(R.id.tv_beauty_strong).setOnClickListener(this);
     }
 
-    private void animToHeight(int upperHeight, int bottomHeight) {
-        Logger.d(TAG, "animToHeight, " + upperHeight + ", " + bottomHeight);
+    private void animMaskToHeight(int upperHeight, int bottomHeight) {
+        Logger.d(TAG, "animMaskToHeight, " + upperHeight + ", " + bottomHeight);
         ValueAnimator upperAnim = ValueAnimator.ofInt(mUpperMask.getMeasuredHeight(), upperHeight);
         upperAnim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
@@ -475,5 +604,48 @@ public class VideoRecordActivity extends AppCompatActivity implements
 
         bottomAnim.start();
         upperAnim.start();
+    }
+
+    private void animFilterName() {
+        if (mShowAnim != null) {
+            mShowAnim.end();
+        }
+        if (mFadeAnim != null) {
+            mFadeAnim.cancel();
+        }
+
+        ObjectAnimator translate = ObjectAnimator.ofFloat(mFilterName, "translationY", -50, 0);
+        ObjectAnimator alpha = ObjectAnimator.ofFloat(mFilterName, "alpha", 0f, 1f);
+        ObjectAnimator fade = ObjectAnimator.ofFloat(mFilterInfoView, "alpha", 1f, 0f);
+        fade.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+                mFilterInfoView.setVisibility(View.INVISIBLE);
+                mFilterInfoView.setAlpha(1f);
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                super.onAnimationCancel(animation);
+                mFilterInfoView.setAlpha(1f);
+            }
+        });
+        fade.setDuration(500);
+
+        AnimatorSet showSet = new AnimatorSet();
+        showSet.playTogether(translate, alpha);
+        showSet.setDuration(500);
+        showSet.start();
+
+        AnimatorSet playSet = new AnimatorSet();
+        playSet.play(fade).after(1500);
+        playSet.start();
+        mShowAnim = showSet;
+        mFadeAnim = playSet;
+    }
+
+    private void getFilterList() {
+        mFilterList = AssetsUtil.parseJsonToList(this, "filter_list.json", Filter.class);
     }
 }

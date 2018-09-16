@@ -1,0 +1,665 @@
+[
+  {
+    "code": "OR",
+    "type": 0,
+    "name": "原片",
+    "asset": "",
+    "adjust": [
+      1.0
+    ]
+  },
+  {
+    "code": "F1",
+    "type": 1,
+    "name": "第八日的蝉",
+    "asset": "nt-1-F1.png",
+    "adjust": [
+      1.0
+    ]
+  },
+  {
+    "code": "F2",
+    "type": 1,
+    "name": "雾港",
+    "asset": "nt-2-F2.png",
+    "adjust": [
+      1.0
+    ]
+  },
+  {
+    "code": "F3",
+    "type": 1,
+    "name": "盛夏方程式",
+    "asset": "nt-3-F3.png",
+    "adjust": [
+      1.0
+    ]
+  },
+  {
+    "code": "P1",
+    "type": 1,
+    "name": "夏威夷少年",
+    "asset": "nt-4-P1.png",
+    "adjust": [
+      1.0
+    ]
+  },
+  {
+    "code": "P2",
+    "type": 1,
+    "name": "给桃子的信",
+    "asset": "nt-5-P2.png",
+    "adjust": [
+      1.0
+    ]
+  },
+  {
+    "code": "L1",
+    "type": 1,
+    "name": "白日梦想家",
+    "asset": "nt-6-L1.png",
+    "adjust": [
+      1.0
+    ]
+  },
+  {
+    "code": "L2",
+    "type": 1,
+    "name": "美国往事",
+    "asset": "nt-7-L2.png",
+    "adjust": [
+      1.0
+    ]
+  },
+  {
+    "code": "L3",
+    "type": 1,
+    "name": "迷失东京",
+    "asset": "nt-8-L3.png",
+    "adjust": [
+      1.0
+    ]
+  },
+  {
+    "code": "B1",
+    "type": 1,
+    "name": "寒冬夜行人",
+    "asset": "nt-9-B1.png",
+    "adjust": [
+      1.0
+    ]
+  },
+  {
+    "code": "B2",
+    "type": 1,
+    "name": "澄沙之味",
+    "asset": "nt-10-B2.png",
+    "adjust": [
+      1.0
+    ]
+  },
+  {
+    "code": "B3",
+    "type": 1,
+    "name": "三月的狮子",
+    "asset": "nt-11-B3.png",
+    "adjust": [
+      1.0
+    ]
+  },
+  {
+    "code": "G1",
+    "type": 2,
+    "name": "Contrast",
+    "asset": "",
+    "adjust": [
+      2.0
+    ]
+  },
+  {
+    "code": "G2",
+    "type": 3,
+    "name": "Gamma",
+    "asset": "",
+    "adjust": [
+      2.0
+    ]
+  },
+  {
+    "code": "G3",
+    "type": 4,
+    "name": "Invert",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G4",
+    "type": 5,
+    "name": "Pixelation",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G5",
+    "type": 6,
+    "name": "Hue",
+    "asset": "",
+    "adjust": [
+      90.0
+    ]
+  },
+  {
+    "code": "G6",
+    "type": 7,
+    "name": "Brightness",
+    "asset": "",
+    "adjust": [
+      0.5
+    ]
+  },
+  {
+    "code": "G7",
+    "type": 8,
+    "name": "Grey Scale",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G8",
+    "type": 9,
+    "name": "Sepia",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G9",
+    "type": 10,
+    "name": "Sharpen",
+    "asset": "",
+    "adjust": [
+      2.0
+    ]
+  },
+  {
+    "code": "G10",
+    "type": 11,
+    "name": "Sobel edge detection",
+    "asset": "",
+    "adjust": [
+      1.0
+    ]
+  },
+  {
+    "code": "G11",
+    "type": 12,
+    "name": "3 x 3 Convolution",
+    "asset": "",
+    "adjust": [
+      -1.0,
+      0.0,
+      1.0,
+      -2.0,
+      0.0,
+      2.0,
+      -1.0,
+      0.0,
+      1.0
+    ]
+  },
+  {
+    "code": "G12",
+    "type": 13,
+    "name": "Emboss",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G13",
+    "type": 14,
+    "name": "Posterize",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G14",
+    "type": 15,
+    "name": "Group",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G15",
+    "type": 16,
+    "name": "Saturation",
+    "asset": "",
+    "adjust": [
+      1.0
+    ]
+  },
+  {
+    "code": "G16",
+    "type": 17,
+    "name": "Exposure",
+    "asset": "",
+    "adjust": [
+      0.0
+    ]
+  },
+  {
+    "code": "G17",
+    "type": 18,
+    "name": "Highlight Shadow",
+    "asset": "",
+    "adjust": [
+      0.0,
+      1.0
+    ]
+  },
+  {
+    "code": "G18",
+    "type": 19,
+    "name": "Monochrome",
+    "asset": "",
+    "adjust": [
+      1.0,
+      0.6,
+      0.45,
+      0.3,
+      1.0
+    ]
+  },
+  {
+    "code": "G19",
+    "type": 20,
+    "name": "Opacity",
+    "asset": "",
+    "adjust": [
+      1.0
+    ]
+  },
+  {
+    "code": "G20",
+    "type": 21,
+    "name": "Rgb",
+    "asset": "",
+    "adjust": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  {
+    "code": "G21",
+    "type": 22,
+    "name": "White Balance",
+    "asset": "",
+    "adjust": [
+      5000.0,
+      0.0
+    ]
+  },
+  {
+    "code": "G22",
+    "type": 23,
+    "name": "Vignette",
+    "asset": "",
+    "adjust": [
+      0.5,
+      0.5,
+      0.0,
+      0.0,
+      0.0,
+      0.3,
+      0.75
+    ]
+  },
+  {
+    "code": "G23",
+    "type": 24,
+    "name": "Tone Curve",
+    "asset": "",
+    "adjust": [
+      1.0
+    ]
+  },
+  {
+    "code": "G24",
+    "type": 25,
+    "name": "Blend Difference",
+    "asset": "blend.png",
+    "adjust": []
+  },
+  {
+    "code": "G25",
+    "type": 26,
+    "name": "Blend Source Over",
+    "asset": "blend.png",
+    "adjust": []
+  },
+  {
+    "code": "G26",
+    "type": 27,
+    "name": "Blend Color Burn",
+    "asset": "blend.png",
+    "adjust": []
+  },
+  {
+    "code": "G27",
+    "type": 28,
+    "name": "Blend color dodge",
+    "asset": "blend.png",
+    "adjust": []
+  },
+  {
+    "code": "G28",
+    "type": 29,
+    "name": "Blend Darken",
+    "asset": "blend.png",
+    "adjust": []
+  },
+  {
+    "code": "G29",
+    "type": 30,
+    "name": "Blend Dissolve",
+    "asset": "blend.png",
+    "adjust": []
+  },
+  {
+    "code": "G30",
+    "type": 31,
+    "name": "Blend Exclusion",
+    "asset": "blend.png",
+    "adjust": []
+  },
+  {
+    "code": "G31",
+    "type": 31,
+    "name": "Blend Hard Light",
+    "asset": "blend.png",
+    "adjust": []
+  },
+  {
+    "code": "G32",
+    "type": 33,
+    "name": "Blend Lighten",
+    "asset": "blend.png",
+    "adjust": []
+  },
+  {
+    "code": "G33",
+    "type": 34,
+    "name": "Blend Add",
+    "asset": "blend.png",
+    "adjust": []
+  },
+  {
+    "code": "G34",
+    "type": 35,
+    "name": "Blend Divide",
+    "asset": "blend.png",
+    "adjust": []
+  },
+  {
+    "code": "G35",
+    "type": 36,
+    "name": "Blend Multiply",
+    "asset": "blend.png",
+    "adjust": []
+  },
+  {
+    "code": "G36",
+    "type": 37,
+    "name": "Blend Overlay",
+    "asset": "blend.png",
+    "adjust": []
+  },
+  {
+    "code": "G37",
+    "type": 38,
+    "name": "Blend Screen",
+    "asset": "blend.png",
+    "adjust": []
+  },
+  {
+    "code": "G38",
+    "type": 39,
+    "name": "Blend Alpha",
+    "asset": "blend.png",
+    "adjust": []
+  },
+  {
+    "code": "G39",
+    "type": 40,
+    "name": "Blend Color",
+    "asset": "blend.png",
+    "adjust": []
+  },
+  {
+    "code": "G40",
+    "type": 41,
+    "name": "Blend Hue",
+    "asset": "blend.png",
+    "adjust": []
+  },
+  {
+    "code": "G41",
+    "type": 42,
+    "name": "Blend Saturation",
+    "asset": "blend.png",
+    "adjust": []
+  },
+  {
+    "code": "G42",
+    "type": 43,
+    "name": "Blend Luminosity",
+    "asset": "blend.png",
+    "adjust": []
+  },
+  {
+    "code": "G43",
+    "type": 44,
+    "name": "Blend Linear Burn",
+    "asset": "blend.png",
+    "adjust": []
+  },
+  {
+    "code": "G44",
+    "type": 45,
+    "name": "Blend Soft Light",
+    "asset": "blend.png",
+    "adjust": []
+  },
+  {
+    "code": "G45",
+    "type": 46,
+    "name": "Blend Subtract",
+    "asset": "blend.png",
+    "adjust": []
+  },
+  {
+    "code": "G46",
+    "type": 47,
+    "name": "Blend Chroma Key",
+    "asset": "blend.png",
+    "adjust": []
+  },
+  {
+    "code": "G47",
+    "type": 48,
+    "name": "Blend Normal",
+    "asset": "blend.png",
+    "adjust": []
+  },
+  {
+    "code": "G48",
+    "type": 49,
+    "name": "Gaussian Blur",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G49",
+    "type": 50,
+    "name": "Cross Hatch",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G50",
+    "type": 51,
+    "name": "Box blur",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G51",
+    "type": 52,
+    "name": "CGA ColorSpace",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G52",
+    "type": 53,
+    "name": "Dilation",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G53",
+    "type": 54,
+    "name": "Kuwahara",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G54",
+    "type": 55,
+    "name": "RGB Dilation",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G55",
+    "type": 56,
+    "name": "Sketch",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G56",
+    "type": 57,
+    "name": "Toon",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G57",
+    "type": 58,
+    "name": "Smooth Toon",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G58",
+    "type": 59,
+    "name": "Bulge Distortion",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G59",
+    "type": 60,
+    "name": "Glass Sphere",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G60",
+    "type": 61,
+    "name": "Haze",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G61",
+    "type": 62,
+    "name": "Laplacian",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G62",
+    "type": 63,
+    "name": "Non Maximum Suppression",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G63",
+    "type": 64,
+    "name": "Sphere Refraction",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G64",
+    "type": 65,
+    "name": "Swirl",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G65",
+    "type": 66,
+    "name": "Weak Pixel Inclusion",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G66",
+    "type": 67,
+    "name": "False Color",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G67",
+    "type": 68,
+    "name": "Color Balance",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G68",
+    "type": 69,
+    "name": "Levels Filter Min",
+    "asset": "",
+    "adjust": [
+      0.0,
+      3.0,
+      1.0
+    ]
+  },
+  {
+    "code": "G69",
+    "type": 70,
+    "name": "Half Tone",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G70",
+    "type": 71,
+    "name": "Bilateral Blur",
+    "asset": "",
+    "adjust": []
+  },
+  {
+    "code": "G71",
+    "type": 72,
+    "name": "Transform 2D",
+    "asset": "",
+    "adjust": []
+  }
+]

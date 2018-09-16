@@ -1,5 +1,6 @@
 package com.createchance.avflowengine;
 
+import android.opengl.GLES20;
 import android.view.Surface;
 
 import com.createchance.avflowengine.base.Logger;
@@ -29,6 +30,8 @@ public class AVFlowEngine {
     private CodecStreamProcessor mProcessor;
     private MuxerStreamSaver mSaver;
 
+    private Config mConfig;
+
     private int mClipTop, mClipLeft, mClipBottom, mClipRight;
 
     private boolean mAllowToChangeClip = true;
@@ -45,6 +48,7 @@ public class AVFlowEngine {
     }
 
     public void configure(Config config) {
+        mConfig = config;
         mCameraGenerator = new CameraStreamGenerator();
         mLocalGenerator = new LocalStreamGenerator();
         mProcessor = new CodecStreamProcessor();
@@ -56,10 +60,20 @@ public class AVFlowEngine {
     }
 
     public void setPreviewFilter(GPUImageFilter filter) {
+        if (filter != null) {
+            filter.init();
+            GLES20.glUseProgram(filter.getProgram());
+            filter.onOutputSizeChanged(mConfig.mSurfaceWidth, mConfig.mSurfaceHeight);
+        }
         mProcessor.setPreviewFilter(filter);
     }
 
     public void setSaveFilter(GPUImageFilter filter) {
+        if (filter != null) {
+            filter.init();
+            GLES20.glUseProgram(filter.getProgram());
+            filter.onOutputSizeChanged(mConfig.mSurfaceWidth, mConfig.mSurfaceHeight);
+        }
         mProcessor.setSaveFilter(filter);
     }
 
