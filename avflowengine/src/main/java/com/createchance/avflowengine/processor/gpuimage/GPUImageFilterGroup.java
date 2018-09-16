@@ -45,6 +45,9 @@ public class GPUImageFilterGroup extends GPUImageFilter {
     private final FloatBuffer mGLTextureBuffer;
     private final FloatBuffer mGLTextureFlipBuffer;
 
+    private int mOutputTextureId;
+    private int mOutputFrameBufferId;
+
     /**
      * Instantiates a new GPUImageFilterGroup with no filters.
      */
@@ -141,7 +144,7 @@ public class GPUImageFilterGroup extends GPUImageFilter {
 
         int size = mFilters.size();
         for (int i = 0; i < size; i++) {
-            mFilters.get(i).onOutputSizeChanged(width, height);
+            mFilters.get(i).onOutputSizeChanged(mOutputWidth, mOutputHeight);
         }
 
         if (mMergedFilters != null && mMergedFilters.size() > 0) {
@@ -153,7 +156,7 @@ public class GPUImageFilterGroup extends GPUImageFilter {
                 GLES20.glGenFramebuffers(1, mFrameBuffers, i);
                 GLES20.glGenTextures(1, mFrameBufferTextures, i);
                 GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mFrameBufferTextures[i]);
-                GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, width, height, 0,
+                GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, mOutputWidth, mOutputHeight, 0,
                         GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, null);
                 GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D,
                         GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
@@ -172,6 +175,11 @@ public class GPUImageFilterGroup extends GPUImageFilter {
                 GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
             }
         }
+    }
+
+    public void setOutput(int outputFrameBufferId, int outputTextureId) {
+        mOutputTextureId = outputTextureId;
+        mOutputFrameBufferId = outputFrameBufferId;
     }
 
     /*
@@ -196,6 +204,10 @@ public class GPUImageFilterGroup extends GPUImageFilter {
                 if (isNotLast) {
                     GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, mFrameBuffers[i]);
                     GLES20.glClearColor(0, 0, 0, 0);
+                } else {
+                    GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, mOutputFrameBufferId);
+                    GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0,
+                            GLES20.GL_TEXTURE_2D, mOutputTextureId, 0);
                 }
 
                 if (i == 0) {

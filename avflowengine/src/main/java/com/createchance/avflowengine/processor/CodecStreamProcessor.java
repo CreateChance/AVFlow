@@ -7,6 +7,7 @@ import com.createchance.avflowengine.base.Logger;
 import com.createchance.avflowengine.processor.gles.EglCore;
 import com.createchance.avflowengine.processor.gles.WindowSurface;
 import com.createchance.avflowengine.processor.gpuimage.GPUImageFilter;
+import com.createchance.avflowengine.processor.gpuimage.GPUImageFilterGroup;
 import com.createchance.avflowengine.processor.gpuimage.OpenGlUtils;
 
 import java.nio.FloatBuffer;
@@ -113,12 +114,22 @@ public final class CodecStreamProcessor implements SurfaceTexture.OnFrameAvailab
         if (mPreviewFilter != null) {
             mPreviewFilter.destroy();
         }
+        if (filter instanceof GPUImageFilterGroup) {
+            ((GPUImageFilterGroup) filter).setOutput(
+                    mOutputSurfaceDrawer.getOffScreenFrameBuffer(),
+                    mPreviewDrawSurface.getOutputTextureIds()[1]);
+        }
         mPreviewFilter = filter;
     }
 
     public void setSaveFilter(GPUImageFilter filter) {
         if (mSaveFilter != null) {
             mSaveFilter.destroy();
+        }
+        if (filter instanceof GPUImageFilterGroup) {
+            ((GPUImageFilterGroup) filter).setOutput(
+                    mOutputSurfaceDrawer.getOffScreenFrameBuffer(),
+                    mPreviewDrawSurface.getOutputTextureIds()[1]);
         }
         mSaveFilter = filter;
     }

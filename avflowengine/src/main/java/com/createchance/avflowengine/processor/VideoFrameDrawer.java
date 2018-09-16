@@ -81,6 +81,10 @@ class VideoFrameDrawer {
         GLES20.glGenFramebuffers(mFrameBuffer.length, mFrameBuffer, 0);
     }
 
+    int getOffScreenFrameBuffer() {
+        return mFrameBuffer[0];
+    }
+
     private void bindOffScreenFrameBuffer(int textureId) {
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, mFrameBuffer[0]);
         GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0,
