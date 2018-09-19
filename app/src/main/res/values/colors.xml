@@ -5,6 +5,7 @@
     <color name="colorAccent">#FF4081</color>
 
     <color name="theme_dark">#303030</color>
+    <color name="theme_red">#FF4240</color>
 
     <color name="font_white">#FFFFFF</color>
     <color name="font_grey">#838383</color>

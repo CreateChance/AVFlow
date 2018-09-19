@@ -19,4 +19,9 @@
     <string name="beauty_effect_none">无</string>
     <string name="beauty_effect_medium">中</string>
     <string name="beauty_effect_strong">强</string>
+    <string name="go_to_work_list">作品列表</string>
+    <string name="go_to_video_edit">编辑</string>
+    <string name="go_to_video_take">编辑</string>
+    <string name="go_to_video_save">生成</string>
+    <string name="video_edit_title">视频编辑</string>
 </resources>

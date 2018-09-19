@@ -14,7 +14,6 @@ public class CameraStreamGenerator {
     private static final String TAG = "CameraStreamGenerator";
 
     private CameraImpl mCamera;
-    private boolean mForceV1Camera;
 
     private SurfaceTexture mOutputSurface;
 
@@ -22,8 +21,8 @@ public class CameraStreamGenerator {
         mOutputSurface = surfaceTexture;
     }
 
-    public void start() {
-        if (mForceV1Camera) {
+    public void start(boolean forceV1) {
+        if (forceV1) {
             mCamera = new CameraV1(mOutputSurface);
         } else {
             if (Build.VERSION.SDK_INT < 21) {
@@ -43,9 +42,5 @@ public class CameraStreamGenerator {
 
     public CameraImpl getCamera() {
         return mCamera;
-    }
-
-    public void setForceV1Camera(boolean force) {
-        mForceV1Camera = force;
     }
 }

@@ -1,11 +1,10 @@
 package com.createchance.avflowengine.generator;
 
 import android.graphics.SurfaceTexture;
-import android.util.Log;
 import android.view.Surface;
 
 import java.io.File;
-import java.io.IOException;
+import java.util.List;
 
 /**
  * ${DESC}
@@ -17,54 +16,39 @@ public class LocalStreamGenerator {
 
     private static final String TAG = "LocalStreamGenerator";
 
-    private File mInputFile;
+    private List<File> mInputFileList;
 
     private Surface mOutputSurface;
 
-    private VideoPlayer mPlayer;
+    private final VideoPlayer mVideoPlayer;
+
+    public LocalStreamGenerator() {
+        mVideoPlayer = new VideoPlayer();
+    }
 
     public void setOutputTexture(SurfaceTexture surfaceTexture) {
         mOutputSurface = new Surface(surfaceTexture);
+        mVideoPlayer.setOutputSurface(mOutputSurface);
     }
 
-    public void setInputFile(File inputFile) {
-        mInputFile = inputFile;
+    public void setInputFile(List<File> inputFiles) {
+        mInputFileList = inputFiles;
+        mVideoPlayer.setInputFileList(mInputFileList);
     }
 
-    public void start() {
-        try {
-            mPlayer = new VideoPlayer(mInputFile, mOutputSurface, new VideoPlayer.FrameCallback() {
-                @Override
-                public void preRender(long presentationTimeUsec) {
-                    Log.d(TAG, "preRender: " + presentationTimeUsec);
-                }
+    public void setLoop(boolean loop) {
+        mVideoPlayer.setLoop(loop);
+    }
 
-                @Override
-                public void postRender() {
-                    Log.d(TAG, "postRender: ");
-                }
+    public void setSpeed(float speedRate) {
+        mVideoPlayer.setSpeedRate(speedRate);
+    }
 
-                @Override
-                public void loopReset() {
-                    Log.d(TAG, "loopReset: ");
-                }
-            });
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        // alloc buffer
-        new VideoPlayer.PlayTask(mPlayer, new VideoPlayer.PlayerFeedback() {
-            @Override
-            public void playbackStopped() {
-                Log.d(TAG, "playbackStopped: ");
-            }
-        }).execute();
+    public void start(VideoPlayListener listener) {
+        mVideoPlayer.start(listener);
     }
 
     public void stop() {
-        Log.d(TAG, "shutdown: ");
-        if (mPlayer != null) {
-            mPlayer.requestStop();
-        }
+        mVideoPlayer.stop();
     }
 }

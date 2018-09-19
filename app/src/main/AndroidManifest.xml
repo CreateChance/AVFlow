@@ -19,6 +19,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".VideoRecordActivity" />
+        <activity android:name=".VideoEditActivity"></activity>
     </application>
 
 </manifest>

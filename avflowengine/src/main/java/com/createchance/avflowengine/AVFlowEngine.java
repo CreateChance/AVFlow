@@ -7,12 +7,14 @@ import com.createchance.avflowengine.base.Logger;
 import com.createchance.avflowengine.generator.CameraImpl;
 import com.createchance.avflowengine.generator.CameraStreamGenerator;
 import com.createchance.avflowengine.generator.LocalStreamGenerator;
+import com.createchance.avflowengine.generator.VideoPlayListener;
 import com.createchance.avflowengine.processor.CodecStreamProcessor;
 import com.createchance.avflowengine.processor.gpuimage.GPUImageFilter;
 import com.createchance.avflowengine.saver.MuxerStreamSaver;
 import com.createchance.avflowengine.saver.SaveListener;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * av flow engine.
@@ -30,13 +32,17 @@ public class AVFlowEngine {
     private CodecStreamProcessor mProcessor;
     private MuxerStreamSaver mSaver;
 
-    private Config mConfig;
-
     private int mClipTop, mClipLeft, mClipBottom, mClipRight;
+
+    private int mInputSurfaceWidth, mInputSurfaceHeight;
 
     private boolean mAllowToChangeClip = true;
 
     private AVFlowEngine() {
+        mCameraGenerator = new CameraStreamGenerator();
+        mLocalGenerator = new LocalStreamGenerator();
+        mProcessor = new CodecStreamProcessor();
+        mSaver = new MuxerStreamSaver();
     }
 
     public synchronized static AVFlowEngine getInstance() {
@@ -47,23 +53,27 @@ public class AVFlowEngine {
         return sInstance;
     }
 
-    public void configure(Config config) {
-        mConfig = config;
-        mCameraGenerator = new CameraStreamGenerator();
-        mLocalGenerator = new LocalStreamGenerator();
-        mProcessor = new CodecStreamProcessor();
-        mSaver = new MuxerStreamSaver();
+    public void setInputSize(int surfaceWidth, int surfaceHeight) {
+        mInputSurfaceWidth = surfaceWidth;
+        mInputSurfaceHeight = surfaceHeight;
+        mProcessor.setSurfaceSize(mInputSurfaceWidth, mInputSurfaceHeight);
+    }
 
-        setPreviewSurface(config.mPreviewSurface);
-        setSurfaceSize(config.mSurfaceWidth, config.mSurfaceHeight);
-        setForceCameraV1(config.mForceCameraV1);
+    public void setPreview(Surface previewSurface) {
+        mProcessor.setPreviewSurface(previewSurface);
+    }
+
+    public void prepare() {
+        mProcessor.prepare();
+        mCameraGenerator.setOutputTexture(mProcessor.getOesTextureId());
+        mLocalGenerator.setOutputTexture(mProcessor.getOesTextureId());
     }
 
     public void setPreviewFilter(GPUImageFilter filter) {
         if (filter != null) {
             filter.init();
             GLES20.glUseProgram(filter.getProgram());
-            filter.onOutputSizeChanged(mConfig.mSurfaceWidth, mConfig.mSurfaceHeight);
+            filter.onOutputSizeChanged(mInputSurfaceWidth, mInputSurfaceHeight);
         }
         mProcessor.setPreviewFilter(filter);
     }
@@ -72,7 +82,7 @@ public class AVFlowEngine {
         if (filter != null) {
             filter.init();
             GLES20.glUseProgram(filter.getProgram());
-            filter.onOutputSizeChanged(mConfig.mSurfaceWidth, mConfig.mSurfaceHeight);
+            filter.onOutputSizeChanged(mInputSurfaceWidth, mInputSurfaceHeight);
         }
         mProcessor.setSaveFilter(filter);
     }
@@ -96,23 +106,19 @@ public class AVFlowEngine {
                 + mClipRight);
     }
 
-    public void prepare() {
-        mProcessor.start();
-        mCameraGenerator.setOutputTexture(mProcessor.getOesTextureId());
-        mLocalGenerator.setOutputTexture(mProcessor.getOesTextureId());
-    }
-
     public CameraImpl getCamera() {
         return mCameraGenerator.getCamera();
     }
 
-    public void startCameraGenerator() {
-        mCameraGenerator.start();
+    public void startCameraGenerator(boolean forceV1) {
+        mCameraGenerator.start(forceV1);
     }
 
-    public void startLocalGenerator(File inputFile) {
-        mLocalGenerator.setInputFile(inputFile);
-        mLocalGenerator.start();
+    public void startLocalGenerator(List<File> inputFileList, boolean loopPlay, float speedRate, VideoPlayListener listener) {
+        mLocalGenerator.setInputFile(inputFileList);
+        mLocalGenerator.setLoop(loopPlay);
+        mLocalGenerator.setSpeed(speedRate);
+        mLocalGenerator.start(listener);
     }
 
     public void stopCameraGenerator() {
@@ -134,37 +140,36 @@ public class AVFlowEngine {
     public void finishSave() {
         mProcessor.clearSaveSurface();
         mSaver.finishSave();
-    }
-
-    public void cancelSave() {
-        mProcessor.clearSaveSurface();
-        mSaver.cancelSave();
-    }
-
-    public void stop() {
-        // stop all nodes to stop this engine.
-        mCameraGenerator.stop();
-        mLocalGenerator.stop();
-        mProcessor.stop();
-        cancelSave();
         mAllowToChangeClip = true;
     }
 
-    private void setPreviewSurface(Surface surface) {
-        mProcessor.setPreviewSurface(surface);
+    public void cancelSave() {
+        if (mProcessor != null) {
+            mProcessor.clearSaveSurface();
+        }
+        if (mSaver != null) {
+            mSaver.cancelSave();
+        }
+        mAllowToChangeClip = true;
     }
 
-    private void setForceCameraV1(boolean force) {
-        mCameraGenerator.setForceV1Camera(force);
-    }
+    public void reset() {
+        // stop all nodes to stop this engine.
+        if (mCameraGenerator != null) {
+            mCameraGenerator.stop();
+        }
+        if (mLocalGenerator != null) {
+            mLocalGenerator.stop();
+        }
+        if (mProcessor != null) {
+            mProcessor.stop();
+        }
+        cancelSave();
 
-    private void setSurfaceSize(int width, int height) {
-        mProcessor.setSurfaceSize(width, height);
-    }
-
-    public static class Config {
-        public Surface mPreviewSurface;
-        public int mSurfaceWidth, mSurfaceHeight;
-        public boolean mForceCameraV1;
+        mAllowToChangeClip = true;
+        mCameraGenerator = null;
+        mLocalGenerator = null;
+        mProcessor = null;
+        mSaver = null;
     }
 }

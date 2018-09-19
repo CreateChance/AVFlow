@@ -16,7 +16,6 @@ public class SimpleModel {
 
     private SimpleModel() {
         mSceneList = new ArrayList<>();
-        initSceneList();
     }
 
     public synchronized static SimpleModel getInstance() {
@@ -38,11 +37,5 @@ public class SimpleModel {
 
     public List<Scene> getSceneList() {
         return mSceneList;
-    }
-
-    private void initSceneList() {
-        for (int i = 0; i < 4; i++) {
-            mSceneList.add(new Scene());
-        }
     }
 }

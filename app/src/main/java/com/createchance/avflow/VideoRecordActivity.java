@@ -35,11 +35,10 @@ import com.createchance.avflow.utils.DensityUtil;
 import com.createchance.avflowengine.AVFlowEngine;
 import com.createchance.avflowengine.base.Logger;
 import com.createchance.avflowengine.generator.CameraImpl;
-import com.createchance.avflowengine.processor.gpuimage.GPUImageColorInvertFilter;
-import com.createchance.avflowengine.processor.gpuimage.GPUImageHalftoneFilter;
 import com.createchance.avflowengine.saver.SaveListener;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -61,14 +60,14 @@ public class VideoRecordActivity extends AppCompatActivity implements
     private TextureView mPreview;
     private RecyclerView mThumbListView;
     private SceneThumbListAdapter mListAdapter;
-    private int mCurrentScenePos;
-    private ImageView mBack,
-            mNext,
+    private ImageView
             mChooseRatioView,
             mChooseFilterView,
             mSwitchCameraView,
             mMoreView,
             mImportView;
+    private View mBack, mNext;
+    private int mCurrentSceneIndex;
     private View mCurrentModeView;
     private RoundProgressbar mCountDownView;
     private View mPanelChooseRatio, mPanelChooseFilter, mPanelMore;
@@ -83,12 +82,14 @@ public class VideoRecordActivity extends AppCompatActivity implements
     private Handler mHandler;
 
     // scenes
-    private long mDurationOfScene = 10 * 1000;
+    private long mDurationOfScene = 5 * 1000;
     private long mCountStartTime;
     private boolean mIsRecording;
 
     private List<Filter> mFilterList;
     private Filter mCurrentFilter;
+
+    private List<Scene> mSceneList = new ArrayList<>();
 
     private int mScreenWidth, mScreenHeight;
 
@@ -120,14 +121,19 @@ public class VideoRecordActivity extends AppCompatActivity implements
 
         mHandler = new Handler(this);
 
-        mBack = findViewById(R.id.iv_back);
-        mNext = findViewById(R.id.iv_next);
+        mBack = findViewById(R.id.vw_back);
+        mNext = findViewById(R.id.vw_next);
         mUpperMask = findViewById(R.id.vw_upper_mask);
         mBottomMask = findViewById(R.id.vw_bottom_mask);
         mPreview = findViewById(R.id.vw_previewer);
         mPreview.setSurfaceTextureListener(this);
         mThumbListView = findViewById(R.id.rcv_scene_thumb_list);
-        mListAdapter = new SceneThumbListAdapter(this, SimpleModel.getInstance().getSceneList());
+        // default four scenes.
+        mSceneList.add(new Scene());
+        mSceneList.add(new Scene());
+        mSceneList.add(new Scene());
+        mSceneList.add(new Scene());
+        mListAdapter = new SceneThumbListAdapter(this, mSceneList);
         mThumbListView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         mThumbListView.setAdapter(mListAdapter);
         mChooseRatioView = findViewById(R.id.iv_choose_ratio);
@@ -193,10 +199,9 @@ public class VideoRecordActivity extends AppCompatActivity implements
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        AVFlowEngine.getInstance().stop();
+    protected void onStop() {
+        super.onStop();
+//        AVFlowEngine.getInstance().reset();
     }
 
     @Override
@@ -219,6 +224,8 @@ public class VideoRecordActivity extends AppCompatActivity implements
             }
         }
 
+        SimpleModel.getInstance().getSceneList().clear();
+
         super.onBackPressed();
     }
 
@@ -231,11 +238,17 @@ public class VideoRecordActivity extends AppCompatActivity implements
     public void onClick(View v) {
         int animHeight;
         switch (v.getId()) {
-            case R.id.iv_back:
+            case R.id.vw_back:
                 onBackPressed();
                 break;
-            case R.id.iv_next:
+            case R.id.vw_next:
                 // goto video edit activity
+                for (Scene scene : mSceneList) {
+                    if (scene.mVideo != null) {
+                        SimpleModel.getInstance().addScene(scene);
+                    }
+                }
+                VideoEditActivity.start(this);
                 break;
             case R.id.iv_choose_ratio:
                 if (mPanelChooseRatio.getVisibility() == View.VISIBLE) {
@@ -292,14 +305,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
                 mHandler.sendEmptyMessage(MSG_UPDATE_COUNT);
                 break;
             case R.id.iv_import_video:
-                long now = System.currentTimeMillis();
-                if (now % 2 == 0) {
-                    AVFlowEngine.getInstance().setPreviewFilter(new GPUImageColorInvertFilter());
-                    AVFlowEngine.getInstance().setSaveFilter(new GPUImageColorInvertFilter());
-                } else {
-                    AVFlowEngine.getInstance().setPreviewFilter(new GPUImageHalftoneFilter());
-                    AVFlowEngine.getInstance().setSaveFilter(new GPUImageHalftoneFilter());
-                }
+
                 break;
             case R.id.vw_current_mode:
 
@@ -428,14 +434,10 @@ public class VideoRecordActivity extends AppCompatActivity implements
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         Log.d(TAG, "onSurfaceTextureAvailable: " + width + ", " + height);
-        AVFlowEngine.Config config = new AVFlowEngine.Config();
-        config.mPreviewSurface = new Surface(surface);
-        config.mForceCameraV1 = true;
-        config.mSurfaceWidth = width;
-        config.mSurfaceHeight = height;
-        AVFlowEngine.getInstance().configure(config);
+        AVFlowEngine.getInstance().setInputSize(width, height);
+        AVFlowEngine.getInstance().setPreview(new Surface(surface));
         AVFlowEngine.getInstance().prepare();
-        AVFlowEngine.getInstance().startCameraGenerator();
+        AVFlowEngine.getInstance().startCameraGenerator(true);
 
         // show filter info.
         mFilterInfoView.setVisibility(View.VISIBLE);
@@ -451,12 +453,12 @@ public class VideoRecordActivity extends AppCompatActivity implements
 
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-        return false;
+        Log.d(TAG, "onSurfaceTextureDestroyed: ");
+        return true;
     }
 
     @Override
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-
     }
 
     @Override
@@ -468,9 +470,18 @@ public class VideoRecordActivity extends AppCompatActivity implements
                     AVFlowEngine.getInstance().startSave(getOutputFile(), new SaveListener() {
                         @Override
                         public void onSaved(File file) {
-                            SimpleModel.getInstance().getSceneList().get(mCurrentScenePos).mVideo = file;
-                            mCurrentScenePos++;
-                            mListAdapter.refresh(SimpleModel.getInstance().getSceneList());
+                            Scene scene = new Scene();
+                            scene.mVideo = file;
+                            scene.mFilter = mCurrentFilter;
+                            scene.mSpeedRate = 1.0f;
+                            mSceneList.remove(mCurrentSceneIndex);
+                            mSceneList.add(mCurrentSceneIndex, scene);
+                            mCurrentSceneIndex++;
+                            mListAdapter.refresh(mSceneList);
+                            if (mCurrentSceneIndex == mSceneList.size()) {
+                                SimpleModel.getInstance().setSceneList(mSceneList);
+                                VideoEditActivity.start(VideoRecordActivity.this);
+                            }
                         }
                     });
                 }
@@ -512,7 +523,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
     }
 
     private File getOutputFile() {
-        String fileName = "avflow/output.mp4";
+        String fileName = "avflow/" + System.currentTimeMillis() + "_scene.mp4";
         return new File(Environment.getExternalStorageDirectory(), fileName);
     }
 
