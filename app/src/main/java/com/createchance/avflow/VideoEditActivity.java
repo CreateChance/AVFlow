@@ -62,9 +62,47 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.vw_back:
+                AVFlowEngine.getInstance().reset();
                 finish();
                 break;
             case R.id.vw_next:
+                // start play now.
+                List<File> playList = new ArrayList<>();
+                for (Scene scene : SimpleModel.getInstance().getSceneList()) {
+                    Log.d(TAG, "onSurfaceTextureAvailable, scene list: " + SimpleModel.getInstance().getSceneList());
+                    playList.add(scene.mVideo);
+                }
+                AVFlowEngine.getInstance().startLocalGenerator(
+                        playList,
+                        false,
+                        1.0f,
+                        new VideoPlayListener() {
+                            @Override
+                            public void onListPlayStarted() {
+
+                            }
+
+                            @Override
+                            public void onFilePlayStarted(int position, File file) {
+                                AVFlowEngine.getInstance().setPreviewFilter(
+                                        SimpleModel.getInstance().getSceneList().get(position).mFilter.get(VideoEditActivity.this));
+                            }
+
+                            @Override
+                            public void onFilePlayGoing(long currentTime, long duration, File file) {
+
+                            }
+
+                            @Override
+                            public void onFilePlayDone(int position, File file) {
+
+                            }
+
+                            @Override
+                            public void onListPlayDone() {
+
+                            }
+                        });
                 break;
             default:
                 break;
@@ -74,47 +112,10 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         Log.d(TAG, "onSurfaceTextureAvailable: ");
+        AVFlowEngine.getInstance().init();
         AVFlowEngine.getInstance().setInputSize(width, height);
         AVFlowEngine.getInstance().setPreview(new Surface(surface));
         AVFlowEngine.getInstance().prepare();
-
-        // start play now.
-        List<File> playList = new ArrayList<>();
-        for (Scene scene : SimpleModel.getInstance().getSceneList()) {
-            Log.d(TAG, "onSurfaceTextureAvailable, scene list: " + SimpleModel.getInstance().getSceneList());
-            playList.add(scene.mVideo);
-        }
-        AVFlowEngine.getInstance().startLocalGenerator(
-                playList,
-                true,
-                1.0f,
-                new VideoPlayListener() {
-                    @Override
-                    public void onListPlayStarted() {
-
-                    }
-
-                    @Override
-                    public void onFilePlayStarted(int position, File file) {
-                        AVFlowEngine.getInstance().setPreviewFilter(
-                                SimpleModel.getInstance().getSceneList().get(position).mFilter.get(VideoEditActivity.this));
-                    }
-
-                    @Override
-                    public void onFilePlayGoing(long currentTime, long duration, File file) {
-
-                    }
-
-                    @Override
-                    public void onFilePlayDone(int position, File file) {
-
-                    }
-
-                    @Override
-                    public void onListPlayDone() {
-
-                    }
-                });
     }
 
     @Override

@@ -39,10 +39,6 @@ public class AVFlowEngine {
     private boolean mAllowToChangeClip = true;
 
     private AVFlowEngine() {
-        mCameraGenerator = new CameraStreamGenerator();
-        mLocalGenerator = new LocalStreamGenerator();
-        mProcessor = new CodecStreamProcessor();
-        mSaver = new MuxerStreamSaver();
     }
 
     public synchronized static AVFlowEngine getInstance() {
@@ -51,6 +47,13 @@ public class AVFlowEngine {
         }
 
         return sInstance;
+    }
+
+    public void init() {
+        mCameraGenerator = new CameraStreamGenerator();
+        mLocalGenerator = new LocalStreamGenerator();
+        mProcessor = new CodecStreamProcessor();
+        mSaver = new MuxerStreamSaver();
     }
 
     public void setInputSize(int surfaceWidth, int surfaceHeight) {

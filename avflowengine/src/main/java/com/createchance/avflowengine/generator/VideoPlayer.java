@@ -85,6 +85,9 @@ class VideoPlayer {
     void stop() {
         Logger.d(TAG, "Stop playing now.");
         mStop = true;
+        if (mPlayWork != null) {
+            mPlayWork.waitForStop();
+        }
     }
 
     private class PlayWorker implements Runnable {
@@ -94,6 +97,8 @@ class VideoPlayer {
         private List<VideoFile> mVideoList;
 
         private final long WAIT_TIME_OUT = 0;
+
+        private final Object mStopLock = new Object();
 
         @Override
         public void run() {
@@ -126,7 +131,21 @@ class VideoPlayer {
                 release();
             }
 
+            synchronized (mStopLock) {
+                mStopLock.notify();
+            }
+
             Logger.d(TAG, "Play worker done!");
+        }
+
+        public void waitForStop() {
+            synchronized (mStopLock) {
+                try {
+                    mStopLock.wait();
+                } catch (InterruptedException ie) {
+                    // discard
+                }
+            }
         }
 
         private void prepare() throws IOException {
@@ -273,7 +292,7 @@ class VideoPlayer {
                                     mListener.onFilePlayGoing(bufferInfo.presentationTimeUs, currentVideoFile.mDurationUs, currentVideoFile.mFile);
                                 }
 
-                                currentVideoFile.mVideoDecoder.releaseOutputBuffer(videoOutputBufferId, true);
+                                currentVideoFile.mVideoDecoder.releaseOutputBuffer(videoOutputBufferId, bufferInfo.size != 0);
                             }
                         }
                         if ((bufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {

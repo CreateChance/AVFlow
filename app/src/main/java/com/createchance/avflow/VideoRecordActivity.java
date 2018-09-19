@@ -199,12 +199,6 @@ public class VideoRecordActivity extends AppCompatActivity implements
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
-//        AVFlowEngine.getInstance().reset();
-    }
-
-    @Override
     public void onBackPressed() {
         if (mPanelChooseRatio.getVisibility() == View.VISIBLE) {
             mPanelChooseRatio.setVisibility(View.GONE);
@@ -225,6 +219,8 @@ public class VideoRecordActivity extends AppCompatActivity implements
         }
 
         SimpleModel.getInstance().getSceneList().clear();
+
+        AVFlowEngine.getInstance().reset();
 
         super.onBackPressed();
     }
@@ -248,6 +244,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
                         SimpleModel.getInstance().addScene(scene);
                     }
                 }
+                AVFlowEngine.getInstance().reset();
                 VideoEditActivity.start(this);
                 break;
             case R.id.iv_choose_ratio:
@@ -434,6 +431,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         Log.d(TAG, "onSurfaceTextureAvailable: " + width + ", " + height);
+        AVFlowEngine.getInstance().init();
         AVFlowEngine.getInstance().setInputSize(width, height);
         AVFlowEngine.getInstance().setPreview(new Surface(surface));
         AVFlowEngine.getInstance().prepare();
