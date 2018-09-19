@@ -66,8 +66,8 @@ public class AVFlowEngine {
         mProcessor.setPreviewSurface(previewSurface);
     }
 
-    public void prepare() {
-        mProcessor.prepare();
+    public void prepare(int rotation) {
+        mProcessor.prepare(rotation);
         mCameraGenerator.setOutputTexture(mProcessor.getOesTextureId());
         mLocalGenerator.setOutputTexture(mProcessor.getOesTextureId());
     }
@@ -125,18 +125,22 @@ public class AVFlowEngine {
     }
 
     public void stopCameraGenerator() {
-        mCameraGenerator.stop();
+        if (mCameraGenerator != null) {
+            mCameraGenerator.stop();
+        }
     }
 
     public void stopLocalGenerator() {
-        mLocalGenerator.stop();
+        if (mLocalGenerator != null) {
+            mLocalGenerator.stop();
+        }
     }
 
-    public void startSave(File outputFile, SaveListener saveListener) {
+    public void startSave(File outputFile, int orientation, SaveListener saveListener) {
         mSaver.setOutputSize(mClipRight - mClipLeft, mClipBottom - mClipTop);
         mSaver.prepare();
         mProcessor.setSaveSurface(mSaver.getInputSurface(), mClipTop, mClipLeft, mClipBottom, mClipRight);
-        mSaver.beginSave(outputFile, saveListener);
+        mSaver.beginSave(outputFile, orientation, saveListener);
         mAllowToChangeClip = false;
     }
 

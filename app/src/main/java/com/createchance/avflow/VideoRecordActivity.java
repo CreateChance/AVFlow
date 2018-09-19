@@ -92,6 +92,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
     private List<Scene> mSceneList = new ArrayList<>();
 
     private int mScreenWidth, mScreenHeight;
+    private float mCurrentRatio;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,6 +119,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
                 mScreenHeight,
                 mScreenWidth
         );
+        mCurrentRatio = mScreenHeight * 1.0f / mScreenWidth;
 
         mHandler = new Handler(this);
 
@@ -196,6 +198,20 @@ public class VideoRecordActivity extends AppCompatActivity implements
         super.onPause();
 
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        AVFlowEngine.getInstance().stopCameraGenerator();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        AVFlowEngine.getInstance().reset();
     }
 
     @Override
@@ -323,6 +339,8 @@ public class VideoRecordActivity extends AppCompatActivity implements
                 ((TextView) findViewById(R.id.tv_ratio_1_1)).setTextColor(getResources().getColor(R.color.font_grey));
                 ((TextView) findViewById(R.id.tv_ratio_3_4)).setTextColor(getResources().getColor(R.color.font_grey));
                 ((TextView) findViewById(R.id.tv_ratio_circle)).setTextColor(getResources().getColor(R.color.font_grey));
+
+                mCurrentRatio = 16 * 1.0f / 9;
                 break;
             case R.id.vw_ratio_16_9:
                 animHeight = mScreenHeight - (int) (mScreenWidth * 9.0f / 16);
@@ -341,6 +359,8 @@ public class VideoRecordActivity extends AppCompatActivity implements
                 ((TextView) findViewById(R.id.tv_ratio_1_1)).setTextColor(getResources().getColor(R.color.font_grey));
                 ((TextView) findViewById(R.id.tv_ratio_3_4)).setTextColor(getResources().getColor(R.color.font_grey));
                 ((TextView) findViewById(R.id.tv_ratio_circle)).setTextColor(getResources().getColor(R.color.font_grey));
+
+                mCurrentRatio = 9 * 1.0f / 16;
                 break;
             case R.id.vw_ratio_239_1:
                 animHeight = mScreenHeight - (int) (mScreenWidth * 5.0f / 12);
@@ -359,6 +379,8 @@ public class VideoRecordActivity extends AppCompatActivity implements
                 ((TextView) findViewById(R.id.tv_ratio_1_1)).setTextColor(getResources().getColor(R.color.font_grey));
                 ((TextView) findViewById(R.id.tv_ratio_3_4)).setTextColor(getResources().getColor(R.color.font_grey));
                 ((TextView) findViewById(R.id.tv_ratio_circle)).setTextColor(getResources().getColor(R.color.font_grey));
+
+                mCurrentRatio = 5 * 1.0f / 12;
                 break;
             case R.id.vw_ratio_3_4:
                 animHeight = mScreenHeight - (int) (mScreenWidth * 4.0f / 3);
@@ -377,6 +399,8 @@ public class VideoRecordActivity extends AppCompatActivity implements
                 ((TextView) findViewById(R.id.tv_ratio_1_1)).setTextColor(getResources().getColor(R.color.font_grey));
                 ((TextView) findViewById(R.id.tv_ratio_3_4)).setTextColor(getResources().getColor(R.color.font_red));
                 ((TextView) findViewById(R.id.tv_ratio_circle)).setTextColor(getResources().getColor(R.color.font_grey));
+
+                mCurrentRatio = 4 * 1.0f / 3;
                 break;
             case R.id.vw_ratio_1_1:
                 animHeight = mScreenHeight - mScreenWidth;
@@ -395,6 +419,8 @@ public class VideoRecordActivity extends AppCompatActivity implements
                 ((TextView) findViewById(R.id.tv_ratio_1_1)).setTextColor(getResources().getColor(R.color.font_red));
                 ((TextView) findViewById(R.id.tv_ratio_3_4)).setTextColor(getResources().getColor(R.color.font_grey));
                 ((TextView) findViewById(R.id.tv_ratio_circle)).setTextColor(getResources().getColor(R.color.font_grey));
+
+                mCurrentRatio = 1;
                 break;
             case R.id.vw_ratio_circle:
 
@@ -434,7 +460,8 @@ public class VideoRecordActivity extends AppCompatActivity implements
         AVFlowEngine.getInstance().init();
         AVFlowEngine.getInstance().setInputSize(width, height);
         AVFlowEngine.getInstance().setPreview(new Surface(surface));
-        AVFlowEngine.getInstance().prepare();
+        AVFlowEngine.getInstance().prepare(270);
+        AVFlowEngine.getInstance().setPreviewFilter(mCurrentFilter.get(this));
         AVFlowEngine.getInstance().startCameraGenerator(true);
 
         // show filter info.
@@ -465,13 +492,14 @@ public class VideoRecordActivity extends AppCompatActivity implements
             case MSG_UPDATE_COUNT:
                 if (!mIsRecording) {
                     mIsRecording = true;
-                    AVFlowEngine.getInstance().startSave(getOutputFile(), new SaveListener() {
+                    AVFlowEngine.getInstance().startSave(getOutputFile(), 0, new SaveListener() {
                         @Override
                         public void onSaved(File file) {
                             Scene scene = new Scene();
                             scene.mVideo = file;
                             scene.mFilter = mCurrentFilter;
                             scene.mSpeedRate = 1.0f;
+                            scene.mRatio = mCurrentRatio;
                             mSceneList.remove(mCurrentSceneIndex);
                             mSceneList.add(mCurrentSceneIndex, scene);
                             mCurrentSceneIndex++;

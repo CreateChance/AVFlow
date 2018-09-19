@@ -134,10 +134,10 @@ public final class CodecStreamProcessor implements SurfaceTexture.OnFrameAvailab
         mSaveFilter = filter;
     }
 
-    public void prepare() {
+    public void prepare(int rotation) {
         mOesTextureId = OpenGlUtils.createOesTexture();
         mVideoInputSurface = new SurfaceTexture(mOesTextureId);
-        mOesReader = new OesTextureReader(mOesTextureId, mOesWidth, mOesHeight);
+        mOesReader = new OesTextureReader(mOesTextureId, mOesWidth, mOesHeight, rotation);
         mPreviewTextureWriter = new TextureWriter(null, null, mOesWidth, mOesHeight);
         mVideoInputSurface.setOnFrameAvailableListener(this);
     }

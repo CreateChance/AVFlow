@@ -11,11 +11,14 @@ import android.util.Log;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
+import android.view.ViewGroup;
 
 import com.createchance.avflow.model.Scene;
 import com.createchance.avflow.model.SimpleModel;
 import com.createchance.avflowengine.AVFlowEngine;
+import com.createchance.avflowengine.base.UiThreadUtil;
 import com.createchance.avflowengine.generator.VideoPlayListener;
+import com.createchance.avflowengine.processor.gpuimage.GPUImageSwirlFilter;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -49,8 +52,18 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
 
         findViewById(R.id.vw_back).setOnClickListener(this);
         findViewById(R.id.vw_next).setOnClickListener(this);
-        TextureView preview = findViewById(R.id.vw_previewer);
+        final TextureView preview = findViewById(R.id.vw_previewer);
         preview.setSurfaceTextureListener(this);
+
+        UiThreadUtil.post(new Runnable() {
+            @Override
+            public void run() {
+                float ratio = SimpleModel.getInstance().getSceneList().get(0).mRatio;
+                ViewGroup.LayoutParams layoutParams = preview.getLayoutParams();
+                layoutParams.width = (int) (layoutParams.height / ratio);
+                preview.setLayoutParams(layoutParams);
+            }
+        });
     }
 
     public static void start(Context context) {
@@ -59,50 +72,19 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
     }
 
     @Override
+    public void onBackPressed() {
+        AVFlowEngine.getInstance().reset();
+        super.onBackPressed();
+    }
+
+    @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.vw_back:
-                AVFlowEngine.getInstance().reset();
-                finish();
+                onBackPressed();
                 break;
             case R.id.vw_next:
-                // start play now.
-                List<File> playList = new ArrayList<>();
-                for (Scene scene : SimpleModel.getInstance().getSceneList()) {
-                    Log.d(TAG, "onSurfaceTextureAvailable, scene list: " + SimpleModel.getInstance().getSceneList());
-                    playList.add(scene.mVideo);
-                }
-                AVFlowEngine.getInstance().startLocalGenerator(
-                        playList,
-                        false,
-                        1.0f,
-                        new VideoPlayListener() {
-                            @Override
-                            public void onListPlayStarted() {
-
-                            }
-
-                            @Override
-                            public void onFilePlayStarted(int position, File file) {
-                                AVFlowEngine.getInstance().setPreviewFilter(
-                                        SimpleModel.getInstance().getSceneList().get(position).mFilter.get(VideoEditActivity.this));
-                            }
-
-                            @Override
-                            public void onFilePlayGoing(long currentTime, long duration, File file) {
-
-                            }
-
-                            @Override
-                            public void onFilePlayDone(int position, File file) {
-
-                            }
-
-                            @Override
-                            public void onListPlayDone() {
-
-                            }
-                        });
+                AVFlowEngine.getInstance().setPreviewFilter(new GPUImageSwirlFilter());
                 break;
             default:
                 break;
@@ -115,7 +97,50 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
         AVFlowEngine.getInstance().init();
         AVFlowEngine.getInstance().setInputSize(width, height);
         AVFlowEngine.getInstance().setPreview(new Surface(surface));
-        AVFlowEngine.getInstance().prepare();
+        AVFlowEngine.getInstance().prepare(180);
+
+        // start play now.
+        List<File> playList = new ArrayList<>();
+        for (Scene scene : SimpleModel.getInstance().getSceneList()) {
+            Log.d(TAG, "onSurfaceTextureAvailable, scene list: " + SimpleModel.getInstance().getSceneList());
+            playList.add(scene.mVideo);
+        }
+        AVFlowEngine.getInstance().startLocalGenerator(
+                playList,
+                true,
+                1.0f,
+                new VideoPlayListener() {
+                    @Override
+                    public void onListPlayStarted() {
+
+                    }
+
+                    @Override
+                    public void onFilePlayStarted(final int position, File file) {
+                        UiThreadUtil.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                AVFlowEngine.getInstance().setPreviewFilter(
+                                        SimpleModel.getInstance().getSceneList().get(position).mFilter.get(VideoEditActivity.this));
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onFilePlayGoing(long currentTime, long duration, File file) {
+
+                    }
+
+                    @Override
+                    public void onFilePlayDone(int position, File file) {
+
+                    }
+
+                    @Override
+                    public void onListPlayDone() {
+
+                    }
+                });
     }
 
     @Override

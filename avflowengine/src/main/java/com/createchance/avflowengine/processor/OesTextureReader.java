@@ -2,6 +2,7 @@ package com.createchance.avflowengine.processor;
 
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
+import android.opengl.Matrix;
 
 import com.createchance.avflowengine.processor.gpuimage.OpenGlUtils;
 
@@ -16,6 +17,9 @@ import static android.opengl.GLES20.glUniformMatrix4fv;
 import static android.opengl.GLES20.glUseProgram;
 import static android.opengl.GLES20.glVertexAttribPointer;
 import static android.opengl.GLES20.glViewport;
+import static android.opengl.Matrix.multiplyMM;
+import static android.opengl.Matrix.setIdentityM;
+import static android.opengl.Matrix.translateM;
 
 /**
  * ${DESC}
@@ -63,14 +67,14 @@ class OesTextureReader {
 
     private int mSurfaceWidth, mSurfaceHeight;
 
-    OesTextureReader(int oesTextureId, int width, int height) {
+    OesTextureReader(int oesTextureId, int width, int height, int rotation) {
         mOesTextureId = oesTextureId;
         mSurfaceWidth = width;
         mSurfaceHeight = height;
-        init();
+        init(rotation);
     }
 
-    private void init() {
+    private void init(int rotation) {
         mProgramId = OpenGlUtils.loadProgram(
                 BASE_OES_VERTEX_SHADER,
                 BASE_OES_FRAGMENT_SHADER
@@ -105,17 +109,41 @@ class OesTextureReader {
                 }
         );
 
+        // set matrix
+        // set uniform vars
+        float[] projectionMatrix = new float[16];
+        float[] modelMatrix = new float[16];
+//        perspectiveM(projectionMatrix,45, (float) surfaceWidth
+//                / (float) surfaceHeight, 1f, 10f);
+        Matrix.orthoM(
+                projectionMatrix,
+                0,
+                -1f,
+                1f,
+                1f,
+                -1f,
+                0.1f,
+                100f
+        );
+
+        setIdentityM(modelMatrix, 0);
+        translateM(modelMatrix, 0, 0f, 0f, -2.5f);
+//        rotateM(modelMatrix, 0, -60f, 1f, 0f, 0f);
+
+        final float[] temp = new float[16];
+        multiplyMM(temp, 0, projectionMatrix, 0, modelMatrix, 0);
+        System.arraycopy(temp, 0, projectionMatrix, 0, temp.length);
         // set uniform vars
         glUniformMatrix4fv(
                 mMartixLocation,
                 1,
                 false,
-                OpenGlUtils.flip(OpenGlUtils.getIdentityMatrix(), true, true),
+                OpenGlUtils.flip(projectionMatrix, true, false),
                 0);
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, mOesTextureId);
         GLES20.glUniform1i(mTextureUnitLocation, 0);
-        setRotation(270);
+        setRotation(rotation);
     }
 
     void read() {

@@ -6,4 +6,5 @@ public class Scene {
     public File mVideo;
     public Filter mFilter;
     public float mSpeedRate;
+    public float mRatio;
 }

@@ -77,13 +77,14 @@ public class MuxerStreamSaver {
         }
     }
 
-    public void beginSave(File outputFile, SaveListener listener) {
+    public void beginSave(File outputFile, int orientation, SaveListener listener) {
         mOutputFile = outputFile;
         if (mOutputFile != null) {
             // init muxer
             try {
                 mMuxer = new MediaMuxer(mOutputFile.getAbsolutePath(),
                         MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+                mMuxer.setOrientationHint(orientation);
                 mListener = listener;
                 WorkRunner.addTaskToBackground(mSaveThread);
             } catch (IOException e) {
