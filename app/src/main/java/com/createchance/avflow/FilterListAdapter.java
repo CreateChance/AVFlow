@@ -58,6 +58,11 @@ public class FilterListAdapter extends RecyclerView.Adapter<FilterListAdapter.Vi
         return mFilterList.size();
     }
 
+    public void refreshCurrentFilter(int position) {
+        mCurrent = position;
+        notifyDataSetChanged();
+    }
+
     class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         TextView filterCode;

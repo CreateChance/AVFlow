@@ -14,6 +14,7 @@ import com.bumptech.glide.request.RequestOptions;
 import com.createchance.avflow.model.Scene;
 import com.createchance.avflow.utils.DensityUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -28,11 +29,19 @@ public class SceneThumbListAdapter extends RecyclerView.Adapter<SceneThumbListAd
 
     private Context mContext;
 
-    private List<Scene> mSceneList;
+    private List<Data> mSceneList;
+
+    private ClickListener mListener;
 
     public SceneThumbListAdapter(Context context, List<Scene> sceneList) {
+        this(context, sceneList, null);
+    }
+
+    public SceneThumbListAdapter(Context context, List<Scene> sceneList, ClickListener listener) {
         mContext = context;
-        mSceneList = sceneList;
+        mSceneList = new ArrayList<>();
+        initList(sceneList);
+        mListener = listener;
     }
 
     @Override
@@ -42,16 +51,22 @@ public class SceneThumbListAdapter extends RecyclerView.Adapter<SceneThumbListAd
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        Scene scene = mSceneList.get(position);
+        Data data = mSceneList.get(position);
 
-        if (scene.mVideo != null && scene.mVideo.exists() && scene.mVideo.isFile()) {
+        if (data.mScene.mVideo != null && data.mScene.mVideo.exists() && data.mScene.mVideo.isFile()) {
             RequestOptions requestOptions = new RequestOptions();
             requestOptions = requestOptions.transforms(new CenterCrop(),
                     new RoundedCorners(DensityUtil.dip2px(mContext, 4)));
             Glide.with(mContext)
-                    .load(scene.mVideo)
+                    .load(data.mScene.mVideo)
                     .apply(requestOptions)
                     .into(holder.thumb);
+        }
+
+        if (data.mSelected) {
+            holder.thumb.setBackgroundResource(R.drawable.bg_red_stroke);
+        } else {
+            holder.thumb.setBackgroundResource(R.drawable.bg_dark_grey);
         }
     }
 
@@ -61,11 +76,33 @@ public class SceneThumbListAdapter extends RecyclerView.Adapter<SceneThumbListAd
     }
 
     public void refresh(List<Scene> sceneList) {
-        mSceneList = sceneList;
+        initList(sceneList);
         notifyDataSetChanged();
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
+    public void selectOne(int position) {
+        for (Data data : mSceneList) {
+            data.mSelected = false;
+        }
+        mSceneList.get(position).mSelected = true;
+        notifyDataSetChanged();
+    }
+
+    public void selectAll() {
+        for (Data data : mSceneList) {
+            data.mSelected = true;
+        }
+        notifyDataSetChanged();
+    }
+
+    private void initList(List<Scene> sceneList) {
+        mSceneList.clear();
+        for (Scene scene : sceneList) {
+            mSceneList.add(new Data(scene, false));
+        }
+    }
+
+    class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         ImageView thumb;
 
@@ -73,6 +110,28 @@ public class SceneThumbListAdapter extends RecyclerView.Adapter<SceneThumbListAd
             super(itemView);
 
             thumb = itemView.findViewById(R.id.iv_scene_thumb);
+            thumb.setOnClickListener(this);
         }
+
+        @Override
+        public void onClick(View v) {
+            if (mListener != null) {
+                mListener.onClick(mSceneList.get(getAdapterPosition()).mScene);
+            }
+        }
+    }
+
+    class Data {
+        Scene mScene;
+        boolean mSelected;
+
+        Data(Scene scene, boolean selected) {
+            mScene = scene;
+            mSelected = selected;
+        }
+    }
+
+    public interface ClickListener {
+        void onClick(Scene scene);
     }
 }

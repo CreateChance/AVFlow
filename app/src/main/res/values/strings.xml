@@ -24,4 +24,19 @@
     <string name="go_to_video_take">编辑</string>
     <string name="go_to_video_save">生成</string>
     <string name="video_edit_title">视频编辑</string>
+
+    <string name="video_edit_panel_play_all">播放全部</string>
+
+    <string name="video_edit_shot_panel_title">分段</string>
+    <string name="video_edit_shot_panel_mute">静音</string>
+    <string name="video_edit_shot_panel_adjust">画面调节</string>
+    <string name="video_edit_shot_panel_filters">滤镜</string>
+    <string name="video_edit_shot_panel_beauty">美肤</string>
+    <string name="video_edit_shot_panel_speed">速度</string>
+
+    <string name="video_edit_text_panel_title">文字</string>
+
+    <string name="video_edit_sticker_panel_title">贴纸</string>
+
+    <string name="video_edit_music_panel_title">音乐</string>
 </resources>
