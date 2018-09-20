@@ -29,7 +29,6 @@ import com.createchance.avflow.utils.DensityUtil;
 import com.createchance.avflowengine.AVFlowEngine;
 import com.createchance.avflowengine.base.UiThreadUtil;
 import com.createchance.avflowengine.generator.VideoPlayListener;
-import com.createchance.avflowengine.processor.gpuimage.GPUImageSwirlFilter;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -198,7 +197,8 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                 onBackPressed();
                 break;
             case R.id.vw_next:
-
+                AVFlowEngine.getInstance().reset();
+                VideoComposeActivity.start(this);
                 break;
             case R.id.tv_play_all:
                 AVFlowEngine.getInstance().stopLocalGenerator();

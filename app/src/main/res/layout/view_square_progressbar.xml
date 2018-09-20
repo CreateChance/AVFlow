@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center">
+
+    <ImageView
+        android:id="@+id/img_default"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerInParent="true"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter" />
+
+    <View
+        android:id="@+id/img_mask"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@id/img_default"
+        android:layout_alignEnd="@id/img_default"
+        android:layout_alignStart="@id/img_default"
+        android:layout_alignTop="@id/img_default"
+        android:alpha="0.5"
+        android:background="@color/theme_white" />
+
+    <com.createchance.avflow.SquareProgressView
+        android:id="@+id/squareProgressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@id/img_default"
+        android:layout_alignEnd="@id/img_default"
+        android:layout_alignStart="@id/img_default"
+        android:layout_alignTop="@id/img_default" />
+
+</RelativeLayout>

@@ -19,7 +19,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".VideoRecordActivity" />
-        <activity android:name=".VideoEditActivity"></activity>
+        <activity android:name=".VideoEditActivity" />
+        <activity android:name=".VideoComposeActivity"></activity>
     </application>
 
 </manifest>
