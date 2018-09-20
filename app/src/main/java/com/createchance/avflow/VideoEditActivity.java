@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 
 import com.createchance.avflow.model.Scene;
 import com.createchance.avflow.model.SimpleModel;
+import com.createchance.avflow.utils.DensityUtil;
 import com.createchance.avflowengine.AVFlowEngine;
 import com.createchance.avflowengine.base.UiThreadUtil;
 import com.createchance.avflowengine.generator.VideoPlayListener;
@@ -58,9 +59,17 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
         UiThreadUtil.post(new Runnable() {
             @Override
             public void run() {
-                float ratio = SimpleModel.getInstance().getSceneList().get(0).mRatio;
+                int width = SimpleModel.getInstance().getSceneList().get(0).mWidth;
+                int height = SimpleModel.getInstance().getSceneList().get(0).mHeight;
+                int maxHeight = DensityUtil.dip2px(VideoEditActivity.this, 250);
+                float ratio = width * 1.0f / height;
+                if (height > maxHeight) {
+                    height = maxHeight;
+                    width = (int) (height * ratio);
+                }
                 ViewGroup.LayoutParams layoutParams = preview.getLayoutParams();
-                layoutParams.width = (int) (layoutParams.height / ratio);
+                layoutParams.width = width;
+                layoutParams.height = height;
                 preview.setLayoutParams(layoutParams);
             }
         });

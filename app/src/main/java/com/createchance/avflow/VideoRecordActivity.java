@@ -92,7 +92,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
     private List<Scene> mSceneList = new ArrayList<>();
 
     private int mScreenWidth, mScreenHeight;
-    private float mCurrentRatio;
+    private int mSceneWidth, mSceneHeight;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,7 +119,8 @@ public class VideoRecordActivity extends AppCompatActivity implements
                 mScreenHeight,
                 mScreenWidth
         );
-        mCurrentRatio = mScreenHeight * 1.0f / mScreenWidth;
+        mSceneWidth = mScreenWidth;
+        mSceneHeight = mScreenHeight;
 
         mHandler = new Handler(this);
 
@@ -340,7 +341,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
                 ((TextView) findViewById(R.id.tv_ratio_3_4)).setTextColor(getResources().getColor(R.color.font_grey));
                 ((TextView) findViewById(R.id.tv_ratio_circle)).setTextColor(getResources().getColor(R.color.font_grey));
 
-                mCurrentRatio = 16 * 1.0f / 9;
+                mSceneHeight = mScreenHeight;
                 break;
             case R.id.vw_ratio_16_9:
                 animHeight = mScreenHeight - (int) (mScreenWidth * 9.0f / 16);
@@ -360,7 +361,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
                 ((TextView) findViewById(R.id.tv_ratio_3_4)).setTextColor(getResources().getColor(R.color.font_grey));
                 ((TextView) findViewById(R.id.tv_ratio_circle)).setTextColor(getResources().getColor(R.color.font_grey));
 
-                mCurrentRatio = 9 * 1.0f / 16;
+                mSceneHeight = (int) (mScreenWidth * 9.0f / 16);
                 break;
             case R.id.vw_ratio_239_1:
                 animHeight = mScreenHeight - (int) (mScreenWidth * 5.0f / 12);
@@ -380,7 +381,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
                 ((TextView) findViewById(R.id.tv_ratio_3_4)).setTextColor(getResources().getColor(R.color.font_grey));
                 ((TextView) findViewById(R.id.tv_ratio_circle)).setTextColor(getResources().getColor(R.color.font_grey));
 
-                mCurrentRatio = 5 * 1.0f / 12;
+                mSceneHeight = (int) (mScreenWidth * 5.0f / 12);
                 break;
             case R.id.vw_ratio_3_4:
                 animHeight = mScreenHeight - (int) (mScreenWidth * 4.0f / 3);
@@ -400,7 +401,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
                 ((TextView) findViewById(R.id.tv_ratio_3_4)).setTextColor(getResources().getColor(R.color.font_red));
                 ((TextView) findViewById(R.id.tv_ratio_circle)).setTextColor(getResources().getColor(R.color.font_grey));
 
-                mCurrentRatio = 4 * 1.0f / 3;
+                mSceneHeight = (int) (mScreenWidth * 4.0f / 3);
                 break;
             case R.id.vw_ratio_1_1:
                 animHeight = mScreenHeight - mScreenWidth;
@@ -420,7 +421,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
                 ((TextView) findViewById(R.id.tv_ratio_3_4)).setTextColor(getResources().getColor(R.color.font_grey));
                 ((TextView) findViewById(R.id.tv_ratio_circle)).setTextColor(getResources().getColor(R.color.font_grey));
 
-                mCurrentRatio = 1;
+                mSceneHeight = mScreenWidth;
                 break;
             case R.id.vw_ratio_circle:
 
@@ -430,6 +431,8 @@ public class VideoRecordActivity extends AppCompatActivity implements
                 ((TextView) findViewById(R.id.tv_ratio_1_1)).setTextColor(getResources().getColor(R.color.font_grey));
                 ((TextView) findViewById(R.id.tv_ratio_3_4)).setTextColor(getResources().getColor(R.color.font_grey));
                 ((TextView) findViewById(R.id.tv_ratio_circle)).setTextColor(getResources().getColor(R.color.font_red));
+
+                mSceneHeight = mScreenWidth;
                 break;
             case R.id.tv_scene_speed_normal:
 
@@ -499,13 +502,15 @@ public class VideoRecordActivity extends AppCompatActivity implements
                             scene.mVideo = file;
                             scene.mFilter = mCurrentFilter;
                             scene.mSpeedRate = 1.0f;
-                            scene.mRatio = mCurrentRatio;
+                            scene.mWidth = mSceneWidth;
+                            scene.mHeight = mSceneHeight;
                             mSceneList.remove(mCurrentSceneIndex);
                             mSceneList.add(mCurrentSceneIndex, scene);
                             mCurrentSceneIndex++;
                             mListAdapter.refresh(mSceneList);
                             if (mCurrentSceneIndex == mSceneList.size()) {
                                 SimpleModel.getInstance().setSceneList(mSceneList);
+                                AVFlowEngine.getInstance().reset();
                                 VideoEditActivity.start(VideoRecordActivity.this);
                             }
                         }
