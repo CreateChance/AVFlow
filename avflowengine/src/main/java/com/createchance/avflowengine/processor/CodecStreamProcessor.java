@@ -48,7 +48,9 @@ public final class CodecStreamProcessor implements SurfaceTexture.OnFrameAvailab
         Logger.v(TAG, "onFrameAvailable");
         if (mVideoInputSurface != null) {
             mVideoInputSurface.updateTexImage();
-            mOutputSurfaceDrawer.draw(mOesReader, mPreviewDrawSurface, mPreviewFilter, mPreviewTextureWriter);
+            if (mPreviewSurface != null) {
+                mOutputSurfaceDrawer.draw(mOesReader, mPreviewDrawSurface, mPreviewFilter, mPreviewTextureWriter);
+            }
             if (mSaveSurface != null) {
                 mOutputSurfaceDrawer.draw(mOesReader, mSaveDrawSurface, mSaveFilter, mSaveTextureWriter);
             }
@@ -85,15 +87,10 @@ public final class CodecStreamProcessor implements SurfaceTexture.OnFrameAvailab
             return;
         }
 
-        Logger.d(TAG, "Save start!!!!!!!! clip top: " + clipTop
+        Logger.d(TAG, "setSaveSurface, clip top: " + clipTop
                 + ", clip left: " + clipLeft
                 + ", clip bottom: " + clipBottom
                 + ", clip right: " + clipRight);
-        mSaveTextureWriter = new TextureWriter(
-                getVertexBuffer(),
-                getTextureBuffer(clipTop, clipLeft, clipBottom, clipRight),
-                mOesWidth,
-                mOesHeight);
         mSaveSurface = surface;
         mSaveDrawSurface = new WindowSurface(mEglCore, mSaveSurface, false);
         mSaveDrawSurface.makeCurrent();
@@ -104,6 +101,12 @@ public final class CodecStreamProcessor implements SurfaceTexture.OnFrameAvailab
                 clipBottom - clipTop,
                 mOesWidth,
                 mOesHeight);
+        mSaveTextureWriter = new TextureWriter(
+                getVertexBuffer(),
+                getTextureBuffer(clipTop, clipLeft, clipBottom, clipRight),
+                mOesWidth,
+                mOesHeight);
+        mOutputSurfaceDrawer.createFrameBuffer();
     }
 
     public void clearSaveSurface() {
@@ -129,7 +132,7 @@ public final class CodecStreamProcessor implements SurfaceTexture.OnFrameAvailab
         if (filter instanceof GPUImageFilterGroup) {
             ((GPUImageFilterGroup) filter).setOutput(
                     mOutputSurfaceDrawer.getOffScreenFrameBuffer(),
-                    mPreviewDrawSurface.getOutputTextureIds()[1]);
+                    mSaveDrawSurface.getOutputTextureIds()[1]);
         }
         mSaveFilter = filter;
     }

@@ -46,7 +46,7 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
 
     private View mShotPanelTitle, mTextPanelTitle, mStickerPanelTitle, mMusicPanelTitle;
     private FrameLayout mPanelContainer;
-    private View mShotPanel, mTextPanel, mStickPanel, mMusicPanel, mFilterPanel;
+    private View mShotPanel, mTextPanel, mStickPanel, mMusicPanel, mFilterPanel, mInfoPanel;
 
     private FilterListAdapter mFilterListAdapter;
     private RecyclerView mFilterListView;
@@ -69,12 +69,17 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
         }
 
         @Override
-        public void onFilePlayStarted(final int position, File file) {
+        public void onFilePlayStarted(final int position, final File file) {
             Log.d(TAG, "onFilePlayStarted: " + file);
             UiThreadUtil.post(new Runnable() {
                 @Override
                 public void run() {
-                    Filter filter = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex).mFilter;
+                    Filter filter;
+                    if (mCurrentSceneIndex == -1) {
+                        filter = SimpleModel.getInstance().getSceneList().get(position).mFilter;
+                    } else {
+                        filter = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex).mFilter;
+                    }
                     AVFlowEngine.getInstance().setPreviewFilter(filter.get(VideoEditActivity.this));
                     mFilterInfoView.setVisibility(View.VISIBLE);
                     mFilterCode.setText(filter.mCode);
@@ -137,6 +142,7 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
         initStickerPanel();
         initMusicPanel();
         initFilterPanel();
+        initInfoPanel();
 
         // init scene list
         mSceneListView = findViewById(R.id.rcv_scene_list);
@@ -146,6 +152,9 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                 new SceneThumbListAdapter.ClickListener() {
                     @Override
                     public void onClick(Scene scene) {
+                        if (mCurrentSceneIndex == -1) {
+                            gotoPanel(mShotPanel);
+                        }
                         AVFlowEngine.getInstance().stopLocalGenerator();
                         List<File> videoList = new ArrayList<>();
                         videoList.add(scene.mVideo);
@@ -213,6 +222,9 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                         mVideoPlayListener
                 );
                 mSceneListAdapter.selectAll();
+                mCurrentSceneIndex = -1;
+                ((TextView) mInfoPanel.findViewById(R.id.tv_info_text)).setText(R.string.video_edit_shot_select_one_info);
+                gotoPanel(mInfoPanel);
                 break;
             case R.id.vw_panel_shot:
                 mShotPanelTitle.setBackgroundResource(R.color.theme_dark);
@@ -262,8 +274,8 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
         Log.d(TAG, "onSurfaceTextureAvailable: ");
         AVFlowEngine.getInstance().init();
         AVFlowEngine.getInstance().setInputSize(width, height);
-        AVFlowEngine.getInstance().setPreview(new Surface(surface));
-        AVFlowEngine.getInstance().prepare(180);
+        AVFlowEngine.getInstance().preparePreview(new Surface(surface));
+        AVFlowEngine.getInstance().prepareEngine(180);
 
         // start play now.
         List<File> playList = new ArrayList<>();
@@ -359,6 +371,10 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
         mFilterListView.setLayoutManager(
                 new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         mFilterListView.setAdapter(mFilterListAdapter);
+    }
+
+    private void initInfoPanel() {
+        mInfoPanel = getLayoutInflater().inflate(R.layout.edit_panel_info, mPanelContainer, false);
     }
 
     private void gotoPanel(View panelView) {

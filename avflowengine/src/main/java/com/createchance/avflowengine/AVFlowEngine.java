@@ -32,11 +32,7 @@ public class AVFlowEngine {
     private CodecStreamProcessor mProcessor;
     private MuxerStreamSaver mSaver;
 
-    private int mClipTop, mClipLeft, mClipBottom, mClipRight;
-
     private int mInputSurfaceWidth, mInputSurfaceHeight;
-
-    private boolean mAllowToChangeClip = true;
 
     private AVFlowEngine() {
     }
@@ -62,11 +58,25 @@ public class AVFlowEngine {
         mProcessor.setSurfaceSize(mInputSurfaceWidth, mInputSurfaceHeight);
     }
 
-    public void setPreview(Surface previewSurface) {
+    public void preparePreview(Surface previewSurface) {
         mProcessor.setPreviewSurface(previewSurface);
     }
 
-    public void prepare(int rotation) {
+    public void prepareSave(int clipTop, int clipLeft, int clipBottom, int clipRight) {
+        Logger.d(TAG, "Clip top: "
+                + clipTop
+                + ", clip left: "
+                + clipLeft
+                + ", clip bottom: "
+                + clipBottom
+                + ", clip right: "
+                + clipRight);
+        mSaver.setOutputSize(clipRight - clipLeft, clipBottom - clipTop);
+        mSaver.prepare();
+        mProcessor.setSaveSurface(mSaver.getInputSurface(), clipTop, clipLeft, clipBottom, clipRight);
+    }
+
+    public void prepareEngine(int rotation) {
         mProcessor.prepare(rotation);
         mCameraGenerator.setOutputTexture(mProcessor.getOesTextureId());
         mLocalGenerator.setOutputTexture(mProcessor.getOesTextureId());
@@ -88,25 +98,6 @@ public class AVFlowEngine {
             filter.onOutputSizeChanged(mInputSurfaceWidth, mInputSurfaceHeight);
         }
         mProcessor.setSaveFilter(filter);
-    }
-
-    public void setClipArea(int clipTop, int clipLeft, int clipBottom, int clipRight) {
-        if (!mAllowToChangeClip) {
-            Logger.e(TAG, "You can not change clip area duration running!");
-            return;
-        }
-        mClipTop = clipTop;
-        mClipLeft = clipLeft;
-        mClipBottom = clipBottom;
-        mClipRight = clipRight;
-        Logger.d(TAG, "Clip top: "
-                + mClipTop
-                + ", clip left: "
-                + mClipLeft
-                + ", clip bottom: "
-                + mClipBottom
-                + ", clip right: "
-                + mClipRight);
     }
 
     public CameraImpl getCamera() {
@@ -137,17 +128,12 @@ public class AVFlowEngine {
     }
 
     public void startSave(File outputFile, int orientation, SaveListener saveListener) {
-        mSaver.setOutputSize(mClipRight - mClipLeft, mClipBottom - mClipTop);
-        mSaver.prepare();
-        mProcessor.setSaveSurface(mSaver.getInputSurface(), mClipTop, mClipLeft, mClipBottom, mClipRight);
         mSaver.beginSave(outputFile, orientation, saveListener);
-        mAllowToChangeClip = false;
     }
 
     public void finishSave() {
         mProcessor.clearSaveSurface();
         mSaver.finishSave();
-        mAllowToChangeClip = true;
     }
 
     public void cancelSave() {
@@ -157,7 +143,6 @@ public class AVFlowEngine {
         if (mSaver != null) {
             mSaver.cancelSave();
         }
-        mAllowToChangeClip = true;
     }
 
     public void reset() {
@@ -173,7 +158,6 @@ public class AVFlowEngine {
         }
         cancelSave();
 
-        mAllowToChangeClip = true;
         mCameraGenerator = null;
         mLocalGenerator = null;
         mProcessor = null;

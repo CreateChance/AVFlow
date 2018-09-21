@@ -51,8 +51,16 @@ public class MuxerStreamSaver {
     }
 
     public void setOutputSize(int width, int height) {
-        mVideoWidth = width;
-        mVideoHeight = height;
+        if (width % 2 != 0) {
+            mVideoWidth = width + 1;
+        } else {
+            mVideoWidth = width;
+        }
+        if (height % 2 != 0) {
+            mVideoHeight = height + 1;
+        } else {
+            mVideoHeight = height;
+        }
     }
 
     public void prepare() {
@@ -119,6 +127,7 @@ public class MuxerStreamSaver {
                     mOutputFile.delete();
                 }
             }
+            Logger.d(TAG, "Save worker done.");
         }
 
         private void doMux() {

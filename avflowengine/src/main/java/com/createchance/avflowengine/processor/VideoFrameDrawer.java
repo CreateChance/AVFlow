@@ -23,6 +23,8 @@ class VideoFrameDrawer {
 
     private int[] mFrameBuffer = new int[1];
 
+    private boolean mFrameBufferInitDone;
+
     private final float CUBE[] = {
             -1.0f, 1.0f,
             -1.0f, -1.0f,
@@ -77,8 +79,11 @@ class VideoFrameDrawer {
         drawSurface.swapBuffers();
     }
 
-    void createFrameBuffer() {
-        GLES20.glGenFramebuffers(mFrameBuffer.length, mFrameBuffer, 0);
+    synchronized void createFrameBuffer() {
+        if (!mFrameBufferInitDone) {
+            mFrameBufferInitDone = true;
+            GLES20.glGenFramebuffers(mFrameBuffer.length, mFrameBuffer, 0);
+        }
     }
 
     int getOffScreenFrameBuffer() {

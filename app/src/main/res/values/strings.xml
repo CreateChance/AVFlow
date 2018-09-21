@@ -33,6 +33,7 @@
     <string name="video_edit_shot_panel_filters">滤镜</string>
     <string name="video_edit_shot_panel_beauty">美肤</string>
     <string name="video_edit_shot_panel_speed">速度</string>
+    <string name="video_edit_shot_select_one_info">请选择一个片段来编辑</string>
 
     <string name="video_edit_text_panel_title">文字</string>
 

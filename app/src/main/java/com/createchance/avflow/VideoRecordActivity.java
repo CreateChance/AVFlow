@@ -94,6 +94,8 @@ public class VideoRecordActivity extends AppCompatActivity implements
     private int mScreenWidth, mScreenHeight;
     private int mSceneWidth, mSceneHeight;
 
+    private int mClipTop, mClipLeft, mClipBottom, mClipRight;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -113,7 +115,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
         mScreenWidth = getWindowManager().getDefaultDisplay().getWidth();
         mScreenHeight = getWindowManager().getDefaultDisplay().getHeight()
                 + DensityUtil.getNaviBarHeight(this);
-        AVFlowEngine.getInstance().setClipArea(
+        setClipArea(
                 0,
                 0,
                 mScreenHeight,
@@ -327,7 +329,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
             // Panel click
             case R.id.vw_ratio_9_16:
                 animMaskToHeight(0, 0);
-                AVFlowEngine.getInstance().setClipArea(
+                setClipArea(
                         0,
                         0,
                         mScreenHeight,
@@ -346,7 +348,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
             case R.id.vw_ratio_16_9:
                 animHeight = mScreenHeight - (int) (mScreenWidth * 9.0f / 16);
                 animMaskToHeight((int) (animHeight * 0.4f), (int) (animHeight * 0.6f));
-                AVFlowEngine.getInstance().setClipArea(
+                setClipArea(
                         (int) (animHeight * 0.4f),
                         0,
                         mScreenHeight - (int) (animHeight * 0.6f),
@@ -366,7 +368,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
             case R.id.vw_ratio_239_1:
                 animHeight = mScreenHeight - (int) (mScreenWidth * 5.0f / 12);
                 animMaskToHeight((int) (animHeight * 0.4f), (int) (animHeight * 0.6f));
-                AVFlowEngine.getInstance().setClipArea(
+                setClipArea(
                         (int) (animHeight * 0.4f),
                         0,
                         mScreenHeight - (int) (animHeight * 0.6f),
@@ -386,7 +388,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
             case R.id.vw_ratio_3_4:
                 animHeight = mScreenHeight - (int) (mScreenWidth * 4.0f / 3);
                 animMaskToHeight((int) (animHeight * 0.4f), (int) (animHeight * 0.6f));
-                AVFlowEngine.getInstance().setClipArea(
+                setClipArea(
                         (int) (animHeight * 0.4f),
                         0,
                         mScreenHeight - (int) (animHeight * 0.6f),
@@ -406,7 +408,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
             case R.id.vw_ratio_1_1:
                 animHeight = mScreenHeight - mScreenWidth;
                 animMaskToHeight((int) (animHeight * 0.4f), (int) (animHeight * 0.6f));
-                AVFlowEngine.getInstance().setClipArea(
+                setClipArea(
                         (int) (animHeight * 0.4f),
                         0,
                         mScreenHeight - (int) (animHeight * 0.6f),
@@ -462,8 +464,8 @@ public class VideoRecordActivity extends AppCompatActivity implements
         Log.d(TAG, "onSurfaceTextureAvailable: " + width + ", " + height);
         AVFlowEngine.getInstance().init();
         AVFlowEngine.getInstance().setInputSize(width, height);
-        AVFlowEngine.getInstance().setPreview(new Surface(surface));
-        AVFlowEngine.getInstance().prepare(270);
+        AVFlowEngine.getInstance().preparePreview(new Surface(surface));
+        AVFlowEngine.getInstance().prepareEngine(270);
         AVFlowEngine.getInstance().setPreviewFilter(mCurrentFilter.get(this));
         AVFlowEngine.getInstance().startCameraGenerator(true);
 
@@ -495,6 +497,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
             case MSG_UPDATE_COUNT:
                 if (!mIsRecording) {
                     mIsRecording = true;
+                    AVFlowEngine.getInstance().prepareSave(mClipTop, mClipLeft, mClipBottom, mClipRight);
                     AVFlowEngine.getInstance().startSave(getOutputFile(), 0, new SaveListener() {
                         @Override
                         public void onSaved(File file) {
@@ -689,5 +692,12 @@ public class VideoRecordActivity extends AppCompatActivity implements
 
     private void getFilterList() {
         mFilterList = AssetsUtil.parseJsonToList(this, "filter_list.json", Filter.class);
+    }
+
+    private void setClipArea(int clipTop, int clipLeft, int clipBottom, int clipRight) {
+        mClipTop = clipTop;
+        mClipLeft = clipLeft;
+        mClipBottom = clipBottom;
+        mClipRight = clipRight;
     }
 }
