@@ -188,6 +188,13 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
         });
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        AVFlowEngine.getInstance().stopLocalGenerator();
+    }
+
     public static void start(Context context) {
         Intent intent = new Intent(context, VideoEditActivity.class);
         context.startActivity(intent);
