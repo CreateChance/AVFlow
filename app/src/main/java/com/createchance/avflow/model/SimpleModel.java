@@ -27,7 +27,9 @@ public class SimpleModel {
     }
 
     public void addScene(Scene scene) {
-        mSceneList.add(scene);
+        if (!mSceneList.contains(scene)) {
+            mSceneList.add(scene);
+        }
     }
 
     public void setSceneList(List<Scene> sceneList) {
