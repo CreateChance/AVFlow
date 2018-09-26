@@ -33,6 +33,7 @@ import com.createchance.avflow.model.SimpleModel;
 import com.createchance.avflow.utils.AssetsUtil;
 import com.createchance.avflow.utils.DensityUtil;
 import com.createchance.avflowengine.AVFlowEngine;
+import com.createchance.avflowengine.PreviewConfig;
 import com.createchance.avflowengine.base.Logger;
 import com.createchance.avflowengine.generator.CameraImpl;
 import com.createchance.avflowengine.saver.SaveListener;
@@ -206,13 +207,6 @@ public class VideoRecordActivity extends AppCompatActivity implements
     @Override
     protected void onStop() {
         super.onStop();
-
-        AVFlowEngine.getInstance().stopCameraGenerator();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
 
         AVFlowEngine.getInstance().reset();
     }
@@ -462,12 +456,14 @@ public class VideoRecordActivity extends AppCompatActivity implements
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         Log.d(TAG, "onSurfaceTextureAvailable: " + width + ", " + height);
-        AVFlowEngine.getInstance().init();
-        AVFlowEngine.getInstance().setInputSize(width, height);
-        AVFlowEngine.getInstance().preparePreview(new Surface(surface));
-        AVFlowEngine.getInstance().prepareEngine(270);
-        AVFlowEngine.getInstance().setPreviewFilter(mCurrentFilter.get(this));
-        AVFlowEngine.getInstance().startCameraGenerator(true);
+        PreviewConfig config = new PreviewConfig.Builder()
+                .surface(new Surface(surface), width, height)
+                .dataSource(new PreviewConfig.CameraSource(
+                        PreviewConfig.ROTATION_270,
+                        PreviewConfig.CameraSource.CAMERA_FACING_BACK,
+                        true))
+                .build();
+        AVFlowEngine.getInstance().startPreview(config);
 
         // show filter info.
         mFilterInfoView.setVisibility(View.VISIBLE);
@@ -497,27 +493,33 @@ public class VideoRecordActivity extends AppCompatActivity implements
             case MSG_UPDATE_COUNT:
                 if (!mIsRecording) {
                     mIsRecording = true;
-                    AVFlowEngine.getInstance().prepareSave(mClipTop, mClipLeft, mClipBottom, mClipRight);
-                    AVFlowEngine.getInstance().startSave(getOutputFile(), 0, new SaveListener() {
-                        @Override
-                        public void onSaved(File file) {
-                            Scene scene = new Scene();
-                            scene.mVideo = file;
-                            scene.mFilter = mCurrentFilter;
-                            scene.mSpeedRate = 1.0f;
-                            scene.mWidth = mSceneWidth;
-                            scene.mHeight = mSceneHeight;
-                            mSceneList.remove(mCurrentSceneIndex);
-                            mSceneList.add(mCurrentSceneIndex, scene);
-                            mCurrentSceneIndex++;
-                            mListAdapter.refresh(mSceneList);
-                            if (mCurrentSceneIndex == mSceneList.size()) {
-                                SimpleModel.getInstance().setSceneList(mSceneList);
-                                AVFlowEngine.getInstance().reset();
-                                VideoEditActivity.start(VideoRecordActivity.this);
-                            }
-                        }
-                    });
+                    AVFlowEngine.getInstance().startSave(
+                            mClipTop,
+                            mClipLeft,
+                            mClipBottom,
+                            mClipRight,
+                            getOutputFile(),
+                            0,
+                            new SaveListener() {
+                                @Override
+                                public void onSaved(File file) {
+                                    Scene scene = new Scene();
+                                    scene.mVideo = file;
+                                    scene.mFilter = mCurrentFilter;
+                                    scene.mSpeedRate = 1.0f;
+                                    scene.mWidth = mSceneWidth;
+                                    scene.mHeight = mSceneHeight;
+                                    mSceneList.remove(mCurrentSceneIndex);
+                                    mSceneList.add(mCurrentSceneIndex, scene);
+                                    mCurrentSceneIndex++;
+                                    mListAdapter.refresh(mSceneList);
+                                    if (mCurrentSceneIndex == mSceneList.size()) {
+                                        SimpleModel.getInstance().setSceneList(mSceneList);
+                                        AVFlowEngine.getInstance().reset();
+                                        VideoEditActivity.start(VideoRecordActivity.this);
+                                    }
+                                }
+                            });
                 }
                 long now = System.currentTimeMillis();
                 float progress = (now - mCountStartTime) * 1.0f / mDurationOfScene;

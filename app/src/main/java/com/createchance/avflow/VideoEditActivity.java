@@ -27,6 +27,7 @@ import com.createchance.avflow.model.SimpleModel;
 import com.createchance.avflow.utils.AssetsUtil;
 import com.createchance.avflow.utils.DensityUtil;
 import com.createchance.avflowengine.AVFlowEngine;
+import com.createchance.avflowengine.PreviewConfig;
 import com.createchance.avflowengine.base.UiThreadUtil;
 import com.createchance.avflowengine.generator.VideoPlayListener;
 
@@ -61,6 +62,9 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
     private SceneThumbListAdapter mSceneListAdapter;
 
     private int mCurrentSceneIndex;
+
+    private Surface mPreviewSurface;
+    private int mSurfaceWidth, mSurfaceHeight;
 
     private VideoPlayListener mVideoPlayListener = new VideoPlayListener() {
         @Override
@@ -155,11 +159,19 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                         if (mCurrentSceneIndex == -1) {
                             gotoPanel(mShotPanel);
                         }
-                        AVFlowEngine.getInstance().stopLocalGenerator();
+                        AVFlowEngine.getInstance().reset();
                         List<File> videoList = new ArrayList<>();
                         videoList.add(scene.mVideo);
-                        AVFlowEngine.getInstance().startLocalGenerator(
-                                videoList, true, 1.0f, mVideoPlayListener);
+                        PreviewConfig config = new PreviewConfig.Builder()
+                                .surface(mPreviewSurface, mSurfaceWidth, mSurfaceHeight)
+                                .dataSource(new PreviewConfig.FileSource(
+                                        videoList,
+                                        PreviewConfig.ROTATION_180,
+                                        true,
+                                        1.0f,
+                                        mVideoPlayListener))
+                                .build();
+                        AVFlowEngine.getInstance().startPreview(config);
                         mCurrentSceneIndex = SimpleModel.getInstance().getSceneList().indexOf(scene);
                         mSceneListAdapter.selectOne(mCurrentSceneIndex);
                     }
@@ -188,13 +200,6 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
         });
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-
-        AVFlowEngine.getInstance().stopLocalGenerator();
-    }
-
     public static void start(Context context) {
         Intent intent = new Intent(context, VideoEditActivity.class);
         context.startActivity(intent);
@@ -217,17 +222,23 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                 VideoComposeActivity.start(this);
                 break;
             case R.id.tv_play_all:
-                AVFlowEngine.getInstance().stopLocalGenerator();
+                AVFlowEngine.getInstance().reset();
                 List<File> videoList = new ArrayList<>();
                 for (Scene scene : SimpleModel.getInstance().getSceneList()) {
                     videoList.add(scene.mVideo);
                 }
-                AVFlowEngine.getInstance().startLocalGenerator(
-                        videoList,
-                        true,
-                        1.0f,
-                        mVideoPlayListener
-                );
+
+                PreviewConfig config = new PreviewConfig.Builder()
+                        .surface(mPreviewSurface, mSurfaceWidth, mSurfaceHeight)
+                        .dataSource(new PreviewConfig.FileSource(
+                                videoList,
+                                PreviewConfig.ROTATION_180,
+                                true,
+                                1.0f,
+                                mVideoPlayListener))
+                        .build();
+                AVFlowEngine.getInstance().startPreview(config);
+
                 mSceneListAdapter.selectAll();
                 mCurrentSceneIndex = -1;
                 ((TextView) mInfoPanel.findViewById(R.id.tv_info_text)).setText(R.string.video_edit_shot_select_one_info);
@@ -279,19 +290,22 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         Log.d(TAG, "onSurfaceTextureAvailable: ");
-        AVFlowEngine.getInstance().init();
-        AVFlowEngine.getInstance().setInputSize(width, height);
-        AVFlowEngine.getInstance().preparePreview(new Surface(surface));
-        AVFlowEngine.getInstance().prepareEngine(180);
-
-        // start play now.
+        mPreviewSurface = new Surface(surface);
+        mSurfaceWidth = width;
+        mSurfaceHeight = height;
+        // start play preview now.
         List<File> playList = new ArrayList<>();
         playList.add(SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex).mVideo);
-        AVFlowEngine.getInstance().startLocalGenerator(
-                playList,
-                true,
-                1.0f,
-                mVideoPlayListener);
+        PreviewConfig config = new PreviewConfig.Builder()
+                .surface(mPreviewSurface, mSurfaceWidth, mSurfaceHeight)
+                .dataSource(new PreviewConfig.FileSource(
+                        playList,
+                        PreviewConfig.ROTATION_180,
+                        true,
+                        1.0f,
+                        mVideoPlayListener))
+                .build();
+        AVFlowEngine.getInstance().startPreview(config);
         mSceneListAdapter.selectOne(mCurrentSceneIndex);
     }
 
@@ -302,6 +316,9 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
 
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+        mPreviewSurface = null;
+        mSurfaceHeight = 0;
+        mSurfaceWidth = 0;
         return true;
     }
 

@@ -8,9 +8,9 @@ import com.createchance.avflowengine.generator.CameraImpl;
 import com.createchance.avflowengine.generator.CameraStreamGenerator;
 import com.createchance.avflowengine.generator.LocalStreamGenerator;
 import com.createchance.avflowengine.generator.VideoPlayListener;
-import com.createchance.avflowengine.processor.CodecStreamProcessor;
+import com.createchance.avflowengine.processor.AVStreamProcessor;
 import com.createchance.avflowengine.processor.gpuimage.GPUImageFilter;
-import com.createchance.avflowengine.saver.MuxerStreamSaver;
+import com.createchance.avflowengine.saver.AVStreamSaver;
 import com.createchance.avflowengine.saver.SaveListener;
 
 import java.io.File;
@@ -29,10 +29,10 @@ public class AVFlowEngine {
 
     private CameraStreamGenerator mCameraGenerator;
     private LocalStreamGenerator mLocalGenerator;
-    private CodecStreamProcessor mProcessor;
-    private MuxerStreamSaver mSaver;
+    private AVStreamProcessor mProcessor;
+    private AVStreamSaver mSaver;
 
-    private int mInputSurfaceWidth, mInputSurfaceHeight;
+    private PreviewConfig mPreviewConfig;
 
     private AVFlowEngine() {
     }
@@ -45,24 +45,49 @@ public class AVFlowEngine {
         return sInstance;
     }
 
-    public void init() {
-        mCameraGenerator = new CameraStreamGenerator();
-        mLocalGenerator = new LocalStreamGenerator();
-        mProcessor = new CodecStreamProcessor();
-        mSaver = new MuxerStreamSaver();
+    public void startPreview(PreviewConfig config) {
+        if (config == null) {
+            Logger.e(TAG, "Config can not be null!");
+            return;
+        }
+
+        mPreviewConfig = config;
+        init();
+        mProcessor.setSurfaceSize(config.mSurfaceWidth, config.mSurfaceHeight);
+        preparePreview(config.mSurface);
+        if (config.mDataSource.mSource == PreviewConfig.SOURCE_CAMERA) {
+            prepareEngine(((PreviewConfig.CameraSource) config.mDataSource).mRotation);
+            startCameraGenerator(((PreviewConfig.CameraSource) config.mDataSource).mForceCameraV1);
+        } else if (config.mDataSource.mSource == PreviewConfig.SOURCE_FILE) {
+            prepareEngine(((PreviewConfig.FileSource) config.mDataSource).mRotation);
+            startLocalGenerator(((PreviewConfig.FileSource) config.mDataSource).mSourceFileList,
+                    ((PreviewConfig.FileSource) config.mDataSource).mLoop,
+                    ((PreviewConfig.FileSource) config.mDataSource).mSpeedRate,
+                    ((PreviewConfig.FileSource) config.mDataSource).mListener);
+        }
     }
 
-    public void setInputSize(int surfaceWidth, int surfaceHeight) {
-        mInputSurfaceWidth = surfaceWidth;
-        mInputSurfaceHeight = surfaceHeight;
-        mProcessor.setSurfaceSize(mInputSurfaceWidth, mInputSurfaceHeight);
+    public void setPreviewFilter(GPUImageFilter filter) {
+        if (mPreviewConfig == null) {
+            Logger.e(TAG, "You should start preview first!");
+            return;
+        }
+
+        if (filter != null) {
+            filter.init();
+            GLES20.glUseProgram(filter.getProgram());
+            filter.onOutputSizeChanged(mPreviewConfig.mSurfaceWidth, mPreviewConfig.mSurfaceHeight);
+        }
+        mProcessor.setPreviewFilter(filter);
     }
 
-    public void preparePreview(Surface previewSurface) {
-        mProcessor.setPreviewSurface(previewSurface);
-    }
-
-    public void prepareSave(int clipTop, int clipLeft, int clipBottom, int clipRight) {
+    public void startSave(int clipTop,
+                          int clipLeft,
+                          int clipBottom,
+                          int clipRight,
+                          File outputFile,
+                          int orientation,
+                          SaveListener saveListener) {
         Logger.d(TAG, "Clip top: "
                 + clipTop
                 + ", clip left: "
@@ -74,61 +99,16 @@ public class AVFlowEngine {
         mSaver.setOutputSize(clipRight - clipLeft, clipBottom - clipTop);
         mSaver.prepare();
         mProcessor.setSaveSurface(mSaver.getInputSurface(), clipTop, clipLeft, clipBottom, clipRight);
-    }
-
-    public void prepareEngine(int rotation) {
-        mProcessor.prepare(rotation);
-        mCameraGenerator.setOutputTexture(mProcessor.getOesTextureId());
-        mLocalGenerator.setOutputTexture(mProcessor.getOesTextureId());
-    }
-
-    public void setPreviewFilter(GPUImageFilter filter) {
-        if (filter != null) {
-            filter.init();
-            GLES20.glUseProgram(filter.getProgram());
-            filter.onOutputSizeChanged(mInputSurfaceWidth, mInputSurfaceHeight);
-        }
-        mProcessor.setPreviewFilter(filter);
+        mSaver.beginSave(outputFile, orientation, saveListener);
     }
 
     public void setSaveFilter(GPUImageFilter filter) {
         if (filter != null) {
             filter.init();
             GLES20.glUseProgram(filter.getProgram());
-            filter.onOutputSizeChanged(mInputSurfaceWidth, mInputSurfaceHeight);
+            filter.onOutputSizeChanged(mPreviewConfig.mSurfaceWidth, mPreviewConfig.mSurfaceHeight);
         }
         mProcessor.setSaveFilter(filter);
-    }
-
-    public CameraImpl getCamera() {
-        return mCameraGenerator.getCamera();
-    }
-
-    public void startCameraGenerator(boolean forceV1) {
-        mCameraGenerator.start(forceV1);
-    }
-
-    public void startLocalGenerator(List<File> inputFileList, boolean loopPlay, float speedRate, VideoPlayListener listener) {
-        mLocalGenerator.setInputFile(inputFileList);
-        mLocalGenerator.setLoop(loopPlay);
-        mLocalGenerator.setSpeed(speedRate);
-        mLocalGenerator.start(listener);
-    }
-
-    public void stopCameraGenerator() {
-        if (mCameraGenerator != null) {
-            mCameraGenerator.stop();
-        }
-    }
-
-    public void stopLocalGenerator() {
-        if (mLocalGenerator != null) {
-            mLocalGenerator.stop();
-        }
-    }
-
-    public void startSave(File outputFile, int orientation, SaveListener saveListener) {
-        mSaver.beginSave(outputFile, orientation, saveListener);
     }
 
     public void finishSave() {
@@ -146,21 +126,62 @@ public class AVFlowEngine {
     }
 
     public void reset() {
-        // stop all nodes to stop this engine.
-        if (mCameraGenerator != null) {
-            mCameraGenerator.stop();
+        if (mPreviewConfig == null) {
+            Logger.e(TAG, "You should start preview first!");
+            return;
         }
-        if (mLocalGenerator != null) {
-            mLocalGenerator.stop();
+
+        if (mPreviewConfig.mDataSource.mSource == PreviewConfig.SOURCE_CAMERA) {
+            if (mCameraGenerator != null) {
+                mCameraGenerator.stop();
+            }
+        } else if (mPreviewConfig.mDataSource.mSource == PreviewConfig.SOURCE_FILE) {
+            if (mLocalGenerator != null) {
+                mLocalGenerator.stop();
+            }
         }
+
         if (mProcessor != null) {
             mProcessor.stop();
         }
         cancelSave();
 
+        mPreviewConfig = null;
         mCameraGenerator = null;
         mLocalGenerator = null;
         mProcessor = null;
         mSaver = null;
+    }
+
+    private void init() {
+        mCameraGenerator = new CameraStreamGenerator();
+        mLocalGenerator = new LocalStreamGenerator();
+        mProcessor = new AVStreamProcessor();
+        mSaver = new AVStreamSaver();
+    }
+
+    private void preparePreview(Surface previewSurface) {
+        mProcessor.setPreviewSurface(previewSurface);
+    }
+
+    private void prepareEngine(int rotation) {
+        mProcessor.prepare(rotation);
+        mCameraGenerator.setOutputTexture(mProcessor.getOesTextureId());
+        mLocalGenerator.setOutputTexture(mProcessor.getOesTextureId());
+    }
+
+    public CameraImpl getCamera() {
+        return mCameraGenerator.getCamera();
+    }
+
+    private void startCameraGenerator(boolean forceV1) {
+        mCameraGenerator.start(forceV1);
+    }
+
+    private void startLocalGenerator(List<File> inputFileList, boolean loopPlay, float speedRate, VideoPlayListener listener) {
+        mLocalGenerator.setInputFile(inputFileList);
+        mLocalGenerator.setLoop(loopPlay);
+        mLocalGenerator.setSpeed(speedRate);
+        mLocalGenerator.start(listener);
     }
 }

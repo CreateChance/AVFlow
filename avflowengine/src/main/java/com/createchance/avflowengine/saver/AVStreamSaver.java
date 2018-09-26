@@ -22,9 +22,9 @@ import java.nio.ByteBuffer;
  * @author createchance
  * @date 2018/8/27
  */
-public class MuxerStreamSaver {
+public class AVStreamSaver {
 
-    private static final String TAG = "MuxerStreamSaver";
+    private static final String TAG = "AVStreamSaver";
 
     private File mOutputFile;
     private int mVideoWidth, mVideoHeight;
@@ -42,7 +42,7 @@ public class MuxerStreamSaver {
     private int mBitRate = 3000000;
     private int mFrameRate = 30;
 
-    public MuxerStreamSaver() {
+    public AVStreamSaver() {
         mSaveThread = new SaverThread();
     }
 

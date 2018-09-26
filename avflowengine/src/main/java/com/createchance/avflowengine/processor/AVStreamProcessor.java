@@ -18,9 +18,9 @@ import java.nio.FloatBuffer;
  * @author createchance
  * @date 2018/8/27
  */
-public final class CodecStreamProcessor implements SurfaceTexture.OnFrameAvailableListener {
+public final class AVStreamProcessor implements SurfaceTexture.OnFrameAvailableListener {
 
-    private static final String TAG = "CodecStreamProcessor";
+    private static final String TAG = "AVStreamProcessor";
 
     private SurfaceTexture mVideoInputSurface;
 
@@ -37,7 +37,7 @@ public final class CodecStreamProcessor implements SurfaceTexture.OnFrameAvailab
 
     private int mOesWidth, mOesHeight;
 
-    public CodecStreamProcessor() {
+    public AVStreamProcessor() {
         // init egl
         mEglCore = new EglCore(null, EglCore.FLAG_RECORDABLE);
         mOutputSurfaceDrawer = new VideoFrameDrawer();
@@ -45,7 +45,7 @@ public final class CodecStreamProcessor implements SurfaceTexture.OnFrameAvailab
 
     @Override
     public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-        Logger.v(TAG, "onFrameAvailable");
+        Logger.v(TAG, "onFrameAvailable, thread name: " + Thread.currentThread().getName());
         if (mVideoInputSurface != null) {
             mVideoInputSurface.updateTexImage();
             if (mPreviewSurface != null) {
