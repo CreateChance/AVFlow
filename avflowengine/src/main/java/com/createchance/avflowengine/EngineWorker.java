@@ -6,13 +6,18 @@ import android.os.HandlerThread;
 import android.os.Message;
 
 import com.createchance.avflowengine.base.Logger;
+import com.createchance.avflowengine.config.AbstractInputConfig;
+import com.createchance.avflowengine.config.AbstractOutputConfig;
+import com.createchance.avflowengine.config.CameraInputConfig;
+import com.createchance.avflowengine.config.FileInputConfig;
+import com.createchance.avflowengine.config.PreviewOutputConfig;
+import com.createchance.avflowengine.config.SaveOutputConfig;
 import com.createchance.avflowengine.generator.CameraImpl;
 import com.createchance.avflowengine.generator.CameraStreamGenerator;
 import com.createchance.avflowengine.generator.LocalStreamGenerator;
 import com.createchance.avflowengine.processor.AVStreamProcessor;
 import com.createchance.avflowengine.processor.gpuimage.GPUImageFilter;
 import com.createchance.avflowengine.saver.AVStreamSaver;
-import com.createchance.avflowengine.saver.SaveListener;
 
 import java.io.File;
 
@@ -25,28 +30,31 @@ import java.io.File;
 final class EngineWorker extends HandlerThread {
     private static final String TAG = "EngineWorker";
 
-    private static final int MSG_START_PREVIEW = 0;
-    private static final int MSG_RESTART_PREVIEW = 1;
-    private static final int MSG_SET_PREVIEW_FILTER = 2;
-    private static final int MSG_START_SAVE = 3;
-    private static final int MSG_SET_SAVE_FILTER = 4;
+    private static final int MSG_CONFIG_INPUT = 0;
+    private static final int MSG_CONFIG_OUTPUT = 1;
+    private static final int MSG_START = 2;
+    private static final int MSG_STOP = 3;
+    private static final int MSG_START_SAVE = 4;
     private static final int MSG_FINISH_SAVE = 5;
     private static final int MSG_CANCEL_SAVE = 6;
-    private static final int MSG_RESET = 7;
+    private static final int MSG_SET_SAVE_FILTER = 7;
+    private static final int MSG_SET_PREVIEW_FILTER = 8;
 
     private CameraStreamGenerator mCameraGenerator;
     private LocalStreamGenerator mLocalGenerator;
     private AVStreamProcessor mProcessor;
     private AVStreamSaver mSaver;
 
-    private PreviewConfig mPreviewConfig;
+    private CameraInputConfig mCameraInputConfig;
+    private FileInputConfig mFileInputConfig;
+    private PreviewOutputConfig mPreviewOutputConfig;
+    private SaveOutputConfig mSaveOutputConfig;
+
+    private File mOutputFile;
+
+    private boolean mOutputConfigDone;
 
     private Handler mHandler;
-
-    private int mClipTop, mClipLeft, mClipBottom, mClipRight;
-    private File mOutputFile;
-    private int mOutputRotation;
-    private SaveListener mSaveListener;
 
     private String mToken;
 
@@ -64,20 +72,20 @@ final class EngineWorker extends HandlerThread {
 
                 Logger.d(TAG, "New message: " + msg.what);
                 switch (msg.what) {
-                    case MSG_START_PREVIEW:
-                        handleStartPreview((PreviewConfig) msg.obj);
+                    case MSG_CONFIG_INPUT:
+                        handleConfigInput((AbstractInputConfig) msg.obj);
                         break;
-                    case MSG_RESTART_PREVIEW:
-                        handleRestartPreview((PreviewConfig) msg.obj);
+                    case MSG_CONFIG_OUTPUT:
+                        handleConfigOutput((AbstractOutputConfig) msg.obj);
                         break;
-                    case MSG_SET_PREVIEW_FILTER:
-                        handleSetPreviewFilter((GPUImageFilter) msg.obj);
+                    case MSG_START:
+                        handleStartWork();
+                        break;
+                    case MSG_STOP:
+                        handleStopWork();
                         break;
                     case MSG_START_SAVE:
-                        handleStartSave(mClipTop, mClipLeft, mClipBottom, mClipRight, mOutputFile, mOutputRotation, mSaveListener);
-                        break;
-                    case MSG_SET_SAVE_FILTER:
-                        handleSetSaveFilter((GPUImageFilter) msg.obj);
+                        handleStartSave(mOutputFile);
                         break;
                     case MSG_FINISH_SAVE:
                         handleFinishSave();
@@ -85,38 +93,58 @@ final class EngineWorker extends HandlerThread {
                     case MSG_CANCEL_SAVE:
                         handleCancelSave();
                         break;
-                    case MSG_RESET:
-                        handleReset();
+                    case MSG_SET_SAVE_FILTER:
+                        handleSetSaveFilter((GPUImageFilter) msg.obj);
+                        break;
+                    case MSG_SET_PREVIEW_FILTER:
+                        handleSetPreviewFilter((GPUImageFilter) msg.obj);
                         break;
                     default:
                         break;
                 }
             }
         };
+        mCameraGenerator = new CameraStreamGenerator();
+        mLocalGenerator = new LocalStreamGenerator();
+        mProcessor = new AVStreamProcessor();
+        mSaver = new AVStreamSaver();
     }
 
-    void startPreview(PreviewConfig config) {
-        if (config == null) {
-            Logger.e(TAG, "Config can not be null!");
-            return;
-        }
-
+    void configInput(AbstractInputConfig config) {
         Message message = Message.obtain();
-        message.what = MSG_START_PREVIEW;
+        message.what = MSG_CONFIG_INPUT;
         message.obj = config;
         mHandler.sendMessage(message);
     }
 
-    void restartPreview(PreviewConfig config) {
+    void configOutput(AbstractOutputConfig config) {
         Message message = Message.obtain();
-        message.what = MSG_RESTART_PREVIEW;
+        message.what = MSG_CONFIG_OUTPUT;
         message.obj = config;
         mHandler.sendMessage(message);
+    }
+
+    void startWork() {
+        Message message = Message.obtain();
+        message.what = MSG_START;
+        mHandler.sendMessage(message);
+    }
+
+    void stopWork() {
+        Message message = Message.obtain();
+        message.what = MSG_STOP;
+        mHandler.sendMessage(message);
+    }
+
+    void startSave(File outputFile) {
+        mOutputFile = outputFile;
+
+        mHandler.sendEmptyMessage(MSG_START_SAVE);
     }
 
     void setPreviewFilter(GPUImageFilter filter) {
-        if (mPreviewConfig == null) {
-            Logger.e(TAG, "You should start preview first!");
+        if (mPreviewOutputConfig == null) {
+            Logger.d(TAG, "Preview not initialized!");
             return;
         }
 
@@ -126,27 +154,9 @@ final class EngineWorker extends HandlerThread {
         mHandler.sendMessage(message);
     }
 
-    void startSave(int clipTop,
-                   int clipLeft,
-                   int clipBottom,
-                   int clipRight,
-                   File outputFile,
-                   int rotation,
-                   SaveListener saveListener) {
-        mClipTop = clipTop;
-        mClipLeft = clipLeft;
-        mClipBottom = clipBottom;
-        mClipRight = clipRight;
-        mOutputFile = outputFile;
-        mSaveListener = saveListener;
-        mOutputRotation = rotation;
-
-        mHandler.sendEmptyMessage(MSG_START_SAVE);
-    }
-
     void setSaveFilter(GPUImageFilter filter) {
-        if (mPreviewConfig == null) {
-            Logger.e(TAG, "You should start preview first!");
+        if (mSaveOutputConfig == null) {
+            Logger.d(TAG, "Save not initialized!");
             return;
         }
 
@@ -157,8 +167,8 @@ final class EngineWorker extends HandlerThread {
     }
 
     void finishSave() {
-        if (mPreviewConfig == null) {
-            Logger.e(TAG, "You should start preview first!");
+        if (mSaveOutputConfig == null) {
+            Logger.d(TAG, "Save not initialized!");
             return;
         }
 
@@ -166,16 +176,12 @@ final class EngineWorker extends HandlerThread {
     }
 
     void cancelSave() {
-        if (mPreviewConfig == null) {
-            Logger.e(TAG, "You should start preview first!");
+        if (mSaveOutputConfig == null) {
+            Logger.d(TAG, "Save not initialized!");
             return;
         }
 
         mHandler.sendEmptyMessage(MSG_CANCEL_SAVE);
-    }
-
-    void reset() {
-        mHandler.sendEmptyMessage(MSG_RESET);
     }
 
     CameraImpl getCamera() {
@@ -190,94 +196,166 @@ final class EngineWorker extends HandlerThread {
         return String.valueOf(System.currentTimeMillis());
     }
 
-    private void handleStartPreview(PreviewConfig config) {
-        mPreviewConfig = config;
+    private void handleConfigInput(AbstractInputConfig config) {
+        if (mCameraInputConfig != null) {
+            Logger.e(TAG, "Camera input has config already.");
+            return;
+        }
 
-        mCameraGenerator = new CameraStreamGenerator();
-        mLocalGenerator = new LocalStreamGenerator();
-        mProcessor = new AVStreamProcessor();
-        mSaver = new AVStreamSaver();
-
-        mProcessor.setPreviewSurface(config.mSurface, config.mSurfaceWidth, config.mSurfaceHeight);
-        if (config.mDataSource.mSource == PreviewConfig.SOURCE_CAMERA) {
-            mProcessor.prepare(((PreviewConfig.CameraSource) config.mDataSource).mRotation);
-            mCameraGenerator.setOutputTexture(mProcessor.getOesTextureId());
-            mLocalGenerator.setOutputTexture(mProcessor.getOesTextureId());
-            mCameraGenerator.start(((PreviewConfig.CameraSource) config.mDataSource).mForceCameraV1);
-        } else if (config.mDataSource.mSource == PreviewConfig.SOURCE_FILE) {
-            mProcessor.prepare(((PreviewConfig.FileSource) config.mDataSource).mRotation);
-            mCameraGenerator.setOutputTexture(mProcessor.getOesTextureId());
-            mLocalGenerator.setOutputTexture(mProcessor.getOesTextureId());
-
-            mLocalGenerator.setInputFile(((PreviewConfig.FileSource) config.mDataSource).mSourceFileList);
-            mLocalGenerator.setLoop(((PreviewConfig.FileSource) config.mDataSource).mLoop);
-            mLocalGenerator.setSpeed(((PreviewConfig.FileSource) config.mDataSource).mSpeedRate);
-            mLocalGenerator.start(((PreviewConfig.FileSource) config.mDataSource).mListener);
+        switch (config.getType()) {
+            case AbstractInputConfig.TYPE_CAMERA:
+                mCameraInputConfig = (CameraInputConfig) config;
+                handleCameraInput();
+                break;
+            case AbstractInputConfig.TYPE_FILE:
+                if (mFileInputConfig == null) {
+                    mFileInputConfig = (FileInputConfig) config;
+                    handleFileInput();
+                } else {
+                    mFileInputConfig = (FileInputConfig) config;
+                    updateFileInput();
+                }
+                break;
+            default:
+                break;
         }
     }
 
-    private void handleRestartPreview(PreviewConfig config) {
-        mPreviewConfig = config;
-        if (config.mDataSource.mSource == PreviewConfig.SOURCE_CAMERA) {
-            mCameraGenerator.stop();
-            mProcessor.prepare(((PreviewConfig.CameraSource) config.mDataSource).mRotation);
-            mCameraGenerator.setOutputTexture(mProcessor.getOesTextureId());
-            mLocalGenerator.setOutputTexture(mProcessor.getOesTextureId());
-            mCameraGenerator.start(((PreviewConfig.CameraSource) config.mDataSource).mForceCameraV1);
-        } else if (config.mDataSource.mSource == PreviewConfig.SOURCE_FILE) {
-            mLocalGenerator.stop();
-            mProcessor.prepare(((PreviewConfig.FileSource) config.mDataSource).mRotation);
-            mCameraGenerator.setOutputTexture(mProcessor.getOesTextureId());
-            mLocalGenerator.setOutputTexture(mProcessor.getOesTextureId());
-            mLocalGenerator.setInputFile(((PreviewConfig.FileSource) config.mDataSource).mSourceFileList);
-            mLocalGenerator.setLoop(((PreviewConfig.FileSource) config.mDataSource).mLoop);
-            mLocalGenerator.setSpeed(((PreviewConfig.FileSource) config.mDataSource).mSpeedRate);
-            mLocalGenerator.start(((PreviewConfig.FileSource) config.mDataSource).mListener);
+    private void handleConfigOutput(AbstractOutputConfig config) {
+        switch (config.mType) {
+            case AbstractOutputConfig.TYPE_PREVIEW:
+                mPreviewOutputConfig = (PreviewOutputConfig) config;
+                handlePreviewOutput();
+                break;
+            case AbstractOutputConfig.TYPE_SAVE:
+                mSaveOutputConfig = (SaveOutputConfig) config;
+                handleSaveOutput();
+                break;
+            default:
+                break;
         }
+    }
+
+    private void handleStartWork() {
+        if (mCameraInputConfig != null) {
+            mCameraGenerator.start(mCameraInputConfig.isForceCameraV1());
+        } else {
+            mLocalGenerator.start(mFileInputConfig.getListener());
+        }
+    }
+
+    private void handleStopWork() {
+        if (mCameraInputConfig != null) {
+            mCameraGenerator.stop();
+        } else if (mFileInputConfig != null) {
+            mLocalGenerator.stop();
+        }
+
+        mProcessor.stop();
+
+        handleCancelSave();
+    }
+
+    private void handleCameraInput() {
+        mProcessor.setOesSurfaceSize(
+                mCameraInputConfig.getSurfaceWidth(),
+                mCameraInputConfig.getSurfaceHeight());
+    }
+
+    private void handleFileInput() {
+        mProcessor.setOesSurfaceSize(
+                mFileInputConfig.getSurfaceWidth(),
+                mFileInputConfig.getSurfaceHeight());
+        mLocalGenerator.setInputFile(mFileInputConfig.getInputFiles());
+        mLocalGenerator.setLoop(mFileInputConfig.isLoop());
+        mLocalGenerator.setSpeed(mFileInputConfig.getSpeedRate());
+    }
+
+    private void updateFileInput() {
+        mLocalGenerator.stop();
+        mLocalGenerator.setInputFile(mFileInputConfig.getInputFiles());
+        mLocalGenerator.setLoop(mFileInputConfig.isLoop());
+        mLocalGenerator.setSpeed(mFileInputConfig.getSpeedRate());
+        mLocalGenerator.start(mFileInputConfig.getListener());
+    }
+
+    private void handlePreviewOutput() {
+        mProcessor.setPreviewSurface(mPreviewOutputConfig.getSurface());
+
+        if (mOutputConfigDone) {
+            return;
+        }
+
+        mOutputConfigDone = true;
+        if (mCameraInputConfig != null) {
+            mProcessor.prepare(mCameraInputConfig.getRotation());
+        } else if (mFileInputConfig != null) {
+            mProcessor.prepare(mFileInputConfig.getRotation());
+        }
+        mCameraGenerator.setOutputTexture(mProcessor.getOesTextureId());
+        mLocalGenerator.setOutputTexture(mProcessor.getOesTextureId());
+    }
+
+    private void handleSaveOutput() {
+        mSaver.setOutputSize(
+                mSaveOutputConfig.getClipRight() - mSaveOutputConfig.getClipLeft(),
+                mSaveOutputConfig.getClipBottom() - mSaveOutputConfig.getClipTop());
+        mSaver.prepare();
+        mProcessor.setSaveSurface(
+                mSaver.getInputSurface(),
+                mSaveOutputConfig.getClipTop(),
+                mSaveOutputConfig.getClipLeft(),
+                mSaveOutputConfig.getClipBottom(),
+                mSaveOutputConfig.getClipRight());
+
+        Logger.d(TAG, "Clip top: "
+                + mSaveOutputConfig.getClipTop()
+                + ", clip left: "
+                + mSaveOutputConfig.getClipLeft()
+                + ", clip bottom: "
+                + mSaveOutputConfig.getClipBottom()
+                + ", clip right: "
+                + mSaveOutputConfig.getClipRight());
+
+        if (mOutputConfigDone) {
+            return;
+        }
+
+        mOutputConfigDone = true;
+        if (mCameraInputConfig != null) {
+            mProcessor.prepare(mCameraInputConfig.getRotation());
+        } else if (mFileInputConfig != null) {
+            mProcessor.prepare(mFileInputConfig.getRotation());
+        }
+        mCameraGenerator.setOutputTexture(mProcessor.getOesTextureId());
+        mLocalGenerator.setOutputTexture(mProcessor.getOesTextureId());
     }
 
     private void handleSetPreviewFilter(GPUImageFilter filter) {
         if (filter != null) {
             filter.init();
             GLES20.glUseProgram(filter.getProgram());
-            filter.onOutputSizeChanged(mPreviewConfig.mSurfaceWidth, mPreviewConfig.mSurfaceHeight);
+            filter.onOutputSizeChanged(
+                    mPreviewOutputConfig.getSurfaceWidth(),
+                    mPreviewOutputConfig.getSurfaceHeight());
         }
         mProcessor.setPreviewFilter(filter);
     }
 
-    private void handleStartSave(int clipTop,
-                                 int clipLeft,
-                                 int clipBottom,
-                                 int clipRight,
-                                 File outputFile,
-                                 int rotation,
-                                 SaveListener saveListener) {
-        if (mPreviewConfig == null) {
-            mCameraGenerator = new CameraStreamGenerator();
-            mLocalGenerator = new LocalStreamGenerator();
-            mProcessor = new AVStreamProcessor();
-            mSaver = new AVStreamSaver();
-        }
-
-        Logger.d(TAG, "Clip top: "
-                + clipTop
-                + ", clip left: "
-                + clipLeft
-                + ", clip bottom: "
-                + clipBottom
-                + ", clip right: "
-                + clipRight);
-        mSaver.setOutputSize(clipRight - clipLeft, clipBottom - clipTop);
-        mSaver.prepare();
-        mProcessor.setSaveSurface(mSaver.getInputSurface(), clipTop, clipLeft, clipBottom, clipRight);
-        mSaver.beginSave(outputFile, rotation, saveListener);
+    private void handleStartSave(File outputFile) {
+        mSaver.beginSave(
+                outputFile,
+                mSaveOutputConfig.getOutputRotation(),
+                mSaveOutputConfig.getSaveListener());
     }
 
     private void handleSetSaveFilter(GPUImageFilter filter) {
         if (filter != null) {
             filter.init();
             GLES20.glUseProgram(filter.getProgram());
-            filter.onOutputSizeChanged(mPreviewConfig.mSurfaceWidth, mPreviewConfig.mSurfaceHeight);
+            filter.onOutputSizeChanged(
+                    mSaveOutputConfig.getClipRight() - mSaveOutputConfig.getClipLeft(),
+                    mSaveOutputConfig.getClipBottom() - mSaveOutputConfig.getClipTop());
         }
         mProcessor.setSaveFilter(filter);
     }
@@ -294,33 +372,5 @@ final class EngineWorker extends HandlerThread {
         if (mSaver != null) {
             mSaver.cancelSave();
         }
-    }
-
-    private void handleReset() {
-        if (mPreviewConfig == null) {
-            Logger.e(TAG, "You should start preview first!");
-            return;
-        }
-
-        if (mPreviewConfig.mDataSource.mSource == PreviewConfig.SOURCE_CAMERA) {
-            if (mCameraGenerator != null) {
-                mCameraGenerator.stop();
-            }
-        } else if (mPreviewConfig.mDataSource.mSource == PreviewConfig.SOURCE_FILE) {
-            if (mLocalGenerator != null) {
-                mLocalGenerator.stop();
-            }
-        }
-
-        if (mProcessor != null) {
-            mProcessor.stop();
-        }
-        handleCancelSave();
-
-        mPreviewConfig = null;
-        mCameraGenerator = null;
-        mLocalGenerator = null;
-        mProcessor = null;
-        mSaver = null;
     }
 }

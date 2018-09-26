@@ -44,7 +44,7 @@ public class LocalStreamGenerator {
         mVideoPlayer.setSpeedRate(speedRate);
     }
 
-    public void start(VideoPlayListener listener) {
+    public void start(FilePlayListener listener) {
         mVideoPlayer.start(listener);
     }
 

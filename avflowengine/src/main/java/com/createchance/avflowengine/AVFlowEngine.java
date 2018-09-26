@@ -3,9 +3,10 @@ package com.createchance.avflowengine;
 import android.text.TextUtils;
 
 import com.createchance.avflowengine.base.Logger;
+import com.createchance.avflowengine.config.AbstractInputConfig;
+import com.createchance.avflowengine.config.AbstractOutputConfig;
 import com.createchance.avflowengine.generator.CameraImpl;
 import com.createchance.avflowengine.processor.gpuimage.GPUImageFilter;
-import com.createchance.avflowengine.saver.SaveListener;
 
 import java.io.File;
 import java.util.HashMap;
@@ -45,17 +46,43 @@ public class AVFlowEngine {
         return token;
     }
 
-    public void startPreview(String token, PreviewConfig config) {
+    public void configInput(String token, AbstractInputConfig config) {
+        if (config == null) {
+            Logger.e(TAG, "Invalid config: " + config);
+            return;
+        }
+
         if (checkToken(token)) {
             EngineWorker worker = mWorkMap.get(token);
-            worker.startPreview(config);
+            worker.configInput(config);
         }
     }
 
-    public void restartPreview(String token, PreviewConfig config) {
+    public void configOutput(String token, AbstractOutputConfig config) {
+        if (config == null) {
+            Logger.e(TAG, "Invalid config: " + config);
+            return;
+        }
+
         if (checkToken(token)) {
             EngineWorker worker = mWorkMap.get(token);
-            worker.restartPreview(config);
+            worker.configOutput(config);
+        }
+    }
+
+    public void start(String token) {
+        if (checkToken(token)) {
+            EngineWorker worker = mWorkMap.get(token);
+            worker.startWork();
+        }
+    }
+
+    public void stop(String token) {
+        if (checkToken(token)) {
+            EngineWorker worker = mWorkMap.get(token);
+            worker.stopWork();
+            // remove this worker after reset.
+            mWorkMap.remove(token);
         }
     }
 
@@ -66,17 +93,10 @@ public class AVFlowEngine {
         }
     }
 
-    public void startSave(String token,
-                          int clipTop,
-                          int clipLeft,
-                          int clipBottom,
-                          int clipRight,
-                          File outputFile,
-                          int rotation,
-                          SaveListener saveListener) {
+    public void startSave(String token, File outputFile) {
         if (checkToken(token)) {
             EngineWorker worker = mWorkMap.get(token);
-            worker.startSave(clipTop, clipLeft, clipBottom, clipRight, outputFile, rotation, saveListener);
+            worker.startSave(outputFile);
         }
     }
 
@@ -98,15 +118,6 @@ public class AVFlowEngine {
         if (checkToken(token)) {
             EngineWorker worker = mWorkMap.get(token);
             worker.cancelSave();
-        }
-    }
-
-    public void reset(String token) {
-        if (checkToken(token)) {
-            EngineWorker worker = mWorkMap.get(token);
-            worker.reset();
-            // remove this worker after reset.
-            mWorkMap.remove(token);
         }
     }
 

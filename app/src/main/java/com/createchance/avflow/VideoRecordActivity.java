@@ -33,8 +33,10 @@ import com.createchance.avflow.model.SimpleModel;
 import com.createchance.avflow.utils.AssetsUtil;
 import com.createchance.avflow.utils.DensityUtil;
 import com.createchance.avflowengine.AVFlowEngine;
-import com.createchance.avflowengine.PreviewConfig;
 import com.createchance.avflowengine.base.Logger;
+import com.createchance.avflowengine.config.CameraInputConfig;
+import com.createchance.avflowengine.config.PreviewOutputConfig;
+import com.createchance.avflowengine.config.SaveOutputConfig;
 import com.createchance.avflowengine.generator.CameraImpl;
 import com.createchance.avflowengine.saver.SaveListener;
 
@@ -450,14 +452,18 @@ public class VideoRecordActivity extends AppCompatActivity implements
         Log.d(TAG, "onSurfaceTextureAvailable: " + width + ", " + height);
         mEngineToken = AVFlowEngine.getInstance().newWorker();
 
-        PreviewConfig config = new PreviewConfig.Builder()
-                .surface(new Surface(surface), width, height)
-                .dataSource(new PreviewConfig.CameraSource(
-                        PreviewConfig.ROTATION_270,
-                        PreviewConfig.CameraSource.CAMERA_FACING_BACK,
-                        true))
+        CameraInputConfig inputConfig = new CameraInputConfig.Builder()
+                .facing(CameraInputConfig.FACING_BACK)
+                .forceCameraV1(true)
+                .rotation(CameraInputConfig.ROTATION_270)
+                .surfaceSize(width, height)
                 .build();
-        AVFlowEngine.getInstance().startPreview(mEngineToken, config);
+        PreviewOutputConfig previewOutputConfig = new PreviewOutputConfig.Builder()
+                .surface(new Surface(surface), width, height)
+                .build();
+        AVFlowEngine.getInstance().configInput(mEngineToken, inputConfig);
+        AVFlowEngine.getInstance().configOutput(mEngineToken, previewOutputConfig);
+        AVFlowEngine.getInstance().start(mEngineToken);
 
         // show filter info.
         mFilterInfoView.setVisibility(View.VISIBLE);
@@ -474,7 +480,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
         Log.d(TAG, "onSurfaceTextureDestroyed: ");
-        AVFlowEngine.getInstance().reset(mEngineToken);
+        AVFlowEngine.getInstance().stop(mEngineToken);
         return true;
     }
 
@@ -488,15 +494,11 @@ public class VideoRecordActivity extends AppCompatActivity implements
             case MSG_UPDATE_COUNT:
                 if (!mIsRecording) {
                     mIsRecording = true;
-                    AVFlowEngine.getInstance().startSave(
-                            mEngineToken,
-                            mClipTop,
-                            mClipLeft,
-                            mClipBottom,
-                            mClipRight,
-                            getOutputFile(),
-                            0,
-                            new SaveListener() {
+                    SaveOutputConfig outputConfig = new SaveOutputConfig.Builder()
+                            .clipArea(mClipTop, mClipLeft, mClipBottom, mClipRight)
+                            .frameRate(30)
+                            .rotation(SaveOutputConfig.ROTATION_0)
+                            .listener(new SaveListener() {
                                 @Override
                                 public void onSaved(File file) {
                                     Scene scene = new Scene();
@@ -514,7 +516,10 @@ public class VideoRecordActivity extends AppCompatActivity implements
                                         VideoEditActivity.start(VideoRecordActivity.this);
                                     }
                                 }
-                            });
+                            })
+                            .build();
+                    AVFlowEngine.getInstance().configOutput(mEngineToken, outputConfig);
+                    AVFlowEngine.getInstance().startSave(mEngineToken, getOutputFile());
                 }
                 long now = System.currentTimeMillis();
                 float progress = (now - mCountStartTime) * 1.0f / mDurationOfScene;

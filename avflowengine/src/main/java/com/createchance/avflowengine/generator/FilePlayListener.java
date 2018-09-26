@@ -8,7 +8,7 @@ import java.io.File;
  * @author createchance
  * @date 2018-09-19
  */
-public interface VideoPlayListener {
+public interface FilePlayListener {
     void onListPlayStarted();
 
     void onFilePlayStarted(int position, File file);

@@ -57,14 +57,16 @@ public final class AVStreamProcessor implements SurfaceTexture.OnFrameAvailableL
         }
     }
 
-    public void setPreviewSurface(Surface surface, int surfaceWidth, int surfaceHeight) {
+    public void setOesSurfaceSize(int surfaceWidth, int surfaceHeight) {
+        mOesWidth = surfaceWidth;
+        mOesHeight = surfaceHeight;
+    }
+
+    public void setPreviewSurface(Surface surface) {
         if (surface == null) {
             Logger.e(TAG, "Preview surface can not be null!");
             return;
         }
-
-        mOesWidth = surfaceWidth;
-        mOesHeight = surfaceHeight;
 
         mPreviewSurface = surface;
         mPreviewDrawSurface = new WindowSurface(mEglCore, mPreviewSurface, false);

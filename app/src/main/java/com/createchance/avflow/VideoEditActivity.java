@@ -27,12 +27,12 @@ import com.createchance.avflow.model.SimpleModel;
 import com.createchance.avflow.utils.AssetsUtil;
 import com.createchance.avflow.utils.DensityUtil;
 import com.createchance.avflowengine.AVFlowEngine;
-import com.createchance.avflowengine.PreviewConfig;
 import com.createchance.avflowengine.base.UiThreadUtil;
-import com.createchance.avflowengine.generator.VideoPlayListener;
+import com.createchance.avflowengine.config.FileInputConfig;
+import com.createchance.avflowengine.config.PreviewOutputConfig;
+import com.createchance.avflowengine.generator.FilePlayListener;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -68,7 +68,7 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
 
     private String mEngineToken;
 
-    private VideoPlayListener mVideoPlayListener = new VideoPlayListener() {
+    private FilePlayListener mVideoPlayListener = new FilePlayListener() {
         @Override
         public void onListPlayStarted() {
             Log.d(TAG, "onListPlayStarted: ");
@@ -161,18 +161,16 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                         if (mCurrentSceneIndex == -1) {
                             gotoPanel(mShotPanel);
                         }
-                        List<File> videoList = new ArrayList<>();
-                        videoList.add(scene.mVideo);
-                        PreviewConfig config = new PreviewConfig.Builder()
-                                .surface(mPreviewSurface, mSurfaceWidth, mSurfaceHeight)
-                                .dataSource(new PreviewConfig.FileSource(
-                                        videoList,
-                                        PreviewConfig.ROTATION_180,
-                                        true,
-                                        1.0f,
-                                        mVideoPlayListener))
+                        FileInputConfig inputConfig = new FileInputConfig.Builder()
+                                .addFile(scene.mVideo)
+                                .loop(true)
+                                .speedRate(1.0f)
+                                .rotation(FileInputConfig.ROTATION_180)
+                                .surfaceSize(mSurfaceWidth, mSurfaceHeight)
+                                .listener(mVideoPlayListener)
                                 .build();
-                        AVFlowEngine.getInstance().restartPreview(mEngineToken, config);
+                        AVFlowEngine.getInstance().configInput(mEngineToken, inputConfig);
+
                         mCurrentSceneIndex = SimpleModel.getInstance().getSceneList().indexOf(scene);
                         mSceneListAdapter.selectOne(mCurrentSceneIndex);
                     }
@@ -216,21 +214,18 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                 VideoComposeActivity.start(this);
                 break;
             case R.id.tv_play_all:
-                List<File> videoList = new ArrayList<>();
+                FileInputConfig.Builder inputConfigBuilder = new FileInputConfig.Builder();
                 for (Scene scene : SimpleModel.getInstance().getSceneList()) {
-                    videoList.add(scene.mVideo);
+                    inputConfigBuilder.addFile(scene.mVideo);
                 }
 
-                PreviewConfig config = new PreviewConfig.Builder()
-                        .surface(mPreviewSurface, mSurfaceWidth, mSurfaceHeight)
-                        .dataSource(new PreviewConfig.FileSource(
-                                videoList,
-                                PreviewConfig.ROTATION_180,
-                                true,
-                                1.0f,
-                                mVideoPlayListener))
-                        .build();
-                AVFlowEngine.getInstance().restartPreview(mEngineToken, config);
+                inputConfigBuilder.loop(true)
+                        .rotation(FileInputConfig.ROTATION_180)
+                        .speedRate(1.0f)
+                        .surfaceSize(mSurfaceWidth, mSurfaceHeight)
+                        .listener(mVideoPlayListener);
+
+                AVFlowEngine.getInstance().configInput(mEngineToken, inputConfigBuilder.build());
 
                 mSceneListAdapter.selectAll();
                 mCurrentSceneIndex = -1;
@@ -289,18 +284,20 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
         mSurfaceWidth = width;
         mSurfaceHeight = height;
         // start play preview now.
-        List<File> playList = new ArrayList<>();
-        playList.add(SimpleModel.getInstance().getSceneList().get(0).mVideo);
-        PreviewConfig config = new PreviewConfig.Builder()
-                .surface(mPreviewSurface, mSurfaceWidth, mSurfaceHeight)
-                .dataSource(new PreviewConfig.FileSource(
-                        playList,
-                        PreviewConfig.ROTATION_180,
-                        true,
-                        1.0f,
-                        mVideoPlayListener))
+        FileInputConfig inputConfig = new FileInputConfig.Builder()
+                .addFile(SimpleModel.getInstance().getSceneList().get(0).mVideo)
+                .loop(true)
+                .speedRate(1.0f)
+                .rotation(FileInputConfig.ROTATION_180)
+                .surfaceSize(mSurfaceWidth, mSurfaceHeight)
+                .listener(mVideoPlayListener)
                 .build();
-        AVFlowEngine.getInstance().startPreview(mEngineToken, config);
+        PreviewOutputConfig outputConfig = new PreviewOutputConfig.Builder()
+                .surface(new Surface(surface), width, height)
+                .build();
+        AVFlowEngine.getInstance().configInput(mEngineToken, inputConfig);
+        AVFlowEngine.getInstance().configOutput(mEngineToken, outputConfig);
+        AVFlowEngine.getInstance().start(mEngineToken);
         mSceneListAdapter.selectOne(0);
     }
 
@@ -311,7 +308,7 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
 
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-        AVFlowEngine.getInstance().reset(mEngineToken);
+        AVFlowEngine.getInstance().stop(mEngineToken);
         mPreviewSurface = null;
         mSurfaceHeight = 0;
         mSurfaceWidth = 0;

@@ -39,7 +39,7 @@ class VideoPlayer {
 
     private float mSpeedRate;
 
-    private VideoPlayListener mListener;
+    private FilePlayListener mListener;
 
     VideoPlayer() {
 
@@ -61,7 +61,7 @@ class VideoPlayer {
         mSpeedRate = rate;
     }
 
-    boolean start(VideoPlayListener listener) {
+    boolean start(FilePlayListener listener) {
         if (mOutputSurface == null) {
             Logger.e(TAG, "Output surface can not be null!");
             return false;
