@@ -72,14 +72,11 @@ public class TextureWriter {
     private int mProgramId;
 
     TextureWriter(FloatBuffer vertexBuffer,
-                  FloatBuffer textureBuffer,
-                  int surfaceWidth,
-                  int surfaceHeight) {
-        init(vertexBuffer, textureBuffer, surfaceWidth, surfaceHeight);
+                  FloatBuffer textureBuffer) {
+        init(vertexBuffer, textureBuffer);
     }
 
-    private void init(FloatBuffer vertexBuffer, FloatBuffer textureBuffer, int surfaceWidth,
-                      int surfaceHeight) {
+    private void init(FloatBuffer vertexBuffer, FloatBuffer textureBuffer) {
         mProgramId = OpenGlUtils.loadProgram(
                 BASE_VERTEX_SHADER,
                 BASE_FRAGMENT_SHADER

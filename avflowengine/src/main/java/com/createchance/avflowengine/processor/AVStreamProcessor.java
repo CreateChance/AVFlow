@@ -47,26 +47,24 @@ public final class AVStreamProcessor implements SurfaceTexture.OnFrameAvailableL
     public void onFrameAvailable(SurfaceTexture surfaceTexture) {
         Logger.v(TAG, "onFrameAvailable, thread name: " + Thread.currentThread().getName());
         if (mVideoInputSurface != null) {
-            mVideoInputSurface.updateTexImage();
             if (mPreviewSurface != null) {
                 mOutputSurfaceDrawer.draw(mOesReader, mPreviewDrawSurface, mPreviewFilter, mPreviewTextureWriter);
             }
             if (mSaveSurface != null) {
                 mOutputSurfaceDrawer.draw(mOesReader, mSaveDrawSurface, mSaveFilter, mSaveTextureWriter);
             }
+            mVideoInputSurface.updateTexImage();
         }
     }
 
-    public void setSurfaceSize(int surfaceWidth, int surfaceHeight) {
-        mOesWidth = surfaceWidth;
-        mOesHeight = surfaceHeight;
-    }
-
-    public void setPreviewSurface(Surface surface) {
+    public void setPreviewSurface(Surface surface, int surfaceWidth, int surfaceHeight) {
         if (surface == null) {
             Logger.e(TAG, "Preview surface can not be null!");
             return;
         }
+
+        mOesWidth = surfaceWidth;
+        mOesHeight = surfaceHeight;
 
         mPreviewSurface = surface;
         mPreviewDrawSurface = new WindowSurface(mEglCore, mPreviewSurface, false);
@@ -103,9 +101,7 @@ public final class AVStreamProcessor implements SurfaceTexture.OnFrameAvailableL
                 mOesHeight);
         mSaveTextureWriter = new TextureWriter(
                 getVertexBuffer(),
-                getTextureBuffer(clipTop, clipLeft, clipBottom, clipRight),
-                mOesWidth,
-                mOesHeight);
+                getTextureBuffer(clipTop, clipLeft, clipBottom, clipRight));
         mOutputSurfaceDrawer.createFrameBuffer();
     }
 
@@ -141,7 +137,7 @@ public final class AVStreamProcessor implements SurfaceTexture.OnFrameAvailableL
         mOesTextureId = OpenGlUtils.createOesTexture();
         mVideoInputSurface = new SurfaceTexture(mOesTextureId);
         mOesReader = new OesTextureReader(mOesTextureId, mOesWidth, mOesHeight, rotation);
-        mPreviewTextureWriter = new TextureWriter(null, null, mOesWidth, mOesHeight);
+        mPreviewTextureWriter = new TextureWriter(null, null);
         mVideoInputSurface.setOnFrameAvailableListener(this);
     }
 

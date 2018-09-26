@@ -4,21 +4,24 @@ import android.opengl.GLES20;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
-import android.view.Surface;
 
 import com.createchance.avflowengine.base.Logger;
 import com.createchance.avflowengine.generator.CameraImpl;
 import com.createchance.avflowengine.generator.CameraStreamGenerator;
 import com.createchance.avflowengine.generator.LocalStreamGenerator;
-import com.createchance.avflowengine.generator.VideoPlayListener;
 import com.createchance.avflowengine.processor.AVStreamProcessor;
 import com.createchance.avflowengine.processor.gpuimage.GPUImageFilter;
 import com.createchance.avflowengine.saver.AVStreamSaver;
 import com.createchance.avflowengine.saver.SaveListener;
 
 import java.io.File;
-import java.util.List;
 
+/**
+ * Engine worker, all engine work done in this thread.
+ *
+ * @author createchance
+ * @date 2018-09-26
+ */
 final class EngineWorker extends HandlerThread {
     private static final String TAG = "EngineWorker";
 
@@ -189,35 +192,47 @@ final class EngineWorker extends HandlerThread {
 
     private void handleStartPreview(PreviewConfig config) {
         mPreviewConfig = config;
-        init();
-        mProcessor.setSurfaceSize(config.mSurfaceWidth, config.mSurfaceHeight);
-        preparePreview(config.mSurface);
+
+        mCameraGenerator = new CameraStreamGenerator();
+        mLocalGenerator = new LocalStreamGenerator();
+        mProcessor = new AVStreamProcessor();
+        mSaver = new AVStreamSaver();
+
+        mProcessor.setPreviewSurface(config.mSurface, config.mSurfaceWidth, config.mSurfaceHeight);
         if (config.mDataSource.mSource == PreviewConfig.SOURCE_CAMERA) {
-            prepareEngine(((PreviewConfig.CameraSource) config.mDataSource).mRotation);
-            startCameraGenerator(((PreviewConfig.CameraSource) config.mDataSource).mForceCameraV1);
+            mProcessor.prepare(((PreviewConfig.CameraSource) config.mDataSource).mRotation);
+            mCameraGenerator.setOutputTexture(mProcessor.getOesTextureId());
+            mLocalGenerator.setOutputTexture(mProcessor.getOesTextureId());
+            mCameraGenerator.start(((PreviewConfig.CameraSource) config.mDataSource).mForceCameraV1);
         } else if (config.mDataSource.mSource == PreviewConfig.SOURCE_FILE) {
-            prepareEngine(((PreviewConfig.FileSource) config.mDataSource).mRotation);
-            startLocalGenerator(((PreviewConfig.FileSource) config.mDataSource).mSourceFileList,
-                    ((PreviewConfig.FileSource) config.mDataSource).mLoop,
-                    ((PreviewConfig.FileSource) config.mDataSource).mSpeedRate,
-                    ((PreviewConfig.FileSource) config.mDataSource).mListener);
+            mProcessor.prepare(((PreviewConfig.FileSource) config.mDataSource).mRotation);
+            mCameraGenerator.setOutputTexture(mProcessor.getOesTextureId());
+            mLocalGenerator.setOutputTexture(mProcessor.getOesTextureId());
+
+            mLocalGenerator.setInputFile(((PreviewConfig.FileSource) config.mDataSource).mSourceFileList);
+            mLocalGenerator.setLoop(((PreviewConfig.FileSource) config.mDataSource).mLoop);
+            mLocalGenerator.setSpeed(((PreviewConfig.FileSource) config.mDataSource).mSpeedRate);
+            mLocalGenerator.start(((PreviewConfig.FileSource) config.mDataSource).mListener);
         }
     }
 
     private void handleRestartPreview(PreviewConfig config) {
         mPreviewConfig = config;
-        mProcessor.setSurfaceSize(config.mSurfaceWidth, config.mSurfaceHeight);
         if (config.mDataSource.mSource == PreviewConfig.SOURCE_CAMERA) {
             mCameraGenerator.stop();
-            prepareEngine(((PreviewConfig.CameraSource) config.mDataSource).mRotation);
-            startCameraGenerator(((PreviewConfig.CameraSource) config.mDataSource).mForceCameraV1);
+            mProcessor.prepare(((PreviewConfig.CameraSource) config.mDataSource).mRotation);
+            mCameraGenerator.setOutputTexture(mProcessor.getOesTextureId());
+            mLocalGenerator.setOutputTexture(mProcessor.getOesTextureId());
+            mCameraGenerator.start(((PreviewConfig.CameraSource) config.mDataSource).mForceCameraV1);
         } else if (config.mDataSource.mSource == PreviewConfig.SOURCE_FILE) {
             mLocalGenerator.stop();
-            prepareEngine(((PreviewConfig.FileSource) config.mDataSource).mRotation);
-            startLocalGenerator(((PreviewConfig.FileSource) config.mDataSource).mSourceFileList,
-                    ((PreviewConfig.FileSource) config.mDataSource).mLoop,
-                    ((PreviewConfig.FileSource) config.mDataSource).mSpeedRate,
-                    ((PreviewConfig.FileSource) config.mDataSource).mListener);
+            mProcessor.prepare(((PreviewConfig.FileSource) config.mDataSource).mRotation);
+            mCameraGenerator.setOutputTexture(mProcessor.getOesTextureId());
+            mLocalGenerator.setOutputTexture(mProcessor.getOesTextureId());
+            mLocalGenerator.setInputFile(((PreviewConfig.FileSource) config.mDataSource).mSourceFileList);
+            mLocalGenerator.setLoop(((PreviewConfig.FileSource) config.mDataSource).mLoop);
+            mLocalGenerator.setSpeed(((PreviewConfig.FileSource) config.mDataSource).mSpeedRate);
+            mLocalGenerator.start(((PreviewConfig.FileSource) config.mDataSource).mListener);
         }
     }
 
@@ -235,8 +250,15 @@ final class EngineWorker extends HandlerThread {
                                  int clipBottom,
                                  int clipRight,
                                  File outputFile,
-                                 int orientation,
+                                 int rotation,
                                  SaveListener saveListener) {
+        if (mPreviewConfig == null) {
+            mCameraGenerator = new CameraStreamGenerator();
+            mLocalGenerator = new LocalStreamGenerator();
+            mProcessor = new AVStreamProcessor();
+            mSaver = new AVStreamSaver();
+        }
+
         Logger.d(TAG, "Clip top: "
                 + clipTop
                 + ", clip left: "
@@ -248,7 +270,7 @@ final class EngineWorker extends HandlerThread {
         mSaver.setOutputSize(clipRight - clipLeft, clipBottom - clipTop);
         mSaver.prepare();
         mProcessor.setSaveSurface(mSaver.getInputSurface(), clipTop, clipLeft, clipBottom, clipRight);
-        mSaver.beginSave(outputFile, orientation, saveListener);
+        mSaver.beginSave(outputFile, rotation, saveListener);
     }
 
     private void handleSetSaveFilter(GPUImageFilter filter) {
@@ -300,33 +322,5 @@ final class EngineWorker extends HandlerThread {
         mLocalGenerator = null;
         mProcessor = null;
         mSaver = null;
-    }
-
-    private void init() {
-        mCameraGenerator = new CameraStreamGenerator();
-        mLocalGenerator = new LocalStreamGenerator();
-        mProcessor = new AVStreamProcessor();
-        mSaver = new AVStreamSaver();
-    }
-
-    private void preparePreview(Surface previewSurface) {
-        mProcessor.setPreviewSurface(previewSurface);
-    }
-
-    private void prepareEngine(int rotation) {
-        mProcessor.prepare(rotation);
-        mCameraGenerator.setOutputTexture(mProcessor.getOesTextureId());
-        mLocalGenerator.setOutputTexture(mProcessor.getOesTextureId());
-    }
-
-    private void startCameraGenerator(boolean forceV1) {
-        mCameraGenerator.start(forceV1);
-    }
-
-    private void startLocalGenerator(List<File> inputFileList, boolean loopPlay, float speedRate, VideoPlayListener listener) {
-        mLocalGenerator.setInputFile(inputFileList);
-        mLocalGenerator.setLoop(loopPlay);
-        mLocalGenerator.setSpeed(speedRate);
-        mLocalGenerator.start(listener);
     }
 }
