@@ -1,20 +1,15 @@
 package com.createchance.avflowengine;
 
-import android.opengl.GLES20;
-import android.view.Surface;
+import android.text.TextUtils;
 
 import com.createchance.avflowengine.base.Logger;
 import com.createchance.avflowengine.generator.CameraImpl;
-import com.createchance.avflowengine.generator.CameraStreamGenerator;
-import com.createchance.avflowengine.generator.LocalStreamGenerator;
-import com.createchance.avflowengine.generator.VideoPlayListener;
-import com.createchance.avflowengine.processor.AVStreamProcessor;
 import com.createchance.avflowengine.processor.gpuimage.GPUImageFilter;
-import com.createchance.avflowengine.saver.AVStreamSaver;
 import com.createchance.avflowengine.saver.SaveListener;
 
 import java.io.File;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * av flow engine.
@@ -27,12 +22,7 @@ public class AVFlowEngine {
 
     private static AVFlowEngine sInstance;
 
-    private CameraStreamGenerator mCameraGenerator;
-    private LocalStreamGenerator mLocalGenerator;
-    private AVStreamProcessor mProcessor;
-    private AVStreamSaver mSaver;
-
-    private PreviewConfig mPreviewConfig;
+    private Map<String, EngineWorker> mWorkMap;
 
     private AVFlowEngine() {
     }
@@ -40,148 +30,105 @@ public class AVFlowEngine {
     public synchronized static AVFlowEngine getInstance() {
         if (sInstance == null) {
             sInstance = new AVFlowEngine();
+            sInstance.mWorkMap = new HashMap<>();
         }
 
         return sInstance;
     }
 
-    public void startPreview(PreviewConfig config) {
-        if (config == null) {
-            Logger.e(TAG, "Config can not be null!");
-            return;
-        }
+    public String newWorker() {
+        EngineWorker worker = new EngineWorker("EngineWorkerThread");
+        worker.startThread();
+        String token = worker.getToken();
+        mWorkMap.put(token, worker);
 
-        mPreviewConfig = config;
-        init();
-        mProcessor.setSurfaceSize(config.mSurfaceWidth, config.mSurfaceHeight);
-        preparePreview(config.mSurface);
-        if (config.mDataSource.mSource == PreviewConfig.SOURCE_CAMERA) {
-            prepareEngine(((PreviewConfig.CameraSource) config.mDataSource).mRotation);
-            startCameraGenerator(((PreviewConfig.CameraSource) config.mDataSource).mForceCameraV1);
-        } else if (config.mDataSource.mSource == PreviewConfig.SOURCE_FILE) {
-            prepareEngine(((PreviewConfig.FileSource) config.mDataSource).mRotation);
-            startLocalGenerator(((PreviewConfig.FileSource) config.mDataSource).mSourceFileList,
-                    ((PreviewConfig.FileSource) config.mDataSource).mLoop,
-                    ((PreviewConfig.FileSource) config.mDataSource).mSpeedRate,
-                    ((PreviewConfig.FileSource) config.mDataSource).mListener);
+        return token;
+    }
+
+    public void startPreview(String token, PreviewConfig config) {
+        if (checkToken(token)) {
+            EngineWorker worker = mWorkMap.get(token);
+            worker.startPreview(config);
         }
     }
 
-    public void setPreviewFilter(GPUImageFilter filter) {
-        if (mPreviewConfig == null) {
-            Logger.e(TAG, "You should start preview first!");
-            return;
+    public void restartPreview(String token, PreviewConfig config) {
+        if (checkToken(token)) {
+            EngineWorker worker = mWorkMap.get(token);
+            worker.restartPreview(config);
         }
-
-        if (filter != null) {
-            filter.init();
-            GLES20.glUseProgram(filter.getProgram());
-            filter.onOutputSizeChanged(mPreviewConfig.mSurfaceWidth, mPreviewConfig.mSurfaceHeight);
-        }
-        mProcessor.setPreviewFilter(filter);
     }
 
-    public void startSave(int clipTop,
+    public void setPreviewFilter(String token, GPUImageFilter filter) {
+        if (checkToken(token)) {
+            EngineWorker worker = mWorkMap.get(token);
+            worker.setPreviewFilter(filter);
+        }
+    }
+
+    public void startSave(String token,
+                          int clipTop,
                           int clipLeft,
                           int clipBottom,
                           int clipRight,
                           File outputFile,
-                          int orientation,
+                          int rotation,
                           SaveListener saveListener) {
-        Logger.d(TAG, "Clip top: "
-                + clipTop
-                + ", clip left: "
-                + clipLeft
-                + ", clip bottom: "
-                + clipBottom
-                + ", clip right: "
-                + clipRight);
-        mSaver.setOutputSize(clipRight - clipLeft, clipBottom - clipTop);
-        mSaver.prepare();
-        mProcessor.setSaveSurface(mSaver.getInputSurface(), clipTop, clipLeft, clipBottom, clipRight);
-        mSaver.beginSave(outputFile, orientation, saveListener);
-    }
-
-    public void setSaveFilter(GPUImageFilter filter) {
-        if (filter != null) {
-            filter.init();
-            GLES20.glUseProgram(filter.getProgram());
-            filter.onOutputSizeChanged(mPreviewConfig.mSurfaceWidth, mPreviewConfig.mSurfaceHeight);
-        }
-        mProcessor.setSaveFilter(filter);
-    }
-
-    public void finishSave() {
-        mProcessor.clearSaveSurface();
-        mSaver.finishSave();
-    }
-
-    public void cancelSave() {
-        if (mProcessor != null) {
-            mProcessor.clearSaveSurface();
-        }
-        if (mSaver != null) {
-            mSaver.cancelSave();
+        if (checkToken(token)) {
+            EngineWorker worker = mWorkMap.get(token);
+            worker.startSave(clipTop, clipLeft, clipBottom, clipRight, outputFile, rotation, saveListener);
         }
     }
 
-    public void reset() {
-        if (mPreviewConfig == null) {
-            Logger.e(TAG, "You should start preview first!");
-            return;
+    public void setSaveFilter(String token, GPUImageFilter filter) {
+        if (checkToken(token)) {
+            EngineWorker worker = mWorkMap.get(token);
+            worker.setSaveFilter(filter);
+        }
+    }
+
+    public void finishSave(String token) {
+        if (checkToken(token)) {
+            EngineWorker worker = mWorkMap.get(token);
+            worker.finishSave();
+        }
+    }
+
+    public void cancelSave(String token) {
+        if (checkToken(token)) {
+            EngineWorker worker = mWorkMap.get(token);
+            worker.cancelSave();
+        }
+    }
+
+    public void reset(String token) {
+        if (checkToken(token)) {
+            EngineWorker worker = mWorkMap.get(token);
+            worker.reset();
+            // remove this worker after reset.
+            mWorkMap.remove(token);
+        }
+    }
+
+    public CameraImpl getCamera(String token) {
+        if (checkToken(token)) {
+            EngineWorker worker = mWorkMap.get(token);
+            return worker.getCamera();
+        }
+        return null;
+    }
+
+    private boolean checkToken(String token) {
+        if (TextUtils.isEmpty(token)) {
+            Logger.e(TAG, "Invalid token: " + token);
+            return false;
         }
 
-        if (mPreviewConfig.mDataSource.mSource == PreviewConfig.SOURCE_CAMERA) {
-            if (mCameraGenerator != null) {
-                mCameraGenerator.stop();
-            }
-        } else if (mPreviewConfig.mDataSource.mSource == PreviewConfig.SOURCE_FILE) {
-            if (mLocalGenerator != null) {
-                mLocalGenerator.stop();
-            }
+        if (!mWorkMap.containsKey(token)) {
+            Logger.e(TAG, "No worker has a token: " + token);
+            return false;
         }
 
-        if (mProcessor != null) {
-            mProcessor.stop();
-        }
-        cancelSave();
-
-        mPreviewConfig = null;
-        mCameraGenerator = null;
-        mLocalGenerator = null;
-        mProcessor = null;
-        mSaver = null;
-    }
-
-    private void init() {
-        mCameraGenerator = new CameraStreamGenerator();
-        mLocalGenerator = new LocalStreamGenerator();
-        mProcessor = new AVStreamProcessor();
-        mSaver = new AVStreamSaver();
-    }
-
-    private void preparePreview(Surface previewSurface) {
-        mProcessor.setPreviewSurface(previewSurface);
-    }
-
-    private void prepareEngine(int rotation) {
-        mProcessor.prepare(rotation);
-        mCameraGenerator.setOutputTexture(mProcessor.getOesTextureId());
-        mLocalGenerator.setOutputTexture(mProcessor.getOesTextureId());
-    }
-
-    public CameraImpl getCamera() {
-        return mCameraGenerator.getCamera();
-    }
-
-    private void startCameraGenerator(boolean forceV1) {
-        mCameraGenerator.start(forceV1);
-    }
-
-    private void startLocalGenerator(List<File> inputFileList, boolean loopPlay, float speedRate, VideoPlayListener listener) {
-        mLocalGenerator.setInputFile(inputFileList);
-        mLocalGenerator.setLoop(loopPlay);
-        mLocalGenerator.setSpeed(speedRate);
-        mLocalGenerator.start(listener);
+        return true;
     }
 }

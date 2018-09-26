@@ -97,6 +97,8 @@ public class VideoRecordActivity extends AppCompatActivity implements
 
     private int mClipTop, mClipLeft, mClipBottom, mClipRight;
 
+    private String mEngineToken;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -205,13 +207,6 @@ public class VideoRecordActivity extends AppCompatActivity implements
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
-
-        AVFlowEngine.getInstance().reset();
-    }
-
-    @Override
     public void onBackPressed() {
         if (mPanelChooseRatio.getVisibility() == View.VISIBLE) {
             mPanelChooseRatio.setVisibility(View.GONE);
@@ -232,8 +227,6 @@ public class VideoRecordActivity extends AppCompatActivity implements
         }
 
         SimpleModel.getInstance().getSceneList().clear();
-
-        AVFlowEngine.getInstance().reset();
 
         super.onBackPressed();
     }
@@ -257,7 +250,6 @@ public class VideoRecordActivity extends AppCompatActivity implements
                         SimpleModel.getInstance().addScene(scene);
                     }
                 }
-                AVFlowEngine.getInstance().reset();
                 VideoEditActivity.start(this);
                 break;
             case R.id.iv_choose_ratio:
@@ -279,10 +271,10 @@ public class VideoRecordActivity extends AppCompatActivity implements
                 mPanelMore.setVisibility(View.GONE);
                 break;
             case R.id.iv_switch_camera:
-                if (AVFlowEngine.getInstance().getCamera().getFacing() == CameraImpl.FACING_BACK) {
-                    AVFlowEngine.getInstance().getCamera().setFacing(CameraImpl.FACING_FRONT);
+                if (AVFlowEngine.getInstance().getCamera(mEngineToken).getFacing() == CameraImpl.FACING_BACK) {
+                    AVFlowEngine.getInstance().getCamera(mEngineToken).setFacing(CameraImpl.FACING_FRONT);
                 } else {
-                    AVFlowEngine.getInstance().getCamera().setFacing(CameraImpl.FACING_BACK);
+                    AVFlowEngine.getInstance().getCamera(mEngineToken).setFacing(CameraImpl.FACING_BACK);
                 }
                 break;
             case R.id.iv_more:
@@ -456,6 +448,8 @@ public class VideoRecordActivity extends AppCompatActivity implements
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         Log.d(TAG, "onSurfaceTextureAvailable: " + width + ", " + height);
+        mEngineToken = AVFlowEngine.getInstance().newWorker();
+
         PreviewConfig config = new PreviewConfig.Builder()
                 .surface(new Surface(surface), width, height)
                 .dataSource(new PreviewConfig.CameraSource(
@@ -463,7 +457,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
                         PreviewConfig.CameraSource.CAMERA_FACING_BACK,
                         true))
                 .build();
-        AVFlowEngine.getInstance().startPreview(config);
+        AVFlowEngine.getInstance().startPreview(mEngineToken, config);
 
         // show filter info.
         mFilterInfoView.setVisibility(View.VISIBLE);
@@ -480,6 +474,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
         Log.d(TAG, "onSurfaceTextureDestroyed: ");
+        AVFlowEngine.getInstance().reset(mEngineToken);
         return true;
     }
 
@@ -494,6 +489,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
                 if (!mIsRecording) {
                     mIsRecording = true;
                     AVFlowEngine.getInstance().startSave(
+                            mEngineToken,
                             mClipTop,
                             mClipLeft,
                             mClipBottom,
@@ -515,7 +511,6 @@ public class VideoRecordActivity extends AppCompatActivity implements
                                     mListAdapter.refresh(mSceneList);
                                     if (mCurrentSceneIndex == mSceneList.size()) {
                                         SimpleModel.getInstance().setSceneList(mSceneList);
-                                        AVFlowEngine.getInstance().reset();
                                         VideoEditActivity.start(VideoRecordActivity.this);
                                     }
                                 }
@@ -536,7 +531,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
                 if (progress < 1.0f) {
                     mHandler.sendEmptyMessageDelayed(MSG_UPDATE_COUNT, 16);
                 } else {
-                    AVFlowEngine.getInstance().finishSave();
+                    AVFlowEngine.getInstance().finishSave(mEngineToken);
                     mIsRecording = false;
                     mBack.setVisibility(View.VISIBLE);
                     mNext.setVisibility(View.VISIBLE);
@@ -580,7 +575,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
             @Override
             public void onClick(int position) {
                 mCurrentFilter = mFilterList.get(position);
-                AVFlowEngine.getInstance().setPreviewFilter(mCurrentFilter.get(VideoRecordActivity.this));
+                AVFlowEngine.getInstance().setPreviewFilter(mEngineToken, mCurrentFilter.get(VideoRecordActivity.this));
                 mFilterInfoView.setVisibility(View.VISIBLE);
                 mFilterCode.setText(mCurrentFilter.mCode);
                 mFilterName.setText(mCurrentFilter.mName);

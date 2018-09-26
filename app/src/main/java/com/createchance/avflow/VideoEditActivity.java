@@ -66,6 +66,8 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
     private Surface mPreviewSurface;
     private int mSurfaceWidth, mSurfaceHeight;
 
+    private String mEngineToken;
+
     private VideoPlayListener mVideoPlayListener = new VideoPlayListener() {
         @Override
         public void onListPlayStarted() {
@@ -84,7 +86,7 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                     } else {
                         filter = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex).mFilter;
                     }
-                    AVFlowEngine.getInstance().setPreviewFilter(filter.get(VideoEditActivity.this));
+                    AVFlowEngine.getInstance().setPreviewFilter(mEngineToken, filter.get(VideoEditActivity.this));
                     mFilterInfoView.setVisibility(View.VISIBLE);
                     mFilterCode.setText(filter.mCode);
                     mFilterName.setText(filter.mName);
@@ -159,7 +161,6 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                         if (mCurrentSceneIndex == -1) {
                             gotoPanel(mShotPanel);
                         }
-                        AVFlowEngine.getInstance().reset();
                         List<File> videoList = new ArrayList<>();
                         videoList.add(scene.mVideo);
                         PreviewConfig config = new PreviewConfig.Builder()
@@ -171,7 +172,7 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                                         1.0f,
                                         mVideoPlayListener))
                                 .build();
-                        AVFlowEngine.getInstance().startPreview(config);
+                        AVFlowEngine.getInstance().restartPreview(mEngineToken, config);
                         mCurrentSceneIndex = SimpleModel.getInstance().getSceneList().indexOf(scene);
                         mSceneListAdapter.selectOne(mCurrentSceneIndex);
                     }
@@ -206,23 +207,15 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
     }
 
     @Override
-    public void onBackPressed() {
-        AVFlowEngine.getInstance().reset();
-        super.onBackPressed();
-    }
-
-    @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.vw_back:
                 onBackPressed();
                 break;
             case R.id.vw_next:
-                AVFlowEngine.getInstance().reset();
                 VideoComposeActivity.start(this);
                 break;
             case R.id.tv_play_all:
-                AVFlowEngine.getInstance().reset();
                 List<File> videoList = new ArrayList<>();
                 for (Scene scene : SimpleModel.getInstance().getSceneList()) {
                     videoList.add(scene.mVideo);
@@ -237,7 +230,7 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                                 1.0f,
                                 mVideoPlayListener))
                         .build();
-                AVFlowEngine.getInstance().startPreview(config);
+                AVFlowEngine.getInstance().restartPreview(mEngineToken, config);
 
                 mSceneListAdapter.selectAll();
                 mCurrentSceneIndex = -1;
@@ -290,12 +283,14 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         Log.d(TAG, "onSurfaceTextureAvailable: ");
+        mEngineToken = AVFlowEngine.getInstance().newWorker();
+
         mPreviewSurface = new Surface(surface);
         mSurfaceWidth = width;
         mSurfaceHeight = height;
         // start play preview now.
         List<File> playList = new ArrayList<>();
-        playList.add(SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex).mVideo);
+        playList.add(SimpleModel.getInstance().getSceneList().get(0).mVideo);
         PreviewConfig config = new PreviewConfig.Builder()
                 .surface(mPreviewSurface, mSurfaceWidth, mSurfaceHeight)
                 .dataSource(new PreviewConfig.FileSource(
@@ -305,8 +300,8 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                         1.0f,
                         mVideoPlayListener))
                 .build();
-        AVFlowEngine.getInstance().startPreview(config);
-        mSceneListAdapter.selectOne(mCurrentSceneIndex);
+        AVFlowEngine.getInstance().startPreview(mEngineToken, config);
+        mSceneListAdapter.selectOne(0);
     }
 
     @Override
@@ -316,6 +311,7 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
 
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+        AVFlowEngine.getInstance().reset(mEngineToken);
         mPreviewSurface = null;
         mSurfaceHeight = 0;
         mSurfaceWidth = 0;
@@ -377,7 +373,7 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
             public void onClick(int position) {
                 mCurrentFilter = mFilterList.get(position);
                 SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex).mFilter = mCurrentFilter;
-                AVFlowEngine.getInstance().setPreviewFilter(mCurrentFilter.get(VideoEditActivity.this));
+                AVFlowEngine.getInstance().setPreviewFilter(mEngineToken, mCurrentFilter.get(VideoEditActivity.this));
                 mFilterInfoView.setVisibility(View.VISIBLE);
                 mFilterCode.setText(mCurrentFilter.mCode);
                 mFilterName.setText(mCurrentFilter.mName);
