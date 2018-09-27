@@ -300,6 +300,7 @@ final class EngineWorker extends HandlerThread {
         mSaver.setOutputSize(
                 mSaveOutputConfig.getClipRight() - mSaveOutputConfig.getClipLeft(),
                 mSaveOutputConfig.getClipBottom() - mSaveOutputConfig.getClipTop());
+        mSaver.setFrameRate(mSaveOutputConfig.getFrameRate());
         mSaver.prepare();
         mProcessor.setSaveSurface(
                 mSaver.getInputSurface(),

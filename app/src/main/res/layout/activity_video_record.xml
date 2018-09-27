@@ -120,7 +120,7 @@
             android:progress="0"
             app:ballColor="#ffffff"
             app:ballSize="0dp"
-            app:centerColor="#FF4240"
+            app:centerColor="@color/theme_red"
             app:centerText="1.0s"
             app:reachedColor="#00000000"
             app:strokeWidth="1dp"

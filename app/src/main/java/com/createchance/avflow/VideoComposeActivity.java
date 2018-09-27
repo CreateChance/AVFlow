@@ -73,7 +73,7 @@ public class VideoComposeActivity extends AppCompatActivity implements View.OnCl
                 .surfaceSize(SimpleModel.getInstance().getSceneList().get(0).mWidth,
                         SimpleModel.getInstance().getSceneList().get(0).mHeight)
                 .rotation(FileInputConfig.ROTATION_180)
-                .speedRate(FileInputConfig.SPEEDRATE_FASTEST)
+                .speedRate(FileInputConfig.SPEED_RATE_FASTEST)
                 .loop(false)
                 .listener(new FilePlayListener() {
                     @Override
@@ -136,6 +136,16 @@ public class VideoComposeActivity extends AppCompatActivity implements View.OnCl
                         SimpleModel.getInstance().getSceneList().get(0).mHeight,
                         SimpleModel.getInstance().getSceneList().get(0).mWidth)
                 .listener(new SaveListener() {
+                    @Override
+                    public void onStarted(File file) {
+
+                    }
+
+                    @Override
+                    public void onSaveGoing(long currentDurationUs, File file) {
+
+                    }
+
                     @Override
                     public void onSaved(File file) {
                         Log.d(TAG, "onSaved: " + file);

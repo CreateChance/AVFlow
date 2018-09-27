@@ -63,6 +63,10 @@ public class AVStreamSaver {
         }
     }
 
+    public void setFrameRate(int frameRate) {
+        mFrameRate = frameRate;
+    }
+
     public void prepare() {
         // init video format
         MediaFormat videoFormat = MediaFormat.createVideoFormat("video/avc", mVideoWidth, mVideoHeight);
@@ -119,6 +123,14 @@ public class AVStreamSaver {
 
         @Override
         public void run() {
+            if (mListener != null) {
+                UiThreadUtil.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mListener.onStarted(mOutputFile);
+                    }
+                });
+            }
             doMux();
             release();
             if (mNeedDelete) {
@@ -132,7 +144,7 @@ public class AVStreamSaver {
 
         private void doMux() {
             int outputBufferId;
-            MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
+            final MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
             ByteBuffer buffer;
             long framePts = 1000 * 1000 / mFrameRate;
             long nowPts = 0;
@@ -162,6 +174,14 @@ public class AVStreamSaver {
                     Log.i(TAG, "doMux..........., pts: " + bufferInfo.presentationTimeUs);
                     mMuxer.writeSampleData(mVideoTrackId, buffer, bufferInfo);
                     mEncoder.releaseOutputBuffer(outputBufferId, false);
+                    if (mListener != null) {
+                        UiThreadUtil.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                mListener.onSaveGoing(bufferInfo.presentationTimeUs, mOutputFile);
+                            }
+                        });
+                    }
                 } else if (outputBufferId == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
                     MediaFormat videoFormat = mEncoder.getOutputFormat();
                     Logger.d(TAG, "Encode format: " + videoFormat);

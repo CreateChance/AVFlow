@@ -9,5 +9,9 @@ import java.io.File;
  * @date 2018/9/9
  */
 public interface SaveListener {
+    void onStarted(File file);
+
+    void onSaveGoing(long currentDurationUs, File file);
+
     void onSaved(File file);
 }

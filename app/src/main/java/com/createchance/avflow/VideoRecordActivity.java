@@ -59,6 +59,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
     private static final String TAG = "VideoRecordActivity";
 
     private final int MSG_UPDATE_COUNT = 100;
+    private final int MSG_FINISH_COUNT = 101;
 
     private TextureView mPreview;
     private RecyclerView mThumbListView;
@@ -85,8 +86,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
     private Handler mHandler;
 
     // scenes
-    private long mDurationOfScene = 5 * 1000;
-    private long mCountStartTime;
+    private long mDurationOfScene = 5 * 1000 * 1000;
     private boolean mIsRecording;
 
     private List<Filter> mFilterList;
@@ -150,7 +150,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
         mChooseRatioView.setOnClickListener(this);
         mCountDownView = findViewById(R.id.vw_count_down);
         mCountDownView.setOnClickListener(this);
-        mCountDownView.setText(String.valueOf(mDurationOfScene / 1000f) + "s");
+        mCountDownView.setText(String.valueOf(mDurationOfScene / 1000000f) + "s");
         mChooseFilterView = findViewById(R.id.iv_choose_filter);
         mSwitchCameraView = findViewById(R.id.iv_switch_camera);
         mMoreView = findViewById(R.id.iv_more);
@@ -289,24 +289,70 @@ public class VideoRecordActivity extends AppCompatActivity implements
                 }
                 break;
             case R.id.vw_count_down:
-                // hide all views
-                mBack.setVisibility(View.INVISIBLE);
-                mNext.setVisibility(View.INVISIBLE);
-                mChooseRatioView.setVisibility(View.INVISIBLE);
-                mChooseFilterView.setVisibility(View.INVISIBLE);
-                mSwitchCameraView.setVisibility(View.INVISIBLE);
-                mMoreView.setVisibility(View.INVISIBLE);
-                mImportView.setVisibility(View.INVISIBLE);
-                mThumbListView.setVisibility(View.INVISIBLE);
-                mCurrentModeView.setVisibility(View.INVISIBLE);
-                mPanelChooseRatio.setVisibility(View.GONE);
-                mPanelChooseFilter.setVisibility(View.GONE);
-                mPanelMore.setVisibility(View.GONE);
+                if (mIsRecording) {
+                    return;
+                }
+                mIsRecording = true;
+                SaveOutputConfig outputConfig = new SaveOutputConfig.Builder()
+                        .clipArea(mClipTop, mClipLeft, mClipBottom, mClipRight)
+                        .frameRate(30)
+                        .rotation(SaveOutputConfig.ROTATION_0)
+                        .listener(new SaveListener() {
+                            @Override
+                            public void onStarted(File file) {
+                                // hide all views
+                                mBack.setVisibility(View.INVISIBLE);
+                                mNext.setVisibility(View.INVISIBLE);
+                                mChooseRatioView.setVisibility(View.INVISIBLE);
+                                mChooseFilterView.setVisibility(View.INVISIBLE);
+                                mSwitchCameraView.setVisibility(View.INVISIBLE);
+                                mMoreView.setVisibility(View.INVISIBLE);
+                                mImportView.setVisibility(View.INVISIBLE);
+                                mThumbListView.setVisibility(View.INVISIBLE);
+                                mCurrentModeView.setVisibility(View.INVISIBLE);
+                                mPanelChooseRatio.setVisibility(View.GONE);
+                                mPanelChooseFilter.setVisibility(View.GONE);
+                                mPanelMore.setVisibility(View.GONE);
 
-                mCountDownView.setCenterColor(Color.parseColor("#00000000"));
-                mCountDownView.setClickable(false);
-                mCountStartTime = System.currentTimeMillis();
-                mHandler.sendEmptyMessage(MSG_UPDATE_COUNT);
+                                mCountDownView.setCenterColor(Color.parseColor("#00000000"));
+                                mCountDownView.setClickable(false);
+                            }
+
+                            @Override
+                            public void onSaveGoing(long currentDurationUs, File file) {
+                                if (currentDurationUs >= mDurationOfScene) {
+                                    AVFlowEngine.getInstance().finishSave(mEngineToken);
+                                    mHandler.sendEmptyMessage(MSG_FINISH_COUNT);
+                                } else {
+                                    Message message = Message.obtain();
+                                    message.what = MSG_UPDATE_COUNT;
+                                    message.obj = currentDurationUs;
+                                    mHandler.sendMessage(message);
+                                }
+                            }
+
+                            @Override
+                            public void onSaved(File file) {
+                                mIsRecording = false;
+                                Scene scene = new Scene();
+                                scene.mVideo = file;
+                                scene.mFilter = mCurrentFilter;
+                                scene.mSpeedRate = 1.0f;
+                                scene.mWidth = mSceneWidth;
+                                scene.mHeight = mSceneHeight;
+                                mSceneList.remove(mCurrentSceneIndex);
+                                mSceneList.add(mCurrentSceneIndex, scene);
+                                mCurrentSceneIndex++;
+                                mListAdapter.refresh(mSceneList);
+                                if (mCurrentSceneIndex == mSceneList.size()) {
+                                    SimpleModel.getInstance().setSceneList(mSceneList);
+                                    VideoEditActivity.start(VideoRecordActivity.this);
+                                }
+                            }
+                        })
+                        .build();
+                AVFlowEngine.getInstance().configOutput(mEngineToken, outputConfig);
+                AVFlowEngine.getInstance().startSave(mEngineToken, getOutputFile());
                 break;
             case R.id.iv_import_video:
 
@@ -492,65 +538,28 @@ public class VideoRecordActivity extends AppCompatActivity implements
     public boolean handleMessage(Message msg) {
         switch (msg.what) {
             case MSG_UPDATE_COUNT:
-                if (!mIsRecording) {
-                    mIsRecording = true;
-                    SaveOutputConfig outputConfig = new SaveOutputConfig.Builder()
-                            .clipArea(mClipTop, mClipLeft, mClipBottom, mClipRight)
-                            .frameRate(30)
-                            .rotation(SaveOutputConfig.ROTATION_0)
-                            .listener(new SaveListener() {
-                                @Override
-                                public void onSaved(File file) {
-                                    Scene scene = new Scene();
-                                    scene.mVideo = file;
-                                    scene.mFilter = mCurrentFilter;
-                                    scene.mSpeedRate = 1.0f;
-                                    scene.mWidth = mSceneWidth;
-                                    scene.mHeight = mSceneHeight;
-                                    mSceneList.remove(mCurrentSceneIndex);
-                                    mSceneList.add(mCurrentSceneIndex, scene);
-                                    mCurrentSceneIndex++;
-                                    mListAdapter.refresh(mSceneList);
-                                    if (mCurrentSceneIndex == mSceneList.size()) {
-                                        SimpleModel.getInstance().setSceneList(mSceneList);
-                                        VideoEditActivity.start(VideoRecordActivity.this);
-                                    }
-                                }
-                            })
-                            .build();
-                    AVFlowEngine.getInstance().configOutput(mEngineToken, outputConfig);
-                    AVFlowEngine.getInstance().startSave(mEngineToken, getOutputFile());
-                }
-                long now = System.currentTimeMillis();
-                float progress = (now - mCountStartTime) * 1.0f / mDurationOfScene;
+                float progress = (long) msg.obj * 1.0f / mDurationOfScene;
                 if (progress > 1.0f) {
                     progress = 1.0f;
                 }
-                String text = String.format(
-                        Locale.getDefault(),
-                        "%.1fs",
-                        (mDurationOfScene - (now - mCountStartTime)) / 1000.0f);
+                float time = (mDurationOfScene - (long) msg.obj) / 1000000.0f;
+                String text = String.format(Locale.getDefault(), "%.1fs", time >= 0 ? time : 0);
                 mCountDownView.setText(text);
                 mCountDownView.setProgress(progress);
-
-                if (progress < 1.0f) {
-                    mHandler.sendEmptyMessageDelayed(MSG_UPDATE_COUNT, 16);
-                } else {
-                    AVFlowEngine.getInstance().finishSave(mEngineToken);
-                    mIsRecording = false;
-                    mBack.setVisibility(View.VISIBLE);
-                    mNext.setVisibility(View.VISIBLE);
-                    mChooseFilterView.setVisibility(View.VISIBLE);
-                    mSwitchCameraView.setVisibility(View.VISIBLE);
-                    mMoreView.setVisibility(View.VISIBLE);
-                    mImportView.setVisibility(View.VISIBLE);
-                    mThumbListView.setVisibility(View.VISIBLE);
-                    mCurrentModeView.setVisibility(View.VISIBLE);
-                    mCountDownView.setText(String.valueOf(mDurationOfScene / 1000f) + "s");
-                    mCountDownView.setCenterColor(Color.parseColor("#FF4240"));
-                    mCountDownView.setProgress(0f);
-                    mCountDownView.setClickable(true);
-                }
+                break;
+            case MSG_FINISH_COUNT:
+                mBack.setVisibility(View.VISIBLE);
+                mNext.setVisibility(View.VISIBLE);
+                mChooseFilterView.setVisibility(View.VISIBLE);
+                mSwitchCameraView.setVisibility(View.VISIBLE);
+                mMoreView.setVisibility(View.VISIBLE);
+                mImportView.setVisibility(View.VISIBLE);
+                mThumbListView.setVisibility(View.VISIBLE);
+                mCurrentModeView.setVisibility(View.VISIBLE);
+                mCountDownView.setText(String.valueOf(mDurationOfScene / 1000000f) + "s");
+                mCountDownView.setCenterColor(getResources().getColor(R.color.theme_red));
+                mCountDownView.setProgress(0f);
+                mCountDownView.setClickable(true);
                 break;
             default:
                 break;

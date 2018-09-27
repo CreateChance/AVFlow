@@ -240,7 +240,7 @@ class VideoPlayer {
                         }
                         if (!reachVideoEos) {
                             // adjust play speed here.
-                            if (mSpeedRate != FileInputConfig.SPEEDRATE_FASTEST) {
+                            if (mSpeedRate != FileInputConfig.SPEED_RATE_FASTEST) {
                                 try {
                                     Thread.sleep((long) (currentVideoFile.mVideoFrameInterval / mSpeedRate));
                                 } catch (InterruptedException e) {

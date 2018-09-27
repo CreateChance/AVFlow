@@ -164,7 +164,7 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                         FileInputConfig inputConfig = new FileInputConfig.Builder()
                                 .addFile(scene.mVideo)
                                 .loop(true)
-                                .speedRate(1.0f)
+                                .speedRate(FileInputConfig.SPEED_RATE_NORMAL)
                                 .rotation(FileInputConfig.ROTATION_180)
                                 .surfaceSize(mSurfaceWidth, mSurfaceHeight)
                                 .listener(mVideoPlayListener)
@@ -221,7 +221,7 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
 
                 inputConfigBuilder.loop(true)
                         .rotation(FileInputConfig.ROTATION_180)
-                        .speedRate(1.0f)
+                        .speedRate(FileInputConfig.SPEED_RATE_NORMAL)
                         .surfaceSize(mSurfaceWidth, mSurfaceHeight)
                         .listener(mVideoPlayListener);
 
@@ -287,7 +287,7 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
         FileInputConfig inputConfig = new FileInputConfig.Builder()
                 .addFile(SimpleModel.getInstance().getSceneList().get(0).mVideo)
                 .loop(true)
-                .speedRate(1.0f)
+                .speedRate(FileInputConfig.SPEED_RATE_NORMAL)
                 .rotation(FileInputConfig.ROTATION_180)
                 .surfaceSize(mSurfaceWidth, mSurfaceHeight)
                 .listener(mVideoPlayListener)
