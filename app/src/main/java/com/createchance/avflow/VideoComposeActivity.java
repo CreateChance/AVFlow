@@ -155,8 +155,9 @@ public class VideoComposeActivity extends AppCompatActivity implements View.OnCl
             Toast.makeText(this, R.string.video_composing, Toast.LENGTH_SHORT).show();
             return;
         }
-        super.onBackPressed();
+        SimpleModel.getInstance().getSceneList().clear();
         AVFlowEngine.getInstance().stop(mEngineToken);
+        MainActivity.start(this);
     }
 
     public static void start(Context context) {
@@ -168,7 +169,7 @@ public class VideoComposeActivity extends AppCompatActivity implements View.OnCl
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btn_complete:
-                MainActivity.start(this);
+                onBackPressed();
                 break;
             default:
                 break;
