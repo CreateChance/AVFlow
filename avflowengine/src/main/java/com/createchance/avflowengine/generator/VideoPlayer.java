@@ -9,6 +9,7 @@ import android.view.Surface;
 
 import com.createchance.avflowengine.base.Logger;
 import com.createchance.avflowengine.base.WorkRunner;
+import com.createchance.avflowengine.config.FileInputConfig;
 
 import java.io.File;
 import java.io.IOException;
@@ -100,6 +101,8 @@ class VideoPlayer {
 
         private final Object mStopLock = new Object();
 
+        private long mBaseTimeUS, mGlobalTimeUs, mTotalDurationUs;
+
         @Override
         public void run() {
             try {
@@ -162,6 +165,7 @@ class VideoPlayer {
                         videoFile.mVideoTrackId = i;
                         videoFile.mVideoFormat = mediaFormat;
                         videoFile.mDurationUs = mediaFormat.getLong(MediaFormat.KEY_DURATION);
+                        mTotalDurationUs += videoFile.mDurationUs;
                         videoFile.mVideoFrameInterval = 1000 / mediaFormat.getInteger(MediaFormat.KEY_FRAME_RATE);
                         MediaExtractor videoExtractor = new MediaExtractor();
                         videoExtractor.setDataSource(videoFile.mFile.getAbsolutePath());
@@ -236,10 +240,12 @@ class VideoPlayer {
                         }
                         if (!reachVideoEos) {
                             // adjust play speed here.
-                            try {
-                                Thread.sleep((long) (currentVideoFile.mVideoFrameInterval / mSpeedRate));
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
+                            if (mSpeedRate != FileInputConfig.SPEEDRATE_FASTEST) {
+                                try {
+                                    Thread.sleep((long) (currentVideoFile.mVideoFrameInterval / mSpeedRate));
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
                             }
                             videoInputBufferId = currentVideoFile.mVideoDecoder.dequeueInputBuffer(WAIT_TIME_OUT);
                             if (videoInputBufferId >= 0) {
@@ -288,8 +294,15 @@ class VideoPlayer {
                                     Logger.v(TAG, "Playing video, current frame info: " + bufferInfo);
                                 }
 
+                                mGlobalTimeUs = bufferInfo.presentationTimeUs + mBaseTimeUS;
+
                                 if (mListener != null) {
-                                    mListener.onFilePlayGoing(bufferInfo.presentationTimeUs, currentVideoFile.mDurationUs, currentVideoFile.mFile);
+                                    mListener.onFilePlayGoing(
+                                            bufferInfo.presentationTimeUs,
+                                            currentVideoFile.mDurationUs,
+                                            mGlobalTimeUs,
+                                            mTotalDurationUs,
+                                            currentVideoFile.mFile);
                                 }
 
                                 currentVideoFile.mVideoDecoder.releaseOutputBuffer(videoOutputBufferId, bufferInfo.size != 0);
@@ -307,6 +320,7 @@ class VideoPlayer {
                     Logger.e(TAG, "Current file has not video track, file: " + currentVideoFile.mFile);
                 }
 
+                mBaseTimeUS += currentVideoFile.mDurationUs;
                 if (mListener != null) {
                     mListener.onFilePlayDone(mVideoList.indexOf(currentVideoFile), currentVideoFile.mFile);
                 }

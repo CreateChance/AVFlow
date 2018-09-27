@@ -13,7 +13,7 @@ public interface FilePlayListener {
 
     void onFilePlayStarted(int position, File file);
 
-    void onFilePlayGoing(long currentTime, long duration, File file);
+    void onFilePlayGoing(long currentTime, long duration, long globalTime, long totalDuration, File file);
 
     void onFilePlayDone(int position, File file);
 

@@ -13,6 +13,8 @@ public class FileInputConfig extends AbstractInputConfig {
     public static final int ROTATION_180 = 180;
     public static final int ROTATION_270 = 270;
 
+    public static final float SPEEDRATE_FASTEST = 0;
+
     private List<File> mInputFiles;
     private boolean mLoop;
     private float mSpeedRate;

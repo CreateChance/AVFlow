@@ -42,5 +42,6 @@
     <string name="video_edit_music_panel_title">音乐</string>
 
     <string name="video_composing">视频正在合成，请不要退出哦～</string>
+    <string name="video_composed">合成完毕，保存在相册，请点击完成退出</string>
     <string name="video_compose_done">完成</string>
 </resources>

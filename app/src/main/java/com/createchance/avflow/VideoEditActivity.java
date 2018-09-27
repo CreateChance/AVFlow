@@ -97,7 +97,7 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
         }
 
         @Override
-        public void onFilePlayGoing(long currentTime, long duration, File file) {
+        public void onFilePlayGoing(long currentTime, long duration, final long globalTime, final long totalDuration, File file) {
 
         }
 
