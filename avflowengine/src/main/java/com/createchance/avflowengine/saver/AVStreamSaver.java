@@ -63,6 +63,10 @@ public class AVStreamSaver {
         }
     }
 
+    public void setBitrate(int bitrate) {
+        mBitRate = bitrate;
+    }
+
     public void setFrameRate(int frameRate) {
         mFrameRate = frameRate;
     }

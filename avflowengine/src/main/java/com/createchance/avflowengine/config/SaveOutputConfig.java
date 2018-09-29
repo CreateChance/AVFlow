@@ -10,6 +10,7 @@ public class SaveOutputConfig extends AbstractOutputConfig {
     public static final int ROTATION_270 = 270;
 
     private int mFrameRate = 30;
+    private int mBitrate = 3000000;
 
     private int mOutputRotation;
     private SaveListener mSaveListener;
@@ -21,6 +22,10 @@ public class SaveOutputConfig extends AbstractOutputConfig {
 
     public int getFrameRate() {
         return mFrameRate;
+    }
+
+    public int getBitrate() {
+        return mBitrate;
     }
 
     public int getOutputRotation() {
@@ -52,6 +57,12 @@ public class SaveOutputConfig extends AbstractOutputConfig {
 
         public Builder frameRate(int frameRate) {
             config.mFrameRate = frameRate;
+
+            return this;
+        }
+
+        public Builder bitrate(int bitrate) {
+            config.mBitrate = bitrate;
 
             return this;
         }

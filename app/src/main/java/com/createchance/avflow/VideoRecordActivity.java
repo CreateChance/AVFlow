@@ -296,6 +296,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
                 SaveOutputConfig outputConfig = new SaveOutputConfig.Builder()
                         .clipArea(mClipTop, mClipLeft, mClipBottom, mClipRight)
                         .frameRate(30)
+                        .bitrate(3000000)
                         .rotation(SaveOutputConfig.ROTATION_0)
                         .listener(new SaveListener() {
                             @Override

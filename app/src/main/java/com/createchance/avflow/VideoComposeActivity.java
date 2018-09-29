@@ -127,9 +127,15 @@ public class VideoComposeActivity extends AppCompatActivity implements View.OnCl
         for (Scene scene : SimpleModel.getInstance().getSceneList()) {
             inputConfigBuilder.addFile(scene.mVideo);
         }
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        retriever.setDataSource(SimpleModel.getInstance().getSceneList().get(0).mVideo.getAbsolutePath());
+        int bitrate = Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE));
+        retriever.release();
+        Log.d(TAG, "onCreate, bitrate: " + bitrate);
         SaveOutputConfig outputConfig = new SaveOutputConfig.Builder()
                 .rotation(SaveOutputConfig.ROTATION_0)
                 .frameRate(30)
+                .bitrate(3000000)
                 .clipArea(
                         0,
                         0,
