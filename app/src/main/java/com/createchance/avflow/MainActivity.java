@@ -5,8 +5,13 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+
+import com.createchance.avflowengine.AVFlowEngine;
+
+import java.io.File;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -35,6 +40,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (v.getId()) {
             case R.id.btn_start_take:
                 VideoRecordActivity.start(this);
+                break;
+            case R.id.btn_test_freetype:
+                AVFlowEngine.getInstance().test(new File(Environment.getExternalStorageDirectory() + "/test.ttf").getAbsolutePath(), "H");
                 break;
             default:
                 break;

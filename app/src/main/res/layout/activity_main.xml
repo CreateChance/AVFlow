@@ -13,4 +13,13 @@
         android:onClick="onClick"
         android:text="start take" />
 
+    <Button
+        android:id="@+id/btn_test_freetype"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/btn_start_take"
+        android:layout_centerHorizontal="true"
+        android:onClick="onClick"
+        android:text="Test Freetype" />
+
 </RelativeLayout>

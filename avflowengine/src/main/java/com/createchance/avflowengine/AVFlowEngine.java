@@ -25,6 +25,10 @@ public class AVFlowEngine {
 
     private Map<String, EngineWorker> mWorkMap;
 
+    static {
+        System.loadLibrary("freetype");
+    }
+
     private AVFlowEngine() {
     }
 
@@ -142,4 +146,6 @@ public class AVFlowEngine {
 
         return true;
     }
+
+    public native void test(String fontPath, String text);
 }

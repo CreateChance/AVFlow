@@ -306,6 +306,7 @@ set(BASE_SRCS
   src/type1/type1.c
   src/type42/type42.c
   src/winfonts/winfnt.c
+  src/api.c
 )
 
 if (WIN32)
@@ -326,7 +327,6 @@ endif ()
 #if (NOT DISABLE_FORCE_DEBUG_POSTFIX)
 #  set(CMAKE_DEBUG_POSTFIX d)
 #endif()
-
 
 add_library(freetype
     SHARED
@@ -403,6 +403,15 @@ if (HARFBUZZ_FOUND)
   list(APPEND PKG_CONFIG_REQUIRED_PRIVATE harfbuzz)
 endif ()
 
+find_library( # Defines the name of the path variable that stores the
+              # location of the NDK library.
+              log-lib
+
+              # Specifies the name of the NDK library that
+              # CMake needs to locate.
+              log )
+target_link_libraries(freetype PRIVATE ${log-lib})
+list(APPEND PKG_CONFIG_REQUIRED_PRIVATE log)
 
 # Installation
 include(GNUInstallDirs)
