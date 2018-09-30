@@ -7,11 +7,14 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 
 import com.createchance.avflowengine.AVFlowEngine;
 
 import java.io.File;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -42,7 +45,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 VideoRecordActivity.start(this);
                 break;
             case R.id.btn_test_freetype:
-                AVFlowEngine.getInstance().test(new File(Environment.getExternalStorageDirectory() + "/test.ttf").getAbsolutePath(), "H");
+                byte[] bytes = "a".getBytes(StandardCharsets.UTF_16);
+                for (byte b : bytes) {
+                    Log.d(TAG, "Bytes: " + String.format("%x", b));
+                }
                 break;
             default:
                 break;

@@ -57,10 +57,10 @@ show_image(void) {
             putchar(image[i][j] == 0 ? ' '
                                      : image[i][j] < 128 ? '+'
                                                          : '*');
-            __android_log_print(ANDROID_LOG_DEBUG, "FreeTypeNative", "%c", image[i][j]);
+//            __android_log_print(ANDROID_LOG_DEBUG, "FreeTypeNative", "%c", image[i][j]);
         }
         putchar('\n');
-        __android_log_print(ANDROID_LOG_DEBUG, "FreeTypeNative", "\n");
+//        __android_log_print(ANDROID_LOG_DEBUG, "FreeTypeNative", "\n");
     }
 }
 
@@ -90,8 +90,10 @@ int main(int argc, char**  argv) {
     filename      = argv[1];                           /* first argument     */
     text          = argv[2];                           /* second argument    */
     num_chars     = strlen( text );
-    angle         = ( 25.0 / 360 ) * 3.14159 * 2;      /* use 25 degrees     */
+    angle         = ( 0.0 / 360 ) * 3.14159 * 2;      /* use 25 degrees     */
     target_height = HEIGHT;
+
+    printf("Text len: %d \n", num_chars);
 
     error = FT_Init_FreeType( &library );              /* initialize library */
     /* error handling omitted */
@@ -126,7 +128,7 @@ int main(int argc, char**  argv) {
         FT_Set_Transform( face, &matrix, &pen );
 
         /* load glyph image into the slot (erase previous one) */
-        error = FT_Load_Char( face, text[n], FT_LOAD_RENDER );
+        error = FT_Load_Char( face, 0x597D, FT_LOAD_RENDER );
         if ( error )
             continue;                 /* ignore errors */
 
