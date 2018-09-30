@@ -328,12 +328,19 @@ endif ()
 #  set(CMAKE_DEBUG_POSTFIX d)
 #endif()
 
-add_library(freetype
-    SHARED
-  ${PUBLIC_HEADERS}
-  ${PUBLIC_CONFIG_HEADERS}
-  ${PRIVATE_HEADERS}
-  ${BASE_SRCS}
+#add_library(freetype
+#    SHARED
+#  ${PUBLIC_HEADERS}
+#  ${PUBLIC_CONFIG_HEADERS}
+#  ${PRIVATE_HEADERS}
+#  ${BASE_SRCS}
+#)
+
+add_executable(freetype
+    ${PUBLIC_HEADERS}
+    ${PUBLIC_CONFIG_HEADERS}
+    ${PRIVATE_HEADERS}
+    ${BASE_SRCS}
 )
 
 set_target_properties(
@@ -462,18 +469,7 @@ if (NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL)
       COMPONENT pkgconfig)
   endif ()
 
-  install(
-    TARGETS freetype
-      EXPORT freetype-targets
-      LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-      FRAMEWORK DESTINATION Library/Frameworks
-      COMPONENT libraries)
-  install(
-    EXPORT freetype-targets
-      DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/freetype
-      FILE freetype-config.cmake
-      COMPONENT headers)
+
 endif ()
 
 
