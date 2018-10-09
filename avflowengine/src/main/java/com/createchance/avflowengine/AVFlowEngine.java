@@ -25,10 +25,6 @@ public class AVFlowEngine {
 
     private Map<String, EngineWorker> mWorkMap;
 
-    static {
-        System.loadLibrary("freetype");
-    }
-
     private AVFlowEngine() {
     }
 
@@ -101,6 +97,36 @@ public class AVFlowEngine {
         if (checkToken(token)) {
             EngineWorker worker = mWorkMap.get(token);
             worker.startSave(outputFile);
+        }
+    }
+
+    public void setPreviewText(String token,
+                               String fontPath,
+                               String text,
+                               int posX,
+                               int posY,
+                               float scaleFactor,
+                               float red,
+                               float green,
+                               float blue) {
+        if (checkToken(token)) {
+            EngineWorker worker = mWorkMap.get(token);
+            worker.setPreviewText(fontPath, text, posX, posY, scaleFactor, red, green, blue);
+        }
+    }
+
+    public void setSaveText(String token,
+                            String fontPath,
+                            String text,
+                            int posX,
+                            int posY,
+                            float scaleFactor,
+                            float red,
+                            float green,
+                            float blue) {
+        if (checkToken(token)) {
+            EngineWorker worker = mWorkMap.get(token);
+            worker.setSaveText(fontPath, text, posX, posY, scaleFactor, red, green, blue);
         }
     }
 

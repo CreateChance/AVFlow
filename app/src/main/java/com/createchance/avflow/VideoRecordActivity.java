@@ -356,7 +356,15 @@ public class VideoRecordActivity extends AppCompatActivity implements
                 AVFlowEngine.getInstance().startSave(mEngineToken, getOutputFile());
                 break;
             case R.id.iv_import_video:
-
+                AVFlowEngine.getInstance().setPreviewText(mEngineToken,
+                        new File(Environment.getExternalStorageDirectory(), "test.otf").getAbsolutePath(),
+                        "This is test,        jump to up!",
+                        0,
+                        600,
+                        2.0f,
+                        0.5f,
+                        0.8f,
+                        0.2f);
                 break;
             case R.id.vw_current_mode:
 

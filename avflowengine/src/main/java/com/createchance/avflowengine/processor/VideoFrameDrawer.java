@@ -51,7 +51,7 @@ class VideoFrameDrawer {
         deleteOffScreenFrameBuffer();
     }
 
-    void draw(OesTextureReader reader, WindowSurface drawSurface, GPUImageFilter filter, TextureWriter writer) {
+    void draw(OesTextureReader reader, WindowSurface drawSurface, GPUImageFilter filter, TextureWriter outputWriter, TextWriter textWriter) {
         drawSurface.makeCurrent();
         bindOffScreenFrameBuffer(drawSurface.getOutputTextureIds()[0]);
         reader.read();
@@ -64,17 +64,20 @@ class VideoFrameDrawer {
             bindDefaultFrameBuffer();
         }
         if (filter == null) {
-            writer.write(drawSurface.getOutputTextureIds()[0],
+            outputWriter.write(drawSurface.getOutputTextureIds()[0],
                     drawSurface.getX(),
                     drawSurface.getY(),
                     drawSurface.getTextureWidth(),
                     drawSurface.getTextureHeight());
         } else {
-            writer.write(drawSurface.getOutputTextureIds()[1],
+            outputWriter.write(drawSurface.getOutputTextureIds()[1],
                     drawSurface.getX(),
                     drawSurface.getY(),
                     drawSurface.getTextureWidth(),
                     drawSurface.getTextureHeight());
+        }
+        if (textWriter != null) {
+            textWriter.write();
         }
         drawSurface.swapBuffers();
     }

@@ -328,20 +328,20 @@ endif ()
 #  set(CMAKE_DEBUG_POSTFIX d)
 #endif()
 
-#add_library(freetype
-#    SHARED
-#  ${PUBLIC_HEADERS}
-#  ${PUBLIC_CONFIG_HEADERS}
-#  ${PRIVATE_HEADERS}
-#  ${BASE_SRCS}
-#)
-
-add_executable(freetype
-    ${PUBLIC_HEADERS}
-    ${PUBLIC_CONFIG_HEADERS}
-    ${PRIVATE_HEADERS}
-    ${BASE_SRCS}
+add_library(freetype
+    SHARED
+  ${PUBLIC_HEADERS}
+  ${PUBLIC_CONFIG_HEADERS}
+  ${PRIVATE_HEADERS}
+  ${BASE_SRCS}
 )
+
+#add_executable(freetype
+#    ${PUBLIC_HEADERS}
+#    ${PUBLIC_CONFIG_HEADERS}
+#    ${PRIVATE_HEADERS}
+#    ${BASE_SRCS}
+#)
 
 set_target_properties(
   freetype PROPERTIES
@@ -419,6 +419,16 @@ find_library( # Defines the name of the path variable that stores the
               log )
 target_link_libraries(freetype PRIVATE ${log-lib})
 list(APPEND PKG_CONFIG_REQUIRED_PRIVATE log)
+
+find_library( # Defines the name of the path variable that stores the
+              # location of the NDK library.
+              GLESv2
+
+              # Specifies the name of the NDK library that
+              # CMake needs to locate.
+              glesv2 )
+target_link_libraries(freetype PRIVATE ${GLESv2})
+list(APPEND PKG_CONFIG_REQUIRED_PRIVATE glesv2)
 
 # Installation
 include(GNUInstallDirs)

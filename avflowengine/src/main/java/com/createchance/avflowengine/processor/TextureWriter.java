@@ -152,7 +152,7 @@ public class TextureWriter {
         glUseProgram(mProgramId);
         glViewport(x, y, surfaceWidth, surfaceHeight);
 
-        GLES20.glClearColor(1, 0, 0, 1);
+        GLES20.glClearColor(0, 0, 0, 0);
 
         // bind texture
         glActiveTexture(GL_TEXTURE0);

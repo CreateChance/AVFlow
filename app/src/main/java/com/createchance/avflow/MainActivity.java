@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.View;
 
 import com.createchance.avflowengine.AVFlowEngine;
+import com.createchance.avflowengine.processor.TextWriter;
 
 import java.io.File;
 import java.nio.charset.Charset;
@@ -45,10 +46,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 VideoRecordActivity.start(this);
                 break;
             case R.id.btn_test_freetype:
-                byte[] bytes = "a".getBytes(StandardCharsets.UTF_16);
-                for (byte b : bytes) {
-                    Log.d(TAG, "Bytes: " + String.format("%x", b));
-                }
                 break;
             default:
                 break;

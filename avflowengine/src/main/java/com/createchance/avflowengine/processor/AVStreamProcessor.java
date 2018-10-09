@@ -30,6 +30,7 @@ public final class AVStreamProcessor implements SurfaceTexture.OnFrameAvailableL
     private Surface mPreviewSurface, mSaveSurface;
     private WindowSurface mPreviewDrawSurface, mSaveDrawSurface;
     private GPUImageFilter mPreviewFilter, mSaveFilter;
+    private TextWriter mPreviewTextWriter, mSaveTextWriter;
 
     private int mOesTextureId = -1;
     private OesTextureReader mOesReader;
@@ -48,10 +49,10 @@ public final class AVStreamProcessor implements SurfaceTexture.OnFrameAvailableL
         Logger.v(TAG, "onFrameAvailable, thread name: " + Thread.currentThread().getName());
         if (mVideoInputSurface != null) {
             if (mPreviewSurface != null) {
-                mOutputSurfaceDrawer.draw(mOesReader, mPreviewDrawSurface, mPreviewFilter, mPreviewTextureWriter);
+                mOutputSurfaceDrawer.draw(mOesReader, mPreviewDrawSurface, mPreviewFilter, mPreviewTextureWriter, mPreviewTextWriter);
             }
             if (mSaveSurface != null) {
-                mOutputSurfaceDrawer.draw(mOesReader, mSaveDrawSurface, mSaveFilter, mSaveTextureWriter);
+                mOutputSurfaceDrawer.draw(mOesReader, mSaveDrawSurface, mSaveFilter, mSaveTextureWriter, mSaveTextWriter);
             }
             mVideoInputSurface.updateTexImage();
         }
@@ -133,6 +134,30 @@ public final class AVStreamProcessor implements SurfaceTexture.OnFrameAvailableL
                     mSaveDrawSurface.getOutputTextureIds()[1]);
         }
         mSaveFilter = filter;
+    }
+
+    public void setPreviewText(String fontPath,
+                               String text,
+                               int posX,
+                               int posY,
+                               float scaleFactor,
+                               float red,
+                               float green,
+                               float blue) {
+        mPreviewTextWriter = new TextWriter();
+        mPreviewTextWriter.setText(fontPath, text, posX, posY, scaleFactor, red, green, blue);
+    }
+
+    public void setSaveText(String fontPath,
+                            String text,
+                            int posX,
+                            int posY,
+                            float scaleFactor,
+                            float red,
+                            float green,
+                            float blue) {
+        mSaveTextWriter = new TextWriter();
+        mSaveTextWriter.setText(fontPath, text, posX, posY, scaleFactor, red, green, blue);
     }
 
     public void prepare(int rotation) {

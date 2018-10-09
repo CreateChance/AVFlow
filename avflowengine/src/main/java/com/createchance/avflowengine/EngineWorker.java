@@ -20,6 +20,8 @@ import com.createchance.avflowengine.processor.gpuimage.GPUImageFilter;
 import com.createchance.avflowengine.saver.AVStreamSaver;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Engine worker, all engine work done in this thread.
@@ -39,6 +41,8 @@ final class EngineWorker extends HandlerThread {
     private static final int MSG_CANCEL_SAVE = 6;
     private static final int MSG_SET_SAVE_FILTER = 7;
     private static final int MSG_SET_PREVIEW_FILTER = 8;
+    private static final int MSG_SET_PREVIEW_TEXT = 9;
+    private static final int MSG_SET_SAVE_TEXT = 10;
 
     private CameraStreamGenerator mCameraGenerator;
     private LocalStreamGenerator mLocalGenerator;
@@ -98,6 +102,28 @@ final class EngineWorker extends HandlerThread {
                         break;
                     case MSG_SET_PREVIEW_FILTER:
                         handleSetPreviewFilter((GPUImageFilter) msg.obj);
+                        break;
+                    case MSG_SET_PREVIEW_TEXT:
+                        List<Object> previewTextParams = (List<Object>) msg.obj;
+                        handleSetPreviewText((String) previewTextParams.get(0),
+                                (String) previewTextParams.get(1),
+                                (int) previewTextParams.get(2),
+                                (int) previewTextParams.get(3),
+                                (float) previewTextParams.get(4),
+                                (float) previewTextParams.get(5),
+                                (float) previewTextParams.get(6),
+                                (float) previewTextParams.get(7));
+                        break;
+                    case MSG_SET_SAVE_TEXT:
+                        List<Object> saveTextParams = (List<Object>) msg.obj;
+                        handleSetSaveText((String) saveTextParams.get(0),
+                                (String) saveTextParams.get(1),
+                                (int) saveTextParams.get(2),
+                                (int) saveTextParams.get(3),
+                                (float) saveTextParams.get(4),
+                                (float) saveTextParams.get(5),
+                                (float) saveTextParams.get(6),
+                                (float) saveTextParams.get(7));
                         break;
                     default:
                         break;
@@ -163,6 +189,62 @@ final class EngineWorker extends HandlerThread {
         Message message = Message.obtain();
         message.what = MSG_SET_SAVE_FILTER;
         message.obj = filter;
+        mHandler.sendMessage(message);
+    }
+
+    void setPreviewText(String fontPath,
+                        String text,
+                        int posX,
+                        int posY,
+                        float scaleFactor,
+                        float red,
+                        float green,
+                        float blue) {
+        if (mPreviewOutputConfig == null) {
+            Logger.d(TAG, "Preview not initialized!");
+            return;
+        }
+
+        Message message = Message.obtain();
+        message.what = MSG_SET_PREVIEW_TEXT;
+        List<Object> params = new ArrayList<>(8);
+        params.add(fontPath);
+        params.add(text);
+        params.add(posX);
+        params.add(posY);
+        params.add(scaleFactor);
+        params.add(red);
+        params.add(green);
+        params.add(blue);
+        message.obj = params;
+        mHandler.sendMessage(message);
+    }
+
+    void setSaveText(String fontPath,
+                     String text,
+                     int posX,
+                     int posY,
+                     float scaleFactor,
+                     float red,
+                     float green,
+                     float blue) {
+        if (mSaveOutputConfig == null) {
+            Logger.d(TAG, "Save not initialized!");
+            return;
+        }
+
+        Message message = Message.obtain();
+        message.what = MSG_SET_SAVE_TEXT;
+        List<Object> params = new ArrayList<>(8);
+        params.add(fontPath);
+        params.add(text);
+        params.add(posX);
+        params.add(posY);
+        params.add(scaleFactor);
+        params.add(red);
+        params.add(green);
+        params.add(blue);
+        message.obj = params;
         mHandler.sendMessage(message);
     }
 
@@ -360,6 +442,28 @@ final class EngineWorker extends HandlerThread {
                     mSaveOutputConfig.getClipBottom() - mSaveOutputConfig.getClipTop());
         }
         mProcessor.setSaveFilter(filter);
+    }
+
+    private void handleSetPreviewText(String fontPath,
+                                      String text,
+                                      int posX,
+                                      int posY,
+                                      float scaleFactor,
+                                      float red,
+                                      float green,
+                                      float blue) {
+        mProcessor.setPreviewText(fontPath, text, posX, posY, scaleFactor, red, green, blue);
+    }
+
+    private void handleSetSaveText(String fontPath,
+                                   String text,
+                                   int posX,
+                                   int posY,
+                                   float scaleFactor,
+                                   float red,
+                                   float green,
+                                   float blue) {
+        mProcessor.setSaveText(fontPath, text, posX, posY, scaleFactor, red, green, blue);
     }
 
     private void handleFinishSave() {
