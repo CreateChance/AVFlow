@@ -2,15 +2,12 @@ package com.createchance.avflowengine.processor;
 
 import android.opengl.GLES20;
 import android.opengl.Matrix;
-import android.util.Log;
 
 import com.createchance.avflowengine.processor.gpuimage.OpenGlUtils;
 
 import java.nio.FloatBuffer;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import static android.opengl.GLES20.GL_BLEND;
 import static android.opengl.GLES20.GL_ONE_MINUS_SRC_ALPHA;
@@ -159,23 +156,21 @@ public class TextWriter {
                 0);
     }
 
-    void setText(String fontPath, String text, int posX, int posY, float scaleFactor, float red, float green, float blue) {
+    void setText(String fontPath, String text, int posX, int posY, int textSize, float red, float green, float blue) {
         mPosX = posX;
         mPosY = posY;
-        mScaleFactor = scaleFactor;
         mRed = red;
         mGreen = green;
         mBlue = blue;
-        byte[] textArray = text.getBytes(Charset.defaultCharset());
+        char[] textArray = text.toCharArray();
         int[] unicodeTextArray = new int[textArray.length];
         mLoadedTextList.clear();
         for (int i = 0; i < textArray.length; i++) {
-            Log.d(TAG, "setText, value: " + textArray[i]);
             mLoadedTextList.add(new LoadedText(textArray[i]));
             unicodeTextArray[i] = textArray[i];
         }
 
-        int[] result = loadText(fontPath, unicodeTextArray);
+        int[] result = loadText(fontPath, unicodeTextArray, textSize);
         for (int i = 0, j = 0; i < result.length; i += 7) {
             LoadedText loadedText = mLoadedTextList.get(j++);
             loadedText.textureId = result[i];
@@ -197,8 +192,8 @@ public class TextWriter {
         glUniform1i(mTextureUnitLocation, 0);
         int currentPosX = mPosX;
         for (LoadedText loadedText : mLoadedTextList) {
-            int xpos = currentPosX + (int)(loadedText.left * mScaleFactor);
-            int ypos = mPosY - (int)((loadedText.height - loadedText.top) * mScaleFactor);
+            int xpos = currentPosX + (int) (loadedText.left * mScaleFactor);
+            int ypos = mPosY - (int) ((loadedText.height - loadedText.top) * mScaleFactor);
 
             int w = (int) (loadedText.width * mScaleFactor);
             int h = (int) (loadedText.height * mScaleFactor);
@@ -237,7 +232,7 @@ public class TextWriter {
         glDisable(GL_BLEND);
     }
 
-    private native int[] loadText(String fontPath, int[] textArray);
+    private native int[] loadText(String fontPath, int[] textArray, int textSize);
 
     private class LoadedText {
         public int value;

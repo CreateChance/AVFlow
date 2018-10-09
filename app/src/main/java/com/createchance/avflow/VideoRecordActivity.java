@@ -357,11 +357,11 @@ public class VideoRecordActivity extends AppCompatActivity implements
                 break;
             case R.id.iv_import_video:
                 AVFlowEngine.getInstance().setPreviewText(mEngineToken,
-                        new File(Environment.getExternalStorageDirectory(), "test.otf").getAbsolutePath(),
-                        "This is test,        jump to up!",
+                        new File(Environment.getExternalStorageDirectory(), "BillionStars_PersonalUse.ttf").getAbsolutePath(),
+                        "CreateChance",
                         0,
                         600,
-                        2.0f,
+                        100,
                         0.5f,
                         0.8f,
                         0.2f);

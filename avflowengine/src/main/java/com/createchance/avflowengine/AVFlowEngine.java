@@ -105,13 +105,13 @@ public class AVFlowEngine {
                                String text,
                                int posX,
                                int posY,
-                               float scaleFactor,
+                               int textSize,
                                float red,
                                float green,
                                float blue) {
         if (checkToken(token)) {
             EngineWorker worker = mWorkMap.get(token);
-            worker.setPreviewText(fontPath, text, posX, posY, scaleFactor, red, green, blue);
+            worker.setPreviewText(fontPath, text, posX, posY, textSize, red, green, blue);
         }
     }
 
@@ -120,13 +120,13 @@ public class AVFlowEngine {
                             String text,
                             int posX,
                             int posY,
-                            float scaleFactor,
+                            int textSize,
                             float red,
                             float green,
                             float blue) {
         if (checkToken(token)) {
             EngineWorker worker = mWorkMap.get(token);
-            worker.setSaveText(fontPath, text, posX, posY, scaleFactor, red, green, blue);
+            worker.setSaveText(fontPath, text, posX, posY, textSize, red, green, blue);
         }
     }
 

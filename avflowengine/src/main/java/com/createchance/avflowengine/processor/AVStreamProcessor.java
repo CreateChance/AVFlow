@@ -140,24 +140,24 @@ public final class AVStreamProcessor implements SurfaceTexture.OnFrameAvailableL
                                String text,
                                int posX,
                                int posY,
-                               float scaleFactor,
+                               int textSize,
                                float red,
                                float green,
                                float blue) {
         mPreviewTextWriter = new TextWriter();
-        mPreviewTextWriter.setText(fontPath, text, posX, posY, scaleFactor, red, green, blue);
+        mPreviewTextWriter.setText(fontPath, text, posX, posY, textSize, red, green, blue);
     }
 
     public void setSaveText(String fontPath,
                             String text,
                             int posX,
                             int posY,
-                            float scaleFactor,
+                            int textSize,
                             float red,
                             float green,
                             float blue) {
         mSaveTextWriter = new TextWriter();
-        mSaveTextWriter.setText(fontPath, text, posX, posY, scaleFactor, red, green, blue);
+        mSaveTextWriter.setText(fontPath, text, posX, posY, textSize, red, green, blue);
     }
 
     public void prepare(int rotation) {

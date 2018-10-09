@@ -109,7 +109,7 @@ final class EngineWorker extends HandlerThread {
                                 (String) previewTextParams.get(1),
                                 (int) previewTextParams.get(2),
                                 (int) previewTextParams.get(3),
-                                (float) previewTextParams.get(4),
+                                (int) previewTextParams.get(4),
                                 (float) previewTextParams.get(5),
                                 (float) previewTextParams.get(6),
                                 (float) previewTextParams.get(7));
@@ -120,7 +120,7 @@ final class EngineWorker extends HandlerThread {
                                 (String) saveTextParams.get(1),
                                 (int) saveTextParams.get(2),
                                 (int) saveTextParams.get(3),
-                                (float) saveTextParams.get(4),
+                                (int) saveTextParams.get(4),
                                 (float) saveTextParams.get(5),
                                 (float) saveTextParams.get(6),
                                 (float) saveTextParams.get(7));
@@ -196,7 +196,7 @@ final class EngineWorker extends HandlerThread {
                         String text,
                         int posX,
                         int posY,
-                        float scaleFactor,
+                        int textSize,
                         float red,
                         float green,
                         float blue) {
@@ -212,7 +212,7 @@ final class EngineWorker extends HandlerThread {
         params.add(text);
         params.add(posX);
         params.add(posY);
-        params.add(scaleFactor);
+        params.add(textSize);
         params.add(red);
         params.add(green);
         params.add(blue);
@@ -224,7 +224,7 @@ final class EngineWorker extends HandlerThread {
                      String text,
                      int posX,
                      int posY,
-                     float scaleFactor,
+                     int textSize,
                      float red,
                      float green,
                      float blue) {
@@ -240,7 +240,7 @@ final class EngineWorker extends HandlerThread {
         params.add(text);
         params.add(posX);
         params.add(posY);
-        params.add(scaleFactor);
+        params.add(textSize);
         params.add(red);
         params.add(green);
         params.add(blue);
@@ -448,22 +448,22 @@ final class EngineWorker extends HandlerThread {
                                       String text,
                                       int posX,
                                       int posY,
-                                      float scaleFactor,
+                                      int textSize,
                                       float red,
                                       float green,
                                       float blue) {
-        mProcessor.setPreviewText(fontPath, text, posX, posY, scaleFactor, red, green, blue);
+        mProcessor.setPreviewText(fontPath, text, posX, posY, textSize, red, green, blue);
     }
 
     private void handleSetSaveText(String fontPath,
                                    String text,
                                    int posX,
                                    int posY,
-                                   float scaleFactor,
+                                   int textSize,
                                    float red,
                                    float green,
                                    float blue) {
-        mProcessor.setSaveText(fontPath, text, posX, posY, scaleFactor, red, green, blue);
+        mProcessor.setSaveText(fontPath, text, posX, posY, textSize, red, green, blue);
     }
 
     private void handleFinishSave() {

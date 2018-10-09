@@ -152,7 +152,8 @@ int main(int argc, char **argv) {
 JNIEXPORT jintArray JNICALL
 Java_com_createchance_avflowengine_processor_TextWriter_loadText(JNIEnv *env, jobject obj,
                                                                  jstring jFontPath,
-                                                                 jintArray textArray) {
+                                                                 jintArray textArray,
+                                                                 jint textSize) {
     FT_Library library;
     FT_Face face;
 
@@ -171,7 +172,7 @@ Java_com_createchance_avflowengine_processor_TextWriter_loadText(JNIEnv *env, jo
     error = FT_New_Face(library, fontPath, 0, &face);/* create face object */
     /* error handling omitted */
 
-    FT_Set_Pixel_Sizes(face, 0, 48);
+    FT_Set_Pixel_Sizes(face, 0, textSize);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     jint resultArray[num_chars * 7];
