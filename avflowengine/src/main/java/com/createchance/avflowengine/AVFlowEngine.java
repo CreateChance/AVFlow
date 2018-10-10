@@ -1,5 +1,6 @@
 package com.createchance.avflowengine;
 
+import android.graphics.Bitmap;
 import android.text.TextUtils;
 
 import com.createchance.avflowengine.base.Logger;
@@ -108,10 +109,30 @@ public class AVFlowEngine {
                                int textSize,
                                float red,
                                float green,
-                               float blue) {
+                               float blue,
+                               Bitmap background) {
         if (checkToken(token)) {
             EngineWorker worker = mWorkMap.get(token);
-            worker.setPreviewText(fontPath, text, posX, posY, textSize, red, green, blue);
+            worker.setPreviewText(fontPath, text, posX, posY, textSize, red, green, blue, background);
+        }
+    }
+
+    public void removePreviewText(String token) {
+        if (checkToken(token)) {
+            EngineWorker worker = mWorkMap.get(token);
+            worker.removePreviewText();
+        }
+    }
+
+    public void updatePreviewTextParams(String token,
+                                        int posX,
+                                        int posY,
+                                        float red,
+                                        float green,
+                                        float blue) {
+        if (checkToken(token)) {
+            EngineWorker worker = mWorkMap.get(token);
+            worker.updatePreviewTextParams(posX, posY, red, green, blue);
         }
     }
 
@@ -123,10 +144,30 @@ public class AVFlowEngine {
                             int textSize,
                             float red,
                             float green,
-                            float blue) {
+                            float blue,
+                            Bitmap background) {
         if (checkToken(token)) {
             EngineWorker worker = mWorkMap.get(token);
-            worker.setSaveText(fontPath, text, posX, posY, textSize, red, green, blue);
+            worker.setSaveText(fontPath, text, posX, posY, textSize, red, green, blue, background);
+        }
+    }
+
+    public void removeSaveText(String token) {
+        if (checkToken(token)) {
+            EngineWorker worker = mWorkMap.get(token);
+            worker.removeSaveText();
+        }
+    }
+
+    public void updateSaveTextParams(String token,
+                                     int posX,
+                                     int posY,
+                                     float red,
+                                     float green,
+                                     float blue) {
+        if (checkToken(token)) {
+            EngineWorker worker = mWorkMap.get(token);
+            worker.updateSaveTextParams(posX, posY, red, green, blue);
         }
     }
 

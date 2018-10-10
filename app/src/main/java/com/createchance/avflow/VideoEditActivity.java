@@ -8,10 +8,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.SurfaceTexture;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Surface;
 import android.view.TextureView;
@@ -47,7 +49,7 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
 
     private View mShotPanelTitle, mTextPanelTitle, mStickerPanelTitle, mMusicPanelTitle;
     private FrameLayout mPanelContainer;
-    private View mShotPanel, mTextPanel, mStickPanel, mMusicPanel, mFilterPanel, mInfoPanel;
+    private View mShotPanel, mTextPanel, mStickPanel, mMusicPanel, mFilterPanel, mInfoPanel, mTextTitlePanel;
 
     private FilterListAdapter mFilterListAdapter;
     private RecyclerView mFilterListView;
@@ -81,17 +83,34 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                 @Override
                 public void run() {
                     Filter filter;
+                    Scene scene;
                     if (mCurrentSceneIndex == -1) {
-                        filter = SimpleModel.getInstance().getSceneList().get(position).mFilter;
+                        scene = SimpleModel.getInstance().getSceneList().get(position);
                     } else {
-                        filter = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex).mFilter;
+                        scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
                     }
+                    filter = scene.mFilter;
                     AVFlowEngine.getInstance().setPreviewFilter(mEngineToken, filter.get(VideoEditActivity.this));
                     mFilterInfoView.setVisibility(View.VISIBLE);
                     mFilterCode.setText(filter.mCode);
                     mFilterName.setText(filter.mName);
                     animFilterName();
                     mFilterListAdapter.refreshCurrentFilter(mFilterList.indexOf(SimpleModel.getInstance().getSceneList().get(position).mFilter));
+
+                    if (scene.mText != null) {
+                        AVFlowEngine.getInstance().setPreviewText(mEngineToken,
+                                scene.mText.mFontPath,
+                                scene.mText.mValue,
+                                scene.mText.mPosX,
+                                scene.mText.mPosY,
+                                scene.mText.mTextSize,
+                                scene.mText.mRed,
+                                scene.mText.mGreen,
+                                scene.mText.mBlue,
+                                scene.mText.mBackground);
+                    } else {
+                        AVFlowEngine.getInstance().removePreviewText(mEngineToken);
+                    }
                 }
             });
         }
@@ -149,6 +168,7 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
         initMusicPanel();
         initFilterPanel();
         initInfoPanel();
+        initTextTitlePanel();
 
         // init scene list
         mSceneListView = findViewById(R.id.rcv_scene_list);
@@ -173,6 +193,21 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
 
                         mCurrentSceneIndex = SimpleModel.getInstance().getSceneList().indexOf(scene);
                         mSceneListAdapter.selectOne(mCurrentSceneIndex);
+
+                        if (scene.mText != null && !TextUtils.isEmpty(scene.mText.mValue)) {
+                            AVFlowEngine.getInstance().setPreviewText(mEngineToken,
+                                    scene.mText.mFontPath,
+                                    scene.mText.mValue,
+                                    scene.mText.mPosX,
+                                    scene.mText.mPosY,
+                                    scene.mText.mTextSize,
+                                    scene.mText.mRed,
+                                    scene.mText.mGreen,
+                                    scene.mText.mBlue,
+                                    scene.mText.mBackground);
+                        } else {
+                            AVFlowEngine.getInstance().removePreviewText(mEngineToken);
+                        }
                     }
                 });
         mSceneListView.setLayoutManager(
@@ -185,7 +220,8 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                 // just take the fist one's width and height.
                 int width = SimpleModel.getInstance().getSceneList().get(0).mWidth;
                 int height = SimpleModel.getInstance().getSceneList().get(0).mHeight;
-                int maxHeight = DensityUtil.dip2px(VideoEditActivity.this, 300);
+                int screenHeight = VideoEditActivity.this.getWindowManager().getDefaultDisplay().getHeight();
+                int maxHeight = (int) ((screenHeight - DensityUtil.dip2px(VideoEditActivity.this, 48)) * 0.6f);
                 float ratio = width * 1.0f / height;
                 if (height > maxHeight) {
                     height = maxHeight;
@@ -211,6 +247,11 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                 onBackPressed();
                 break;
             case R.id.vw_next:
+                for (Scene scene : SimpleModel.getInstance().getSceneList()) {
+                    if (scene.mText != null) {
+                        scene.mText.mPosY = scene.mHeight / 2;
+                    }
+                }
                 VideoComposeActivity.start(this);
                 break;
             case R.id.tv_play_all:
@@ -269,6 +310,51 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                 break;
             case R.id.iv_filter_panel_back:
                 gotoPanel(mShotPanel);
+                break;
+            case R.id.vw_text_title:
+                gotoPanel(mTextTitlePanel);
+                break;
+            case R.id.vw_text_caption:
+
+                break;
+            case R.id.vw_text_label:
+
+                break;
+            case R.id.btn_set_title:
+                SetTextDialog.start(this, new SetTextDialog.OnClickListener() {
+                    @Override
+                    public void onConfirm(String text) {
+                        // update params of scene.
+                        String fontPath = new File(Environment.getExternalStorageDirectory(), "SentyWEN2017.ttf").getAbsolutePath();
+                        Scene scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                        scene.mText = new Scene.Text();
+                        scene.mText.mFontPath = fontPath;
+                        scene.mText.mValue = text;
+                        scene.mText.mBackground = null;
+                        scene.mText.mPosX = 0;
+                        scene.mText.mPosY = mSurfaceHeight / 2;
+
+                        AVFlowEngine.getInstance().setPreviewText(mEngineToken,
+                                scene.mText.mFontPath,
+                                scene.mText.mValue,
+                                scene.mText.mPosX,
+                                scene.mText.mPosY,
+                                scene.mText.mTextSize,
+                                scene.mText.mRed,
+                                scene.mText.mGreen,
+                                scene.mText.mBlue,
+                                scene.mText.mBackground);
+
+                    }
+
+                    @Override
+                    public void onCancel() {
+
+                    }
+                });
+                break;
+            case R.id.iv_set_text_panel_back:
+                gotoPanel(mTextPanel);
                 break;
             default:
                 break;
@@ -332,6 +418,9 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
 
     private void initTextPanel() {
         mTextPanel = getLayoutInflater().inflate(R.layout.edit_panel_text, mPanelContainer, false);
+        mTextPanel.findViewById(R.id.vw_text_title).setOnClickListener(this);
+        mTextPanel.findViewById(R.id.vw_text_caption).setOnClickListener(this);
+        mTextPanel.findViewById(R.id.vw_text_label).setOnClickListener(this);
     }
 
     private void initStickerPanel() {
@@ -392,6 +481,135 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
 
     private void initInfoPanel() {
         mInfoPanel = getLayoutInflater().inflate(R.layout.edit_panel_info, mPanelContainer, false);
+    }
+
+    private void initTextTitlePanel() {
+        mTextTitlePanel = getLayoutInflater().inflate(R.layout.edit_panel_text_title, mPanelContainer, false);
+        mTextTitlePanel.findViewById(R.id.btn_set_title).setOnClickListener(this);
+        mTextTitlePanel.findViewById(R.id.iv_set_text_panel_back).setOnClickListener(this);
+        SeekBar changeSize = mTextTitlePanel.findViewById(R.id.sb_change_font_size);
+        changeSize.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                Scene scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                if (scene.mText == null || TextUtils.isEmpty(scene.mText.mValue)) {
+                    return;
+                }
+                // update params of scene.
+                scene.mText.mTextSize = seekBar.getProgress();
+
+                AVFlowEngine.getInstance().setPreviewText(mEngineToken,
+                        scene.mText.mFontPath,
+                        scene.mText.mValue,
+                        scene.mText.mPosX,
+                        scene.mText.mPosY,
+                        scene.mText.mTextSize,
+                        scene.mText.mRed,
+                        scene.mText.mGreen,
+                        scene.mText.mBlue,
+                        scene.mText.mBackground);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+        SeekBar changeRed = mTextTitlePanel.findViewById(R.id.sb_change_font_red);
+        changeRed.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                Scene scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                if (scene.mText == null || TextUtils.isEmpty(scene.mText.mValue)) {
+                    return;
+                }
+
+                // update params of scene.
+                scene.mText.mRed = (float) (progress * 1.0 / seekBar.getMax());
+
+                AVFlowEngine.getInstance().updatePreviewTextParams(mEngineToken,
+                        scene.mText.mPosX,
+                        scene.mText.mPosY,
+                        scene.mText.mRed,
+                        scene.mText.mGreen,
+                        scene.mText.mBlue);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+        SeekBar changeGreen = mTextTitlePanel.findViewById(R.id.sb_change_font_green);
+        changeGreen.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                Scene scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                if (scene.mText == null || TextUtils.isEmpty(scene.mText.mValue)) {
+                    return;
+                }
+
+                // update params of scene.
+                scene.mText.mGreen = progress * 1.0f / seekBar.getMax();
+
+                AVFlowEngine.getInstance().updatePreviewTextParams(mEngineToken,
+                        scene.mText.mPosX,
+                        scene.mText.mPosY,
+                        scene.mText.mRed,
+                        scene.mText.mGreen,
+                        scene.mText.mBlue);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+        SeekBar changeBlue = mTextTitlePanel.findViewById(R.id.sb_change_font_blue);
+        changeBlue.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                Scene scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                if (scene.mText == null || TextUtils.isEmpty(scene.mText.mValue)) {
+                    return;
+                }
+
+                // update params of scene.
+                scene.mText.mBlue = progress * 1.0f / seekBar.getMax();
+
+                AVFlowEngine.getInstance().updatePreviewTextParams(mEngineToken,
+                        scene.mText.mPosX,
+                        scene.mText.mPosY,
+                        scene.mText.mRed,
+                        scene.mText.mGreen,
+                        scene.mText.mBlue);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
     }
 
     private void gotoPanel(View panelView) {

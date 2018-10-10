@@ -73,7 +73,7 @@ public class VideoComposeActivity extends AppCompatActivity implements View.OnCl
                 .surfaceSize(SimpleModel.getInstance().getSceneList().get(0).mWidth,
                         SimpleModel.getInstance().getSceneList().get(0).mHeight)
                 .rotation(FileInputConfig.ROTATION_180)
-                .speedRate(FileInputConfig.SPEED_RATE_FASTEST)
+                .speedRate(FileInputConfig.SPEED_RATE_NORMAL)
                 .loop(false)
                 .listener(new FilePlayListener() {
                     @Override
@@ -84,9 +84,25 @@ public class VideoComposeActivity extends AppCompatActivity implements View.OnCl
                     @Override
                     public void onFilePlayStarted(int position, File file) {
                         Log.d(TAG, "onFilePlayStarted: " + position + ", file: " + file);
+                        Scene scene = SimpleModel.getInstance().getSceneList().get(position);
                         AVFlowEngine.getInstance().setSaveFilter(
                                 mEngineToken,
-                                SimpleModel.getInstance().getSceneList().get(position).mFilter.get(VideoComposeActivity.this));
+                                scene.mFilter.get(VideoComposeActivity.this));
+
+                        if (scene.mText != null) {
+                            AVFlowEngine.getInstance().setSaveText(mEngineToken,
+                                    scene.mText.mFontPath,
+                                    scene.mText.mValue,
+                                    scene.mText.mPosX,
+                                    scene.mText.mPosY,
+                                    scene.mText.mTextSize,
+                                    scene.mText.mRed,
+                                    scene.mText.mGreen,
+                                    scene.mText.mBlue,
+                                    scene.mText.mBackground);
+                        } else {
+                            AVFlowEngine.getInstance().removePreviewText(mEngineToken);
+                        }
                     }
 
                     @Override

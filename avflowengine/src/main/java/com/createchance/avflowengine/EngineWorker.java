@@ -1,5 +1,6 @@
 package com.createchance.avflowengine;
 
+import android.graphics.Bitmap;
 import android.opengl.GLES20;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -43,6 +44,10 @@ final class EngineWorker extends HandlerThread {
     private static final int MSG_SET_PREVIEW_FILTER = 8;
     private static final int MSG_SET_PREVIEW_TEXT = 9;
     private static final int MSG_SET_SAVE_TEXT = 10;
+    private static final int MSG_UPDATE_PREVIEW_TEXT_PARAMS = 11;
+    private static final int MSG_UPDATE_SAVE_TEXT_PARAMS = 12;
+    private static final int MSG_REMOVE_PREVIEW_TEXT = 13;
+    private static final int MSG_REMOVE_SAVE_TEXT = 14;
 
     private CameraStreamGenerator mCameraGenerator;
     private LocalStreamGenerator mLocalGenerator;
@@ -112,7 +117,8 @@ final class EngineWorker extends HandlerThread {
                                 (int) previewTextParams.get(4),
                                 (float) previewTextParams.get(5),
                                 (float) previewTextParams.get(6),
-                                (float) previewTextParams.get(7));
+                                (float) previewTextParams.get(7),
+                                (Bitmap) previewTextParams.get(8));
                         break;
                     case MSG_SET_SAVE_TEXT:
                         List<Object> saveTextParams = (List<Object>) msg.obj;
@@ -123,7 +129,30 @@ final class EngineWorker extends HandlerThread {
                                 (int) saveTextParams.get(4),
                                 (float) saveTextParams.get(5),
                                 (float) saveTextParams.get(6),
-                                (float) saveTextParams.get(7));
+                                (float) saveTextParams.get(7),
+                                (Bitmap) saveTextParams.get(8));
+                        break;
+                    case MSG_UPDATE_PREVIEW_TEXT_PARAMS:
+                        List<Object> updatePreviewParams = (List<Object>) msg.obj;
+                        handleUpdatePreviewTextParams((int) updatePreviewParams.get(0),
+                                (int) updatePreviewParams.get(1),
+                                (float) updatePreviewParams.get(2),
+                                (float) updatePreviewParams.get(3),
+                                (float) updatePreviewParams.get(4));
+                        break;
+                    case MSG_UPDATE_SAVE_TEXT_PARAMS:
+                        List<Object> updateSaveParams = (List<Object>) msg.obj;
+                        handleUpdateSaveTextParams((int) updateSaveParams.get(0),
+                                (int) updateSaveParams.get(1),
+                                (float) updateSaveParams.get(2),
+                                (float) updateSaveParams.get(3),
+                                (float) updateSaveParams.get(4));
+                        break;
+                    case MSG_REMOVE_PREVIEW_TEXT:
+                        handleRemovePreviewText();
+                        break;
+                    case MSG_REMOVE_SAVE_TEXT:
+                        handleRemoveSaveText();
                         break;
                     default:
                         break;
@@ -199,7 +228,8 @@ final class EngineWorker extends HandlerThread {
                         int textSize,
                         float red,
                         float green,
-                        float blue) {
+                        float blue,
+                        Bitmap background) {
         if (mPreviewOutputConfig == null) {
             Logger.d(TAG, "Preview not initialized!");
             return;
@@ -216,6 +246,29 @@ final class EngineWorker extends HandlerThread {
         params.add(red);
         params.add(green);
         params.add(blue);
+        params.add(background);
+        message.obj = params;
+        mHandler.sendMessage(message);
+    }
+
+    void updatePreviewTextParams(int posX,
+                                        int posY,
+                                        float red,
+                                        float green,
+                                        float blue) {
+        if (mPreviewOutputConfig == null) {
+            Logger.d(TAG, "Preview not initialized!");
+            return;
+        }
+
+        Message message = Message.obtain();
+        message.what = MSG_UPDATE_PREVIEW_TEXT_PARAMS;
+        List<Object> params = new ArrayList<>(5);
+        params.add(posX);
+        params.add(posY);
+        params.add(red);
+        params.add(green);
+        params.add(blue);
         message.obj = params;
         mHandler.sendMessage(message);
     }
@@ -227,7 +280,8 @@ final class EngineWorker extends HandlerThread {
                      int textSize,
                      float red,
                      float green,
-                     float blue) {
+                     float blue,
+                     Bitmap background) {
         if (mSaveOutputConfig == null) {
             Logger.d(TAG, "Save not initialized!");
             return;
@@ -244,8 +298,39 @@ final class EngineWorker extends HandlerThread {
         params.add(red);
         params.add(green);
         params.add(blue);
+        params.add(background);
         message.obj = params;
         mHandler.sendMessage(message);
+    }
+
+    void updateSaveTextParams(int posX,
+                                     int posY,
+                                     float red,
+                                     float green,
+                                     float blue) {
+        if (mSaveOutputConfig == null) {
+            Logger.d(TAG, "Preview not initialized!");
+            return;
+        }
+
+        Message message = Message.obtain();
+        message.what = MSG_UPDATE_SAVE_TEXT_PARAMS;
+        List<Object> params = new ArrayList<>(5);
+        params.add(posX);
+        params.add(posY);
+        params.add(red);
+        params.add(green);
+        params.add(blue);
+        message.obj = params;
+        mHandler.sendMessage(message);
+    }
+
+    void removePreviewText() {
+        mHandler.sendEmptyMessage(MSG_REMOVE_PREVIEW_TEXT);
+    }
+
+    void removeSaveText() {
+        mHandler.sendEmptyMessage(MSG_REMOVE_SAVE_TEXT);
     }
 
     void finishSave() {
@@ -451,8 +536,9 @@ final class EngineWorker extends HandlerThread {
                                       int textSize,
                                       float red,
                                       float green,
-                                      float blue) {
-        mProcessor.setPreviewText(fontPath, text, posX, posY, textSize, red, green, blue);
+                                      float blue,
+                                      Bitmap background) {
+        mProcessor.setPreviewText(fontPath, text, posX, posY, textSize, red, green, blue, background);
     }
 
     private void handleSetSaveText(String fontPath,
@@ -462,8 +548,33 @@ final class EngineWorker extends HandlerThread {
                                    int textSize,
                                    float red,
                                    float green,
-                                   float blue) {
-        mProcessor.setSaveText(fontPath, text, posX, posY, textSize, red, green, blue);
+                                   float blue,
+                                   Bitmap background) {
+        mProcessor.setSaveText(fontPath, text, posX, posY, textSize, red, green, blue, background);
+    }
+
+    private void handleUpdatePreviewTextParams(int posX,
+                                               int posY,
+                                               float red,
+                                               float green,
+                                               float blue) {
+        mProcessor.updatePreviewTextParams(posX, posY, red, green, blue);
+    }
+
+    private void handleUpdateSaveTextParams(int posX,
+                                            int posY,
+                                            float red,
+                                            float green,
+                                            float blue) {
+        mProcessor.updateSaveTextParams(posX, posY, red, green, blue);
+    }
+
+    private void handleRemovePreviewText() {
+        mProcessor.removePreviewText();
+    }
+
+    private void handleRemoveSaveText() {
+        mProcessor.removeSaveText();
     }
 
     private void handleFinishSave() {

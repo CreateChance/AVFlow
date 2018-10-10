@@ -1,5 +1,6 @@
 package com.createchance.avflowengine.processor;
 
+import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.view.Surface;
 
@@ -143,9 +144,10 @@ public final class AVStreamProcessor implements SurfaceTexture.OnFrameAvailableL
                                int textSize,
                                float red,
                                float green,
-                               float blue) {
+                               float blue,
+                               Bitmap background) {
         mPreviewTextWriter = new TextWriter();
-        mPreviewTextWriter.setText(fontPath, text, posX, posY, textSize, red, green, blue);
+        mPreviewTextWriter.setText(fontPath, text, posX, posY, textSize, red, green, blue, background);
     }
 
     public void setSaveText(String fontPath,
@@ -155,9 +157,44 @@ public final class AVStreamProcessor implements SurfaceTexture.OnFrameAvailableL
                             int textSize,
                             float red,
                             float green,
-                            float blue) {
+                            float blue,
+                            Bitmap background) {
         mSaveTextWriter = new TextWriter();
-        mSaveTextWriter.setText(fontPath, text, posX, posY, textSize, red, green, blue);
+        mSaveTextWriter.setText(fontPath, text, posX, posY, textSize, red, green, blue, background);
+    }
+
+    public void updatePreviewTextParams(int posX,
+                                        int posY,
+                                        float red,
+                                        float green,
+                                        float blue) {
+        if (mPreviewTextWriter != null) {
+            mPreviewTextWriter.setParams(posX, posY, red, green, blue);
+        }
+    }
+
+    public void updateSaveTextParams(int posX,
+                                     int posY,
+                                     float red,
+                                     float green,
+                                     float blue) {
+        if (mSaveTextWriter != null) {
+            mSaveTextWriter.setParams(posX, posY, red, green, blue);
+        }
+    }
+
+    public void removePreviewText() {
+        if (mPreviewTextWriter != null) {
+            mPreviewTextWriter.release();
+            mPreviewTextWriter = null;
+        }
+    }
+
+    public void removeSaveText() {
+        if (mSaveTextWriter != null) {
+            mSaveTextWriter.release();
+            mSaveTextWriter = null;
+        }
     }
 
     public void prepare(int rotation) {

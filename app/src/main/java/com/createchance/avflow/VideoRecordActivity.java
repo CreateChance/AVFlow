@@ -7,6 +7,7 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.SurfaceTexture;
 import android.os.Build;
@@ -356,15 +357,7 @@ public class VideoRecordActivity extends AppCompatActivity implements
                 AVFlowEngine.getInstance().startSave(mEngineToken, getOutputFile());
                 break;
             case R.id.iv_import_video:
-                AVFlowEngine.getInstance().setPreviewText(mEngineToken,
-                        new File(Environment.getExternalStorageDirectory(), "BillionStars_PersonalUse.ttf").getAbsolutePath(),
-                        "CreateChance",
-                        0,
-                        600,
-                        100,
-                        0.5f,
-                        0.8f,
-                        0.2f);
+
                 break;
             case R.id.vw_current_mode:
 

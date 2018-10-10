@@ -1,6 +1,9 @@
 <resources>
     <string name="app_name">AVFlow</string>
 
+    <string name="dialog_confirm">确定</string>
+    <string name="dialog_cancel">取消</string>
+
     <string name="template_default_mode_title">分段模式</string>
     <string name="template_default_mode_desc">10秒, 4段</string>
     <string name="choose_ratio">选择画幅</string>
@@ -36,6 +39,16 @@
     <string name="video_edit_shot_select_one_info">请选择一个片段来编辑</string>
 
     <string name="video_edit_text_panel_title">文字</string>
+    <string name="video_edit_text_panel_add_title">标题</string>
+    <string name="video_edit_text_panel_set_title">添加标题</string>
+    <string name="video_edit_text_panel_title_change_size">修改大小</string>
+    <string name="video_edit_text_panel_title_change_red">红色</string>
+    <string name="video_edit_text_panel_title_change_green">绿色</string>
+    <string name="video_edit_text_panel_title_change_blue">蓝色</string>
+    <string name="video_edit_text_panel_add_title_dialog_content">请输入文字</string>
+    <string name="video_edit_text_panel_add_caption">字幕</string>
+    <string name="video_edit_text_panel_add_location">时间地点</string>
+    <string name="video_edit_text_panel_add_label">标签</string>
 
     <string name="video_edit_sticker_panel_title">贴纸</string>
 
