@@ -6,6 +6,7 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.graphics.SurfaceTexture;
 import android.os.Bundle;
 import android.os.Environment;
@@ -242,22 +243,23 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
 
     @Override
     public void onClick(View v) {
+        Scene scene;
         switch (v.getId()) {
             case R.id.vw_back:
                 onBackPressed();
                 break;
             case R.id.vw_next:
-                for (Scene scene : SimpleModel.getInstance().getSceneList()) {
-                    if (scene.mText != null) {
-                        scene.mText.mPosY = scene.mHeight / 2;
+                for (Scene s : SimpleModel.getInstance().getSceneList()) {
+                    if (s.mText != null) {
+                        s.mText.mPosY = s.mHeight / 2;
                     }
                 }
                 VideoComposeActivity.start(this);
                 break;
             case R.id.tv_play_all:
                 FileInputConfig.Builder inputConfigBuilder = new FileInputConfig.Builder();
-                for (Scene scene : SimpleModel.getInstance().getSceneList()) {
-                    inputConfigBuilder.addFile(scene.mVideo);
+                for (Scene s : SimpleModel.getInstance().getSceneList()) {
+                    inputConfigBuilder.addFile(s.mVideo);
                 }
 
                 inputConfigBuilder.loop(true)
@@ -352,6 +354,94 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
 
                     }
                 });
+                break;
+            case R.id.tv_text_bg_1:
+                scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                if (scene.mText == null) {
+                    return;
+                }
+
+                scene.mText.mBackground = BitmapFactory.decodeResource(getResources(), R.drawable.icon_text_bg_1);
+                scene.mText.mRed = 0;
+                scene.mText.mGreen = 0;
+                scene.mText.mBlue = 0;
+
+                AVFlowEngine.getInstance().setPreviewText(mEngineToken,
+                        scene.mText.mFontPath,
+                        scene.mText.mValue,
+                        scene.mText.mPosX,
+                        scene.mText.mPosY,
+                        scene.mText.mTextSize,
+                        scene.mText.mRed,
+                        scene.mText.mGreen,
+                        scene.mText.mBlue,
+                        scene.mText.mBackground);
+                break;
+            case R.id.tv_text_bg_2:
+                scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                if (scene.mText == null) {
+                    return;
+                }
+
+                scene.mText.mBackground = BitmapFactory.decodeResource(getResources(), R.drawable.icon_text_bg_2);
+                scene.mText.mRed = 1f;
+                scene.mText.mGreen = 1f;
+                scene.mText.mBlue = 1f;
+
+                AVFlowEngine.getInstance().setPreviewText(mEngineToken,
+                        scene.mText.mFontPath,
+                        scene.mText.mValue,
+                        scene.mText.mPosX,
+                        scene.mText.mPosY,
+                        scene.mText.mTextSize,
+                        scene.mText.mRed,
+                        scene.mText.mGreen,
+                        scene.mText.mBlue,
+                        scene.mText.mBackground);
+                break;
+            case R.id.tv_text_bg_3:
+                scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                if (scene.mText == null) {
+                    return;
+                }
+
+                scene.mText.mBackground = BitmapFactory.decodeResource(getResources(), R.drawable.icon_text_bg_3);
+                scene.mText.mRed = 1f;
+                scene.mText.mGreen = 1f;
+                scene.mText.mBlue = 1f;
+
+                AVFlowEngine.getInstance().setPreviewText(mEngineToken,
+                        scene.mText.mFontPath,
+                        scene.mText.mValue,
+                        scene.mText.mPosX,
+                        scene.mText.mPosY,
+                        scene.mText.mTextSize,
+                        scene.mText.mRed,
+                        scene.mText.mGreen,
+                        scene.mText.mBlue,
+                        scene.mText.mBackground);
+                break;
+            case R.id.tv_text_bg_4:
+                scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                if (scene.mText == null) {
+                    return;
+                }
+
+                scene.mText.mBackground = BitmapFactory.decodeResource(getResources(), R.drawable.icon_text_bg_4);
+                scene.mText.mRed = 0;
+                scene.mText.mGreen = 0;
+                scene.mText.mBlue = 0;
+
+                AVFlowEngine.getInstance().setPreviewText(mEngineToken,
+                        scene.mText.mFontPath,
+                        scene.mText.mValue,
+                        scene.mText.mPosX,
+                        scene.mText.mPosY,
+                        scene.mText.mTextSize,
+                        scene.mText.mRed,
+                        scene.mText.mGreen,
+                        scene.mText.mBlue,
+                        scene.mText.mBackground);
                 break;
             case R.id.iv_set_text_panel_back:
                 gotoPanel(mTextPanel);
@@ -487,6 +577,10 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
         mTextTitlePanel = getLayoutInflater().inflate(R.layout.edit_panel_text_title, mPanelContainer, false);
         mTextTitlePanel.findViewById(R.id.btn_set_title).setOnClickListener(this);
         mTextTitlePanel.findViewById(R.id.iv_set_text_panel_back).setOnClickListener(this);
+        mTextTitlePanel.findViewById(R.id.tv_text_bg_1).setOnClickListener(this);
+        mTextTitlePanel.findViewById(R.id.tv_text_bg_2).setOnClickListener(this);
+        mTextTitlePanel.findViewById(R.id.tv_text_bg_3).setOnClickListener(this);
+        mTextTitlePanel.findViewById(R.id.tv_text_bg_4).setOnClickListener(this);
         SeekBar changeSize = mTextTitlePanel.findViewById(R.id.sb_change_font_size);
         changeSize.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override

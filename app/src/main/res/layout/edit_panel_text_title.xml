@@ -120,6 +120,66 @@
 
             </LinearLayout>
 
+            <TextView
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:gravity="center"
+                android:text="@string/video_edit_text_panel_title_change_background"
+                android:textColor="@color/font_white" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:layout_marginStart="10dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tv_text_bg_1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/icon_text_bg_1"
+                    android:gravity="center"
+                    android:text="@string/video_edit_text_panel_add_title"
+                    android:textColor="@color/theme_black" />
+
+                <TextView
+                    android:id="@+id/tv_text_bg_2"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/icon_text_bg_2"
+                    android:gravity="center"
+                    android:text="@string/video_edit_text_panel_add_title"
+                    android:textColor="@color/font_white" />
+
+                <TextView
+                    android:id="@+id/tv_text_bg_3"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/icon_text_bg_3"
+                    android:gravity="center"
+                    android:text="@string/video_edit_text_panel_add_title"
+                    android:textColor="@color/font_white" />
+
+                <TextView
+                    android:id="@+id/tv_text_bg_4"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/icon_text_bg_4"
+                    android:gravity="center"
+                    android:text="@string/video_edit_text_panel_add_title"
+                    android:textColor="@color/theme_black" />
+
+            </LinearLayout>
+
         </LinearLayout>
 
     </ScrollView>

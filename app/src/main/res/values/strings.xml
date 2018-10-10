@@ -45,6 +45,7 @@
     <string name="video_edit_text_panel_title_change_red">红色</string>
     <string name="video_edit_text_panel_title_change_green">绿色</string>
     <string name="video_edit_text_panel_title_change_blue">蓝色</string>
+    <string name="video_edit_text_panel_title_change_background">设置背景</string>
     <string name="video_edit_text_panel_add_title_dialog_content">请输入文字</string>
     <string name="video_edit_text_panel_add_caption">字幕</string>
     <string name="video_edit_text_panel_add_location">时间地点</string>
