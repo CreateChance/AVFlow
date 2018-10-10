@@ -8,8 +8,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.graphics.SurfaceTexture;
+import android.graphics.Typeface;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -327,7 +327,7 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                     @Override
                     public void onConfirm(String text) {
                         // update params of scene.
-                        String fontPath = new File(Environment.getExternalStorageDirectory(), "SentyWEN2017.ttf").getAbsolutePath();
+                        String fontPath = new File(getFilesDir(), "fonts/MFYanSong-Regular.ttf").getAbsolutePath();
                         Scene scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
                         scene.mText = new Scene.Text();
                         scene.mText.mFontPath = fontPath;
@@ -432,6 +432,78 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                 scene.mText.mGreen = 0;
                 scene.mText.mBlue = 0;
 
+                AVFlowEngine.getInstance().setPreviewText(mEngineToken,
+                        scene.mText.mFontPath,
+                        scene.mText.mValue,
+                        scene.mText.mPosX,
+                        scene.mText.mPosY,
+                        scene.mText.mTextSize,
+                        scene.mText.mRed,
+                        scene.mText.mGreen,
+                        scene.mText.mBlue,
+                        scene.mText.mBackground);
+                break;
+            case R.id.tv_text_font_1:
+                scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                if (scene.mText == null) {
+                    return;
+                }
+
+                scene.mText.mFontPath = new File(getFilesDir(), "fonts/KaBuQiNuo.otf").getAbsolutePath();
+                AVFlowEngine.getInstance().setPreviewText(mEngineToken,
+                        scene.mText.mFontPath,
+                        scene.mText.mValue,
+                        scene.mText.mPosX,
+                        scene.mText.mPosY,
+                        scene.mText.mTextSize,
+                        scene.mText.mRed,
+                        scene.mText.mGreen,
+                        scene.mText.mBlue,
+                        scene.mText.mBackground);
+                break;
+            case R.id.tv_text_font_2:
+                scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                if (scene.mText == null) {
+                    return;
+                }
+
+                scene.mText.mFontPath = new File(getFilesDir(), "fonts/MFYanSong-Regular.ttf").getAbsolutePath();
+                AVFlowEngine.getInstance().setPreviewText(mEngineToken,
+                        scene.mText.mFontPath,
+                        scene.mText.mValue,
+                        scene.mText.mPosX,
+                        scene.mText.mPosY,
+                        scene.mText.mTextSize,
+                        scene.mText.mRed,
+                        scene.mText.mGreen,
+                        scene.mText.mBlue,
+                        scene.mText.mBackground);
+                break;
+            case R.id.tv_text_font_3:
+                scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                if (scene.mText == null) {
+                    return;
+                }
+
+                scene.mText.mFontPath = new File(getFilesDir(), "fonts/SentyWEN2017.ttf").getAbsolutePath();
+                AVFlowEngine.getInstance().setPreviewText(mEngineToken,
+                        scene.mText.mFontPath,
+                        scene.mText.mValue,
+                        scene.mText.mPosX,
+                        scene.mText.mPosY,
+                        scene.mText.mTextSize,
+                        scene.mText.mRed,
+                        scene.mText.mGreen,
+                        scene.mText.mBlue,
+                        scene.mText.mBackground);
+                break;
+            case R.id.tv_text_font_4:
+                scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                if (scene.mText == null) {
+                    return;
+                }
+
+                scene.mText.mFontPath = new File(getFilesDir(), "fonts/YouLangRuanBi.ttf").getAbsolutePath();
                 AVFlowEngine.getInstance().setPreviewText(mEngineToken,
                         scene.mText.mFontPath,
                         scene.mText.mValue,
@@ -581,6 +653,22 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
         mTextTitlePanel.findViewById(R.id.tv_text_bg_2).setOnClickListener(this);
         mTextTitlePanel.findViewById(R.id.tv_text_bg_3).setOnClickListener(this);
         mTextTitlePanel.findViewById(R.id.tv_text_bg_4).setOnClickListener(this);
+        TextView font1 = mTextTitlePanel.findViewById(R.id.tv_text_font_1);
+        TextView font2 = mTextTitlePanel.findViewById(R.id.tv_text_font_2);
+        TextView font3 = mTextTitlePanel.findViewById(R.id.tv_text_font_3);
+        TextView font4 = mTextTitlePanel.findViewById(R.id.tv_text_font_4);
+        font1.setOnClickListener(this);
+        font2.setOnClickListener(this);
+        font3.setOnClickListener(this);
+        font4.setOnClickListener(this);
+        Typeface type1 = Typeface.createFromAsset(getAssets(), "KaBuQiNuo.otf");
+        Typeface type2 = Typeface.createFromAsset(getAssets(), "MFYanSong-Regular.ttf");
+        Typeface type3 = Typeface.createFromAsset(getAssets(), "SentyWEN2017.ttf");
+        Typeface type4 = Typeface.createFromAsset(getAssets(), "YouLangRuanBi.ttf");
+        font1.setTypeface(type1);
+        font2.setTypeface(type2);
+        font3.setTypeface(type3);
+        font4.setTypeface(type4);
         SeekBar changeSize = mTextTitlePanel.findViewById(R.id.sb_change_font_size);
         changeSize.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
