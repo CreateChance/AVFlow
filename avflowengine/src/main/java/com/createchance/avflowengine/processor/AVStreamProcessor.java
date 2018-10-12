@@ -12,6 +12,7 @@ import com.createchance.avflowengine.processor.gpuimage.GPUImageFilterGroup;
 import com.createchance.avflowengine.processor.gpuimage.OpenGlUtils;
 
 import java.nio.FloatBuffer;
+import java.util.List;
 
 /**
  * ${DESC}
@@ -27,22 +28,23 @@ public final class AVStreamProcessor implements SurfaceTexture.OnFrameAvailableL
 
     private EglCore mEglCore;
 
-    private VideoFrameDrawer mOutputSurfaceDrawer;
+    private VideoFrameHandler mOutputSurfaceDrawer;
     private Surface mPreviewSurface, mSaveSurface;
     private WindowSurface mPreviewDrawSurface, mSaveDrawSurface;
     private GPUImageFilter mPreviewFilter, mSaveFilter;
-    private TextWriter mPreviewTextWriter, mSaveTextWriter;
+    private TextDrawer mPreviewTextDrawer, mSaveTextDrawer;
+    private ImageDrawer mPreviewImageDrawer, mSaveImageDrawer;
 
     private int mOesTextureId = -1;
     private OesTextureReader mOesReader;
-    private TextureWriter mPreviewTextureWriter, mSaveTextureWriter;
+    private OutputDrawer mPreviewTextureDrawer, mSaveTextureDrawer;
 
     private int mOesWidth, mOesHeight;
 
     public AVStreamProcessor() {
         // init egl
         mEglCore = new EglCore(null, EglCore.FLAG_RECORDABLE);
-        mOutputSurfaceDrawer = new VideoFrameDrawer();
+        mOutputSurfaceDrawer = new VideoFrameHandler();
     }
 
     @Override
@@ -50,10 +52,20 @@ public final class AVStreamProcessor implements SurfaceTexture.OnFrameAvailableL
         Logger.v(TAG, "onFrameAvailable, thread name: " + Thread.currentThread().getName());
         if (mVideoInputSurface != null) {
             if (mPreviewSurface != null) {
-                mOutputSurfaceDrawer.draw(mOesReader, mPreviewDrawSurface, mPreviewFilter, mPreviewTextureWriter, mPreviewTextWriter);
+                mOutputSurfaceDrawer.draw(mOesReader,
+                        mPreviewDrawSurface,
+                        mPreviewFilter,
+                        mPreviewTextureDrawer,
+                        mPreviewTextDrawer,
+                        mPreviewImageDrawer);
             }
             if (mSaveSurface != null) {
-                mOutputSurfaceDrawer.draw(mOesReader, mSaveDrawSurface, mSaveFilter, mSaveTextureWriter, mSaveTextWriter);
+                mOutputSurfaceDrawer.draw(mOesReader,
+                        mSaveDrawSurface,
+                        mSaveFilter,
+                        mSaveTextureDrawer,
+                        mSaveTextDrawer,
+                        mSaveImageDrawer);
             }
             mVideoInputSurface.updateTexImage();
         }
@@ -103,7 +115,7 @@ public final class AVStreamProcessor implements SurfaceTexture.OnFrameAvailableL
                 clipBottom - clipTop,
                 mOesWidth,
                 mOesHeight);
-        mSaveTextureWriter = new TextureWriter(
+        mSaveTextureDrawer = new OutputDrawer(
                 getVertexBuffer(),
                 getTextureBuffer(clipTop, clipLeft, clipBottom, clipRight));
         mOutputSurfaceDrawer.createFrameBuffer();
@@ -146,8 +158,11 @@ public final class AVStreamProcessor implements SurfaceTexture.OnFrameAvailableL
                                float green,
                                float blue,
                                Bitmap background) {
-        mPreviewTextWriter = new TextWriter();
-        mPreviewTextWriter.setText(fontPath, text, posX, posY, textSize, red, green, blue, background);
+        if (mPreviewTextDrawer != null) {
+            mPreviewTextDrawer.release();
+        }
+        mPreviewTextDrawer = new TextDrawer();
+        mPreviewTextDrawer.setText(fontPath, text, posX, posY, textSize, red, green, blue, background);
     }
 
     public void setSaveText(String fontPath,
@@ -159,8 +174,27 @@ public final class AVStreamProcessor implements SurfaceTexture.OnFrameAvailableL
                             float green,
                             float blue,
                             Bitmap background) {
-        mSaveTextWriter = new TextWriter();
-        mSaveTextWriter.setText(fontPath, text, posX, posY, textSize, red, green, blue, background);
+        if (mSaveTextDrawer != null) {
+            mSaveTextDrawer.release();
+        }
+        mSaveTextDrawer = new TextDrawer();
+        mSaveTextDrawer.setText(fontPath, text, posX, posY, textSize, red, green, blue, background);
+    }
+
+    public void setPreviewImage(List<String> imageList, int posX, int posY) {
+        if (mPreviewImageDrawer != null) {
+            mPreviewImageDrawer.release();
+        }
+        mPreviewImageDrawer = new ImageDrawer();
+        mPreviewImageDrawer.setImage(imageList, posX, posY);
+    }
+
+    public void setSaveImage(List<String> imageList, int posX, int posY) {
+        if (mSaveImageDrawer != null) {
+            mSaveImageDrawer.release();
+        }
+        mSaveImageDrawer = new ImageDrawer();
+        mSaveImageDrawer.setImage(imageList, posX, posY);
     }
 
     public void updatePreviewTextParams(int posX,
@@ -168,8 +202,8 @@ public final class AVStreamProcessor implements SurfaceTexture.OnFrameAvailableL
                                         float red,
                                         float green,
                                         float blue) {
-        if (mPreviewTextWriter != null) {
-            mPreviewTextWriter.setParams(posX, posY, red, green, blue);
+        if (mPreviewTextDrawer != null) {
+            mPreviewTextDrawer.setParams(posX, posY, red, green, blue);
         }
     }
 
@@ -178,22 +212,22 @@ public final class AVStreamProcessor implements SurfaceTexture.OnFrameAvailableL
                                      float red,
                                      float green,
                                      float blue) {
-        if (mSaveTextWriter != null) {
-            mSaveTextWriter.setParams(posX, posY, red, green, blue);
+        if (mSaveTextDrawer != null) {
+            mSaveTextDrawer.setParams(posX, posY, red, green, blue);
         }
     }
 
     public void removePreviewText() {
-        if (mPreviewTextWriter != null) {
-            mPreviewTextWriter.release();
-            mPreviewTextWriter = null;
+        if (mPreviewTextDrawer != null) {
+            mPreviewTextDrawer.release();
+            mPreviewTextDrawer = null;
         }
     }
 
     public void removeSaveText() {
-        if (mSaveTextWriter != null) {
-            mSaveTextWriter.release();
-            mSaveTextWriter = null;
+        if (mSaveTextDrawer != null) {
+            mSaveTextDrawer.release();
+            mSaveTextDrawer = null;
         }
     }
 
@@ -201,7 +235,7 @@ public final class AVStreamProcessor implements SurfaceTexture.OnFrameAvailableL
         mOesTextureId = OpenGlUtils.createOesTexture();
         mVideoInputSurface = new SurfaceTexture(mOesTextureId);
         mOesReader = new OesTextureReader(mOesTextureId, mOesWidth, mOesHeight, rotation);
-        mPreviewTextureWriter = new TextureWriter(null, null);
+        mPreviewTextureDrawer = new OutputDrawer(null, null);
         mVideoInputSurface.setOnFrameAvailableListener(this);
     }
 

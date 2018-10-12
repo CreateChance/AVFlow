@@ -36,6 +36,7 @@ import com.createchance.avflowengine.config.PreviewOutputConfig;
 import com.createchance.avflowengine.generator.FilePlayListener;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -65,6 +66,8 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
     private SceneThumbListAdapter mSceneListAdapter;
 
     private int mCurrentSceneIndex;
+
+    private List<File> mStickersPathList;
 
     private Surface mPreviewSurface;
     private int mSurfaceWidth, mSurfaceHeight;
@@ -518,6 +521,66 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
             case R.id.iv_set_text_panel_back:
                 gotoPanel(mTextPanel);
                 break;
+            case R.id.iv_sticker_1:
+                AVFlowEngine.getInstance().setPreviewImage(mEngineToken,
+                        getStickerList(mStickersPathList.get(0)),
+                        0,
+                        mSurfaceHeight / 2);
+                break;
+            case R.id.iv_sticker_2:
+                AVFlowEngine.getInstance().setPreviewImage(mEngineToken,
+                        getStickerList(mStickersPathList.get(1)),
+                        0,
+                        mSurfaceHeight / 2);
+                break;
+            case R.id.iv_sticker_3:
+                AVFlowEngine.getInstance().setPreviewImage(mEngineToken,
+                        getStickerList(mStickersPathList.get(2)),
+                        0,
+                        mSurfaceHeight / 2);
+                break;
+            case R.id.iv_sticker_4:
+                AVFlowEngine.getInstance().setPreviewImage(mEngineToken,
+                        getStickerList(mStickersPathList.get(3)),
+                        0,
+                        mSurfaceHeight / 2);
+                break;
+            case R.id.iv_sticker_5:
+                AVFlowEngine.getInstance().setPreviewImage(mEngineToken,
+                        getStickerList(mStickersPathList.get(4)),
+                        0,
+                        mSurfaceHeight / 2);
+                break;
+            case R.id.iv_sticker_6:
+                AVFlowEngine.getInstance().setPreviewImage(mEngineToken,
+                        getStickerList(mStickersPathList.get(5)),
+                        0,
+                        mSurfaceHeight / 2);
+                break;
+            case R.id.iv_sticker_7:
+                AVFlowEngine.getInstance().setPreviewImage(mEngineToken,
+                        getStickerList(mStickersPathList.get(6)),
+                        0,
+                        mSurfaceHeight / 2);
+                break;
+            case R.id.iv_sticker_8:
+                AVFlowEngine.getInstance().setPreviewImage(mEngineToken,
+                        getStickerList(mStickersPathList.get(7)),
+                        0,
+                        mSurfaceHeight / 2);
+                break;
+            case R.id.iv_sticker_9:
+                AVFlowEngine.getInstance().setPreviewImage(mEngineToken,
+                        getStickerList(mStickersPathList.get(8)),
+                        0,
+                        mSurfaceHeight / 2);
+                break;
+            case R.id.iv_sticker_10:
+                AVFlowEngine.getInstance().setPreviewImage(mEngineToken,
+                        getStickerList(mStickersPathList.get(9)),
+                        0,
+                        mSurfaceHeight / 2);
+                break;
             default:
                 break;
         }
@@ -587,6 +650,18 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
 
     private void initStickerPanel() {
         mStickPanel = getLayoutInflater().inflate(R.layout.edit_panel_sticker, mPanelContainer, false);
+        mStickPanel.findViewById(R.id.iv_sticker_1).setOnClickListener(this);
+        mStickPanel.findViewById(R.id.iv_sticker_2).setOnClickListener(this);
+        mStickPanel.findViewById(R.id.iv_sticker_3).setOnClickListener(this);
+        mStickPanel.findViewById(R.id.iv_sticker_4).setOnClickListener(this);
+        mStickPanel.findViewById(R.id.iv_sticker_5).setOnClickListener(this);
+        mStickPanel.findViewById(R.id.iv_sticker_6).setOnClickListener(this);
+        mStickPanel.findViewById(R.id.iv_sticker_7).setOnClickListener(this);
+        mStickPanel.findViewById(R.id.iv_sticker_8).setOnClickListener(this);
+        mStickPanel.findViewById(R.id.iv_sticker_9).setOnClickListener(this);
+        mStickPanel.findViewById(R.id.iv_sticker_10).setOnClickListener(this);
+
+        initStickers();
     }
 
     private void initMusicPanel() {
@@ -840,5 +915,30 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
         playSet.start();
         mShowAnim = showSet;
         mFadeAnim = playSet;
+    }
+
+    private void initStickers() {
+        mStickersPathList = new ArrayList<>();
+        mStickersPathList.add(new File(getFilesDir(), "stickers/beach"));
+        mStickersPathList.add(new File(getFilesDir(), "stickers/book"));
+        mStickersPathList.add(new File(getFilesDir(), "stickers/city"));
+        mStickersPathList.add(new File(getFilesDir(), "stickers/drink"));
+        mStickersPathList.add(new File(getFilesDir(), "stickers/imcome"));
+        mStickersPathList.add(new File(getFilesDir(), "stickers/pingfan"));
+        mStickersPathList.add(new File(getFilesDir(), "stickers/train"));
+        mStickersPathList.add(new File(getFilesDir(), "stickers/tubu"));
+        mStickersPathList.add(new File(getFilesDir(), "stickers/weizhi"));
+        mStickersPathList.add(new File(getFilesDir(), "stickers/xingchen"));
+    }
+
+    private List<String> getStickerList(File path) {
+        String[] fileNames = path.list();
+        List<String> pathList = new ArrayList<>();
+
+        for (String fileName : fileNames) {
+            pathList.add(new File(path, fileName).getAbsolutePath());
+        }
+
+        return pathList;
     }
 }

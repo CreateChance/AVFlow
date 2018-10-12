@@ -3,10 +3,99 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <TextView
+    <HorizontalScrollView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:text="Sticker panel, need to be impl" />
+        android:layout_centerVertical="true">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginStart="190dp"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/iv_sticker_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@color/theme_light_dark"
+                android:src="@drawable/icon_sticker_beach_preview" />
+
+            <ImageView
+                android:id="@+id/iv_sticker_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:background="@color/theme_light_dark"
+                android:src="@drawable/icon_sticker_book_preview" />
+
+            <ImageView
+                android:id="@+id/iv_sticker_3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:background="@color/theme_light_dark"
+                android:src="@drawable/icon_sticker_city_preview" />
+
+            <ImageView
+                android:id="@+id/iv_sticker_4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:background="@color/theme_light_dark"
+                android:src="@drawable/icon_sticker_drink_preview" />
+
+            <ImageView
+                android:id="@+id/iv_sticker_5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:background="@color/theme_light_dark"
+                android:src="@drawable/icon_sticker_imcome_preview" />
+
+            <ImageView
+                android:id="@+id/iv_sticker_6"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@color/theme_light_dark"
+                android:layout_marginStart="5dp"
+                android:src="@drawable/icon_sticker_pingfan_preview" />
+
+            <ImageView
+                android:id="@+id/iv_sticker_7"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@color/theme_light_dark"
+                android:layout_marginStart="5dp"
+                android:src="@drawable/icon_sticker_train_preview" />
+
+            <ImageView
+                android:id="@+id/iv_sticker_8"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@color/theme_light_dark"
+                android:layout_marginStart="5dp"
+                android:src="@drawable/icon_sticker_tubu_preview" />
+
+            <ImageView
+                android:id="@+id/iv_sticker_9"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@color/theme_light_dark"
+                android:layout_marginStart="5dp"
+                android:src="@drawable/icon_sticker_weizhi_preview" />
+
+            <ImageView
+                android:id="@+id/iv_sticker_10"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@color/theme_light_dark"
+                android:layout_marginStart="5dp"
+                android:src="@drawable/icon_sticker_xingchen_preview" />
+
+        </LinearLayout>
+
+    </HorizontalScrollView>
 
 </RelativeLayout>

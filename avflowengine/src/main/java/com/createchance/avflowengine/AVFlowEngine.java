@@ -12,6 +12,7 @@ import com.createchance.avflowengine.processor.gpuimage.GPUImageFilter;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -170,6 +171,20 @@ public class AVFlowEngine {
         if (checkToken(token)) {
             EngineWorker worker = mWorkMap.get(token);
             worker.updateSaveTextParams(posX, posY, red, green, blue);
+        }
+    }
+
+    public void setPreviewImage(String token, List<String> imageList, int posX, int posY) {
+        if (checkToken(token)) {
+            EngineWorker worker = mWorkMap.get(token);
+            worker.setPreviewImage(imageList, posX, posY);
+        }
+    }
+
+    public void setSaveImage(String token, List<String> imageList, int posX, int posY) {
+        if (checkToken(token)) {
+            EngineWorker worker = mWorkMap.get(token);
+            worker.setSaveImage(imageList, posX, posY);
         }
     }
 
