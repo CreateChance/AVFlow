@@ -18,6 +18,8 @@
 #define WIDTH   640
 #define HEIGHT  480
 
+#define ALOGD(...) __android_log_print(ANDROID_LOG_DEBUG , "FreeTypeNative", __VA_ARGS__)
+
 
 /* origin is the upper left corner */
 unsigned char image[HEIGHT][WIDTH];
@@ -149,11 +151,10 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-JNIEXPORT jintArray JNICALL
-Java_com_createchance_avflowengine_processor_TextWriter_loadText(JNIEnv *env, jobject obj,
-                                                                 jstring jFontPath,
-                                                                 jintArray textArray,
-                                                                 jint textSize) {
+jintArray loadText(JNIEnv *env, jobject obj,
+                   jstring jFontPath,
+                   jintArray textArray,
+                   jint textSize) {
     FT_Library library;
     FT_Face face;
 
@@ -228,6 +229,47 @@ Java_com_createchance_avflowengine_processor_TextWriter_loadText(JNIEnv *env, jo
     jintArray result = (*env)->NewIntArray(env, num_chars * 7);
     (*env)->SetIntArrayRegion(env, result, 0, num_chars * 7, resultArray);
     return result;
+}
+
+static JNINativeMethod sMethods[] = {
+        /* name, signature, funcPtr */
+        {"loadText", "(Ljava/lang/String;[II)[I", (void *) loadText}
+};
+
+int register_freetype_native_function(JNIEnv *env) {
+    jclass clazz;
+    static const char *const kClassName = "com/createchance/avflowengine/processor/FreeType";
+
+    clazz = (*env)->FindClass(env, kClassName);
+    if (clazz == NULL) {
+        ALOGD("cannot get class:%s\n", kClassName);
+        return -1;
+    }
+
+    if ((*env)->RegisterNatives(env, clazz, sMethods, sizeof(sMethods) / sizeof(sMethods[0])) !=
+        JNI_OK) {
+        ALOGD("register native method failed!\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+jint JNI_OnLoad(JavaVM *vm, void *reserved) {
+    JNIEnv *env;
+    int status;
+
+    ALOGD("FreeType jni on load.");
+
+    if ((*vm)->GetEnv(vm, (void **) &env, JNI_VERSION_1_6) != JNI_OK) {
+        return JNI_ERR;
+    }
+
+    if (register_freetype_native_function(env)) {
+        return JNI_ERR;
+    }
+
+    return JNI_VERSION_1_6;
 }
 
 /* EOF */

@@ -92,8 +92,6 @@ public class TextWriter {
         }
     }
 
-    private native int[] loadText(String fontPath, int[] textArray, int textSize);
-
     private class Background {
         private final String VERTEX_SHADER =
                 "uniform mat4 u_Matrix;\n" +
@@ -385,7 +383,7 @@ public class TextWriter {
                 unicodeTextArray[i] = textArray[i];
             }
 
-            int[] result = loadText(fontPath, unicodeTextArray, textSize);
+            int[] result = FreeType.loadText(fontPath, unicodeTextArray, textSize);
             for (int i = 0, j = 0; i < result.length; i += 7) {
                 LoadedText loadedText = mLoadedTextList.get(j++);
                 loadedText.textureId = result[i];

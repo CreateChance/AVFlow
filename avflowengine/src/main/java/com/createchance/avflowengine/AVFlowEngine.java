@@ -7,6 +7,7 @@ import com.createchance.avflowengine.base.Logger;
 import com.createchance.avflowengine.config.AbstractInputConfig;
 import com.createchance.avflowengine.config.AbstractOutputConfig;
 import com.createchance.avflowengine.generator.CameraImpl;
+import com.createchance.avflowengine.processor.FreeType;
 import com.createchance.avflowengine.processor.gpuimage.GPUImageFilter;
 
 import java.io.File;
@@ -33,6 +34,7 @@ public class AVFlowEngine {
         if (sInstance == null) {
             sInstance = new AVFlowEngine();
             sInstance.mWorkMap = new HashMap<>();
+            FreeType.init();
         }
 
         return sInstance;
