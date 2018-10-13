@@ -19,14 +19,29 @@
                 android:layout_height="25dp"
                 android:layout_marginStart="10dp"
                 android:layout_marginTop="10dp"
-                android:src="@drawable/icon_arrow_left" />
+                android:src="@drawable/icon_arrow_left"
+                android:visibility="gone" />
 
-            <Button
-                android:id="@+id/btn_set_title"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/video_edit_text_panel_set_title"
-                android:textColor="@color/font_white" />
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btn_set_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/video_edit_text_panel_set_title"
+                    android:textColor="@color/font_white" />
+
+                <Button
+                    android:id="@+id/btn_delete_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/video_edit_text_panel_delete_title"
+                    android:textColor="@color/font_white" />
+
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -117,6 +132,52 @@
                     android:layout_marginBottom="20dp"
                     android:layout_marginTop="20dp"
                     android:max="100" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/video_edit_text_panel_title_change_posx"
+                    android:textColor="@color/font_white" />
+
+                <SeekBar
+                    android:id="@+id/sb_change_font_posx"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="20dp"
+                    android:layout_marginTop="20dp"
+                    android:max="1000" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/video_edit_text_panel_title_change_posy"
+                    android:textColor="@color/font_white" />
+
+                <SeekBar
+                    android:id="@+id/sb_change_font_posy"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="20dp"
+                    android:layout_marginTop="20dp"
+                    android:max="1000" />
 
             </LinearLayout>
 

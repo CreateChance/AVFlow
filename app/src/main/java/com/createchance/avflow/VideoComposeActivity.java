@@ -2,6 +2,8 @@ package com.createchance.avflow;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
 import android.os.Environment;
@@ -101,7 +103,23 @@ public class VideoComposeActivity extends AppCompatActivity implements View.OnCl
                                     scene.mText.mBlue,
                                     scene.mText.mBackground);
                         } else {
-                            AVFlowEngine.getInstance().removePreviewText(mEngineToken);
+                            AVFlowEngine.getInstance().removeSaveText(mEngineToken);
+                        }
+
+                        if (scene.mStickerList != null) {
+                            Bitmap sticker = BitmapFactory.decodeFile(scene.mStickerList.mValue.get(0));
+                            int stickerWidth = sticker.getWidth();
+                            int stickerHeight = sticker.getHeight();
+                            sticker.recycle();
+                            int videoWidth = SimpleModel.getInstance().getSceneList().get(0).mWidth;
+                            int videoHeight = SimpleModel.getInstance().getSceneList().get(0).mHeight;
+                            AVFlowEngine.getInstance().setSaveImage(mEngineToken,
+                                    scene.mStickerList.mValue,
+                                    (videoWidth - stickerWidth) / 2,
+                                    (videoHeight - stickerHeight) / 2,
+                                    scene.mStickerList.mScaleFactor);
+                        } else {
+                            AVFlowEngine.getInstance().removeSaveImage(mEngineToken);
                         }
                     }
 

@@ -174,17 +174,31 @@ public class AVFlowEngine {
         }
     }
 
-    public void setPreviewImage(String token, List<String> imageList, int posX, int posY) {
+    public void setPreviewImage(String token, List<String> imageList, int posX, int posY, float scaleFactor) {
         if (checkToken(token)) {
             EngineWorker worker = mWorkMap.get(token);
-            worker.setPreviewImage(imageList, posX, posY);
+            worker.setPreviewImage(imageList, posX, posY, scaleFactor);
         }
     }
 
-    public void setSaveImage(String token, List<String> imageList, int posX, int posY) {
+    public void setSaveImage(String token, List<String> imageList, int posX, int posY, float scaleFactor) {
         if (checkToken(token)) {
             EngineWorker worker = mWorkMap.get(token);
-            worker.setSaveImage(imageList, posX, posY);
+            worker.setSaveImage(imageList, posX, posY, scaleFactor);
+        }
+    }
+
+    public void removePreviewImage(String token) {
+        if (checkToken(token)) {
+            EngineWorker worker = mWorkMap.get(token);
+            worker.removePreviewImage();
+        }
+    }
+
+    public void removeSaveImage(String token) {
+        if (checkToken(token)) {
+            EngineWorker worker = mWorkMap.get(token);
+            worker.removeSaveImage();
         }
     }
 

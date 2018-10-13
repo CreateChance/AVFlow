@@ -6,6 +6,7 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.SurfaceTexture;
 import android.graphics.Typeface;
@@ -69,8 +70,8 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
 
     private List<File> mStickersPathList;
 
-    private Surface mPreviewSurface;
     private int mSurfaceWidth, mSurfaceHeight;
+    private float mSurfaceScaleFactor = 1.0f;
 
     private String mEngineToken;
 
@@ -101,19 +102,29 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                     animFilterName();
                     mFilterListAdapter.refreshCurrentFilter(mFilterList.indexOf(SimpleModel.getInstance().getSceneList().get(position).mFilter));
 
-                    if (scene.mText != null) {
+                    if (scene.mText != null && !TextUtils.isEmpty(scene.mText.mValue)) {
                         AVFlowEngine.getInstance().setPreviewText(mEngineToken,
                                 scene.mText.mFontPath,
                                 scene.mText.mValue,
-                                scene.mText.mPosX,
-                                scene.mText.mPosY,
-                                scene.mText.mTextSize,
+                                (int) (scene.mText.mPosX * mSurfaceScaleFactor),
+                                (int) (scene.mText.mPosY * mSurfaceScaleFactor),
+                                (int) (scene.mText.mTextSize * mSurfaceScaleFactor),
                                 scene.mText.mRed,
                                 scene.mText.mGreen,
                                 scene.mText.mBlue,
                                 scene.mText.mBackground);
                     } else {
                         AVFlowEngine.getInstance().removePreviewText(mEngineToken);
+                    }
+
+                    if (scene.mStickerList != null) {
+                        AVFlowEngine.getInstance().setPreviewImage(mEngineToken,
+                                scene.mStickerList.mValue,
+                                scene.mStickerList.mPosX,
+                                scene.mStickerList.mPosY,
+                                scene.mStickerList.mScaleFactor);
+                    } else {
+                        AVFlowEngine.getInstance().removePreviewImage(mEngineToken);
                     }
                 }
             });
@@ -185,33 +196,11 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                         if (mCurrentSceneIndex == -1) {
                             gotoPanel(mShotPanel);
                         }
-                        FileInputConfig inputConfig = new FileInputConfig.Builder()
-                                .addFile(scene.mVideo)
-                                .loop(true)
-                                .speedRate(FileInputConfig.SPEED_RATE_NORMAL)
-                                .rotation(FileInputConfig.ROTATION_180)
-                                .surfaceSize(mSurfaceWidth, mSurfaceHeight)
-                                .listener(mVideoPlayListener)
-                                .build();
-                        AVFlowEngine.getInstance().configInput(mEngineToken, inputConfig);
 
                         mCurrentSceneIndex = SimpleModel.getInstance().getSceneList().indexOf(scene);
                         mSceneListAdapter.selectOne(mCurrentSceneIndex);
 
-                        if (scene.mText != null && !TextUtils.isEmpty(scene.mText.mValue)) {
-                            AVFlowEngine.getInstance().setPreviewText(mEngineToken,
-                                    scene.mText.mFontPath,
-                                    scene.mText.mValue,
-                                    scene.mText.mPosX,
-                                    scene.mText.mPosY,
-                                    scene.mText.mTextSize,
-                                    scene.mText.mRed,
-                                    scene.mText.mGreen,
-                                    scene.mText.mBlue,
-                                    scene.mText.mBackground);
-                        } else {
-                            AVFlowEngine.getInstance().removePreviewText(mEngineToken);
-                        }
+                        replayScene(scene);
                     }
                 });
         mSceneListView.setLayoutManager(
@@ -247,16 +236,14 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
     @Override
     public void onClick(View v) {
         Scene scene;
+        List<String> stickerList = null;
+        Bitmap sticker;
+        int stickerWidth, stickerHeight;
         switch (v.getId()) {
             case R.id.vw_back:
                 onBackPressed();
                 break;
             case R.id.vw_next:
-                for (Scene s : SimpleModel.getInstance().getSceneList()) {
-                    if (s.mText != null) {
-                        s.mText.mPosY = s.mHeight / 2;
-                    }
-                }
                 VideoComposeActivity.start(this);
                 break;
             case R.id.tv_play_all:
@@ -292,7 +279,7 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                 mStickerPanelTitle.setBackgroundResource(R.color.theme_black);
                 mMusicPanelTitle.setBackgroundResource(R.color.theme_black);
 
-                gotoPanel(mTextPanel);
+                gotoPanel(mTextTitlePanel);
                 break;
             case R.id.vw_panel_sticker:
                 mShotPanelTitle.setBackgroundResource(R.color.theme_black);
@@ -337,19 +324,23 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                         scene.mText.mValue = text;
                         scene.mText.mBackground = null;
                         scene.mText.mPosX = 0;
-                        scene.mText.mPosY = mSurfaceHeight / 2;
+                        scene.mText.mPosY = (int) (mSurfaceHeight / (2 * mSurfaceScaleFactor));
 
                         AVFlowEngine.getInstance().setPreviewText(mEngineToken,
                                 scene.mText.mFontPath,
                                 scene.mText.mValue,
                                 scene.mText.mPosX,
-                                scene.mText.mPosY,
-                                scene.mText.mTextSize,
+                                mSurfaceHeight / 2,
+                                (int) (scene.mText.mTextSize * mSurfaceScaleFactor),
                                 scene.mText.mRed,
                                 scene.mText.mGreen,
                                 scene.mText.mBlue,
                                 scene.mText.mBackground);
 
+                        SeekBar changePosX = mTextTitlePanel.findViewById(R.id.sb_change_font_posx);
+                        SeekBar changePosY = mTextTitlePanel.findViewById(R.id.sb_change_font_posy);
+                        changePosX.setProgress(scene.mText.mPosX);
+                        changePosY.setProgress(mSurfaceHeight / 2);
                     }
 
                     @Override
@@ -357,6 +348,13 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
 
                     }
                 });
+                break;
+            case R.id.btn_delete_title:
+                scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                if (scene.mText != null) {
+                    AVFlowEngine.getInstance().removePreviewText(mEngineToken);
+                    scene.mText = null;
+                }
                 break;
             case R.id.tv_text_bg_1:
                 scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
@@ -372,9 +370,9 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                 AVFlowEngine.getInstance().setPreviewText(mEngineToken,
                         scene.mText.mFontPath,
                         scene.mText.mValue,
-                        scene.mText.mPosX,
-                        scene.mText.mPosY,
-                        scene.mText.mTextSize,
+                        (int) (scene.mText.mPosX * mSurfaceScaleFactor),
+                        (int) (scene.mText.mPosY * mSurfaceScaleFactor),
+                        (int) (scene.mText.mTextSize * mSurfaceScaleFactor),
                         scene.mText.mRed,
                         scene.mText.mGreen,
                         scene.mText.mBlue,
@@ -394,9 +392,9 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                 AVFlowEngine.getInstance().setPreviewText(mEngineToken,
                         scene.mText.mFontPath,
                         scene.mText.mValue,
-                        scene.mText.mPosX,
-                        scene.mText.mPosY,
-                        scene.mText.mTextSize,
+                        (int) (scene.mText.mPosX * mSurfaceScaleFactor),
+                        (int) (scene.mText.mPosY * mSurfaceScaleFactor),
+                        (int) (scene.mText.mTextSize * mSurfaceScaleFactor),
                         scene.mText.mRed,
                         scene.mText.mGreen,
                         scene.mText.mBlue,
@@ -416,9 +414,9 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                 AVFlowEngine.getInstance().setPreviewText(mEngineToken,
                         scene.mText.mFontPath,
                         scene.mText.mValue,
-                        scene.mText.mPosX,
-                        scene.mText.mPosY,
-                        scene.mText.mTextSize,
+                        (int) (scene.mText.mPosX * mSurfaceScaleFactor),
+                        (int) (scene.mText.mPosY * mSurfaceScaleFactor),
+                        (int) (scene.mText.mTextSize * mSurfaceScaleFactor),
                         scene.mText.mRed,
                         scene.mText.mGreen,
                         scene.mText.mBlue,
@@ -438,9 +436,9 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                 AVFlowEngine.getInstance().setPreviewText(mEngineToken,
                         scene.mText.mFontPath,
                         scene.mText.mValue,
-                        scene.mText.mPosX,
-                        scene.mText.mPosY,
-                        scene.mText.mTextSize,
+                        (int) (scene.mText.mPosX * mSurfaceScaleFactor),
+                        (int) (scene.mText.mPosY * mSurfaceScaleFactor),
+                        (int) (scene.mText.mTextSize * mSurfaceScaleFactor),
                         scene.mText.mRed,
                         scene.mText.mGreen,
                         scene.mText.mBlue,
@@ -456,9 +454,9 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                 AVFlowEngine.getInstance().setPreviewText(mEngineToken,
                         scene.mText.mFontPath,
                         scene.mText.mValue,
-                        scene.mText.mPosX,
-                        scene.mText.mPosY,
-                        scene.mText.mTextSize,
+                        (int) (scene.mText.mPosX * mSurfaceScaleFactor),
+                        (int) (scene.mText.mPosY * mSurfaceScaleFactor),
+                        (int) (scene.mText.mTextSize * mSurfaceScaleFactor),
                         scene.mText.mRed,
                         scene.mText.mGreen,
                         scene.mText.mBlue,
@@ -474,9 +472,9 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                 AVFlowEngine.getInstance().setPreviewText(mEngineToken,
                         scene.mText.mFontPath,
                         scene.mText.mValue,
-                        scene.mText.mPosX,
-                        scene.mText.mPosY,
-                        scene.mText.mTextSize,
+                        (int) (scene.mText.mPosX * mSurfaceScaleFactor),
+                        (int) (scene.mText.mPosY * mSurfaceScaleFactor),
+                        (int) (scene.mText.mTextSize * mSurfaceScaleFactor),
                         scene.mText.mRed,
                         scene.mText.mGreen,
                         scene.mText.mBlue,
@@ -492,9 +490,9 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                 AVFlowEngine.getInstance().setPreviewText(mEngineToken,
                         scene.mText.mFontPath,
                         scene.mText.mValue,
-                        scene.mText.mPosX,
-                        scene.mText.mPosY,
-                        scene.mText.mTextSize,
+                        (int) (scene.mText.mPosX * mSurfaceScaleFactor),
+                        (int) (scene.mText.mPosY * mSurfaceScaleFactor),
+                        (int) (scene.mText.mTextSize * mSurfaceScaleFactor),
                         scene.mText.mRed,
                         scene.mText.mGreen,
                         scene.mText.mBlue,
@@ -510,9 +508,9 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                 AVFlowEngine.getInstance().setPreviewText(mEngineToken,
                         scene.mText.mFontPath,
                         scene.mText.mValue,
-                        scene.mText.mPosX,
-                        scene.mText.mPosY,
-                        scene.mText.mTextSize,
+                        (int) (scene.mText.mPosX * mSurfaceScaleFactor),
+                        (int) (scene.mText.mPosY * mSurfaceScaleFactor),
+                        (int) (scene.mText.mTextSize * mSurfaceScaleFactor),
                         scene.mText.mRed,
                         scene.mText.mGreen,
                         scene.mText.mBlue,
@@ -522,64 +520,162 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                 gotoPanel(mTextPanel);
                 break;
             case R.id.iv_sticker_1:
-                AVFlowEngine.getInstance().setPreviewImage(mEngineToken,
-                        getStickerList(mStickersPathList.get(0)),
-                        0,
-                        mSurfaceHeight / 2);
+                stickerList = getStickerList(mStickersPathList.get(0));
+                sticker = BitmapFactory.decodeFile(stickerList.get(0));
+                stickerWidth = sticker.getWidth();
+                stickerHeight = sticker.getHeight();
+                sticker.recycle();
+                scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                scene.mStickerList = new Scene.StickerList();
+                scene.mStickerList.mValue = stickerList;
+                scene.mStickerList.mPosX = (mSurfaceWidth - stickerWidth) / 2;
+                scene.mStickerList.mPosY = (mSurfaceHeight - stickerHeight) / 2;
+                scene.mStickerList.mScaleFactor = 1.0f;
+                AVFlowEngine.getInstance().removePreviewImage(mEngineToken);
+                replayScene(scene);
                 break;
             case R.id.iv_sticker_2:
-                AVFlowEngine.getInstance().setPreviewImage(mEngineToken,
-                        getStickerList(mStickersPathList.get(1)),
-                        0,
-                        mSurfaceHeight / 2);
+                stickerList = getStickerList(mStickersPathList.get(1));
+                sticker = BitmapFactory.decodeFile(stickerList.get(0));
+                stickerWidth = sticker.getWidth();
+                stickerHeight = sticker.getHeight();
+                sticker.recycle();
+                scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                scene.mStickerList = new Scene.StickerList();
+                scene.mStickerList.mValue = stickerList;
+                scene.mStickerList.mPosX = (mSurfaceWidth - stickerWidth) / 2;
+                scene.mStickerList.mPosY = (mSurfaceHeight - stickerHeight) / 2;
+                scene.mStickerList.mScaleFactor = 1.0f;
+                AVFlowEngine.getInstance().removePreviewImage(mEngineToken);
+                replayScene(scene);
                 break;
             case R.id.iv_sticker_3:
-                AVFlowEngine.getInstance().setPreviewImage(mEngineToken,
-                        getStickerList(mStickersPathList.get(2)),
-                        0,
-                        mSurfaceHeight / 2);
+                stickerList = getStickerList(mStickersPathList.get(2));
+                sticker = BitmapFactory.decodeFile(stickerList.get(0));
+                stickerWidth = sticker.getWidth();
+                stickerHeight = sticker.getHeight();
+                sticker.recycle();
+                scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                scene.mStickerList = new Scene.StickerList();
+                scene.mStickerList.mValue = stickerList;
+                scene.mStickerList.mPosX = (mSurfaceWidth - stickerWidth) / 2;
+                scene.mStickerList.mPosY = (mSurfaceHeight - stickerHeight) / 2;
+                scene.mStickerList.mScaleFactor = 1.0f;
+                AVFlowEngine.getInstance().removePreviewImage(mEngineToken);
+                replayScene(scene);
                 break;
             case R.id.iv_sticker_4:
-                AVFlowEngine.getInstance().setPreviewImage(mEngineToken,
-                        getStickerList(mStickersPathList.get(3)),
-                        0,
-                        mSurfaceHeight / 2);
+                stickerList = getStickerList(mStickersPathList.get(3));
+                sticker = BitmapFactory.decodeFile(stickerList.get(0));
+                stickerWidth = sticker.getWidth();
+                stickerHeight = sticker.getHeight();
+                sticker.recycle();
+                scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                scene.mStickerList = new Scene.StickerList();
+                scene.mStickerList.mValue = stickerList;
+                scene.mStickerList.mPosX = (mSurfaceWidth - stickerWidth) / 2;
+                scene.mStickerList.mPosY = (mSurfaceHeight - stickerHeight) / 2;
+                scene.mStickerList.mScaleFactor = 1.0f;
+                AVFlowEngine.getInstance().removePreviewImage(mEngineToken);
+                replayScene(scene);
                 break;
             case R.id.iv_sticker_5:
-                AVFlowEngine.getInstance().setPreviewImage(mEngineToken,
-                        getStickerList(mStickersPathList.get(4)),
-                        0,
-                        mSurfaceHeight / 2);
+                stickerList = getStickerList(mStickersPathList.get(4));
+                sticker = BitmapFactory.decodeFile(stickerList.get(0));
+                stickerWidth = sticker.getWidth();
+                stickerHeight = sticker.getHeight();
+                sticker.recycle();
+                scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                scene.mStickerList = new Scene.StickerList();
+                scene.mStickerList.mValue = stickerList;
+                scene.mStickerList.mPosX = (mSurfaceWidth - stickerWidth) / 2;
+                scene.mStickerList.mPosY = (mSurfaceHeight - stickerHeight) / 2;
+                scene.mStickerList.mScaleFactor = 1.0f;
+                AVFlowEngine.getInstance().removePreviewImage(mEngineToken);
+                replayScene(scene);
                 break;
             case R.id.iv_sticker_6:
-                AVFlowEngine.getInstance().setPreviewImage(mEngineToken,
-                        getStickerList(mStickersPathList.get(5)),
-                        0,
-                        mSurfaceHeight / 2);
+                stickerList = getStickerList(mStickersPathList.get(5));
+                sticker = BitmapFactory.decodeFile(stickerList.get(0));
+                stickerWidth = sticker.getWidth();
+                stickerHeight = sticker.getHeight();
+                sticker.recycle();
+                scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                scene.mStickerList = new Scene.StickerList();
+                scene.mStickerList.mValue = stickerList;
+                scene.mStickerList.mPosX = (mSurfaceWidth - stickerWidth) / 2;
+                scene.mStickerList.mPosY = (mSurfaceHeight - stickerHeight) / 2;
+                scene.mStickerList.mScaleFactor = 0.75f;
+                AVFlowEngine.getInstance().removePreviewImage(mEngineToken);
+                replayScene(scene);
                 break;
             case R.id.iv_sticker_7:
-                AVFlowEngine.getInstance().setPreviewImage(mEngineToken,
-                        getStickerList(mStickersPathList.get(6)),
-                        0,
-                        mSurfaceHeight / 2);
+                stickerList = getStickerList(mStickersPathList.get(6));
+                sticker = BitmapFactory.decodeFile(stickerList.get(0));
+                stickerWidth = sticker.getWidth();
+                stickerHeight = sticker.getHeight();
+                sticker.recycle();
+                scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                scene.mStickerList = new Scene.StickerList();
+                scene.mStickerList.mValue = stickerList;
+                scene.mStickerList.mPosX = (mSurfaceWidth - stickerWidth) / 2;
+                scene.mStickerList.mPosY = (mSurfaceHeight - stickerHeight) / 2;
+                scene.mStickerList.mScaleFactor = 1.0f;
+                AVFlowEngine.getInstance().removePreviewImage(mEngineToken);
+                replayScene(scene);
                 break;
             case R.id.iv_sticker_8:
-                AVFlowEngine.getInstance().setPreviewImage(mEngineToken,
-                        getStickerList(mStickersPathList.get(7)),
-                        0,
-                        mSurfaceHeight / 2);
+                stickerList = getStickerList(mStickersPathList.get(7));
+                sticker = BitmapFactory.decodeFile(stickerList.get(0));
+                stickerWidth = sticker.getWidth();
+                stickerHeight = sticker.getHeight();
+                sticker.recycle();
+                scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                scene.mStickerList = new Scene.StickerList();
+                scene.mStickerList.mValue = stickerList;
+                scene.mStickerList.mPosX = (mSurfaceWidth - stickerWidth) / 2;
+                scene.mStickerList.mPosY = (mSurfaceHeight - stickerHeight) / 2;
+                scene.mStickerList.mScaleFactor = 0.8f;
+                AVFlowEngine.getInstance().removePreviewImage(mEngineToken);
+                replayScene(scene);
                 break;
             case R.id.iv_sticker_9:
-                AVFlowEngine.getInstance().setPreviewImage(mEngineToken,
-                        getStickerList(mStickersPathList.get(8)),
-                        0,
-                        mSurfaceHeight / 2);
+                stickerList = getStickerList(mStickersPathList.get(8));
+                sticker = BitmapFactory.decodeFile(stickerList.get(0));
+                stickerWidth = sticker.getWidth();
+                stickerHeight = sticker.getHeight();
+                sticker.recycle();
+                scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                scene.mStickerList = new Scene.StickerList();
+                scene.mStickerList.mValue = stickerList;
+                scene.mStickerList.mPosX = (mSurfaceWidth - stickerWidth) / 2;
+                scene.mStickerList.mPosY = (mSurfaceHeight - stickerHeight) / 2;
+                scene.mStickerList.mScaleFactor = 0.8f;
+                AVFlowEngine.getInstance().removePreviewImage(mEngineToken);
+                replayScene(scene);
                 break;
             case R.id.iv_sticker_10:
-                AVFlowEngine.getInstance().setPreviewImage(mEngineToken,
-                        getStickerList(mStickersPathList.get(9)),
-                        0,
-                        mSurfaceHeight / 2);
+                stickerList = getStickerList(mStickersPathList.get(9));
+                sticker = BitmapFactory.decodeFile(stickerList.get(0));
+                stickerWidth = sticker.getWidth();
+                stickerHeight = sticker.getHeight();
+                sticker.recycle();
+                scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                scene.mStickerList = new Scene.StickerList();
+                scene.mStickerList.mValue = stickerList;
+                scene.mStickerList.mPosX = (mSurfaceWidth - stickerWidth) / 2;
+                scene.mStickerList.mPosY = (mSurfaceHeight - stickerHeight) / 2;
+                scene.mStickerList.mScaleFactor = 0.8f;
+                AVFlowEngine.getInstance().removePreviewImage(mEngineToken);
+                replayScene(scene);
+                break;
+            case R.id.btn_delete_stickers:
+                scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                if (scene.mStickerList != null) {
+                    AVFlowEngine.getInstance().removePreviewImage(mEngineToken);
+                    scene.mStickerList = null;
+                    replayScene(scene);
+                }
                 break;
             default:
                 break;
@@ -591,7 +687,6 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
         Log.d(TAG, "onSurfaceTextureAvailable: ");
         mEngineToken = AVFlowEngine.getInstance().newWorker();
 
-        mPreviewSurface = new Surface(surface);
         mSurfaceWidth = width;
         mSurfaceHeight = height;
         // start play preview now.
@@ -610,6 +705,14 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
         AVFlowEngine.getInstance().configOutput(mEngineToken, outputConfig);
         AVFlowEngine.getInstance().start(mEngineToken);
         mSceneListAdapter.selectOne(0);
+
+        SeekBar changePosX = mTextTitlePanel.findViewById(R.id.sb_change_font_posx);
+        SeekBar changePosY = mTextTitlePanel.findViewById(R.id.sb_change_font_posy);
+        changePosX.setMax(mSurfaceWidth);
+        changePosY.setMax(mSurfaceHeight);
+
+        mSurfaceScaleFactor = mSurfaceHeight * 1.0f /
+                SimpleModel.getInstance().getSceneList().get(0).mHeight;
     }
 
     @Override
@@ -620,7 +723,6 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
         AVFlowEngine.getInstance().stop(mEngineToken);
-        mPreviewSurface = null;
         mSurfaceHeight = 0;
         mSurfaceWidth = 0;
         return true;
@@ -660,6 +762,7 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
         mStickPanel.findViewById(R.id.iv_sticker_8).setOnClickListener(this);
         mStickPanel.findViewById(R.id.iv_sticker_9).setOnClickListener(this);
         mStickPanel.findViewById(R.id.iv_sticker_10).setOnClickListener(this);
+        mStickPanel.findViewById(R.id.btn_delete_stickers).setOnClickListener(this);
 
         initStickers();
     }
@@ -723,6 +826,7 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
     private void initTextTitlePanel() {
         mTextTitlePanel = getLayoutInflater().inflate(R.layout.edit_panel_text_title, mPanelContainer, false);
         mTextTitlePanel.findViewById(R.id.btn_set_title).setOnClickListener(this);
+        mTextTitlePanel.findViewById(R.id.btn_delete_title).setOnClickListener(this);
         mTextTitlePanel.findViewById(R.id.iv_set_text_panel_back).setOnClickListener(this);
         mTextTitlePanel.findViewById(R.id.tv_text_bg_1).setOnClickListener(this);
         mTextTitlePanel.findViewById(R.id.tv_text_bg_2).setOnClickListener(this);
@@ -748,19 +852,22 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
         changeSize.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (!fromUser) {
+                    return;
+                }
                 Scene scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
                 if (scene.mText == null || TextUtils.isEmpty(scene.mText.mValue)) {
                     return;
                 }
                 // update params of scene.
-                scene.mText.mTextSize = seekBar.getProgress();
+                scene.mText.mTextSize = (int) (progress / mSurfaceScaleFactor);
 
                 AVFlowEngine.getInstance().setPreviewText(mEngineToken,
                         scene.mText.mFontPath,
                         scene.mText.mValue,
-                        scene.mText.mPosX,
-                        scene.mText.mPosY,
-                        scene.mText.mTextSize,
+                        (int) (scene.mText.mPosX * mSurfaceScaleFactor),
+                        (int) (scene.mText.mPosY * mSurfaceScaleFactor),
+                        progress,
                         scene.mText.mRed,
                         scene.mText.mGreen,
                         scene.mText.mBlue,
@@ -781,17 +888,20 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
         changeRed.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (!fromUser) {
+                    return;
+                }
                 Scene scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
                 if (scene.mText == null || TextUtils.isEmpty(scene.mText.mValue)) {
                     return;
                 }
 
                 // update params of scene.
-                scene.mText.mRed = (float) (progress * 1.0 / seekBar.getMax());
+                scene.mText.mRed = progress * 1.0f / seekBar.getMax();
 
                 AVFlowEngine.getInstance().updatePreviewTextParams(mEngineToken,
-                        scene.mText.mPosX,
-                        scene.mText.mPosY,
+                        (int) (scene.mText.mPosX * mSurfaceScaleFactor),
+                        (int) (scene.mText.mPosY * mSurfaceScaleFactor),
                         scene.mText.mRed,
                         scene.mText.mGreen,
                         scene.mText.mBlue);
@@ -811,6 +921,9 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
         changeGreen.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (!fromUser) {
+                    return;
+                }
                 Scene scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
                 if (scene.mText == null || TextUtils.isEmpty(scene.mText.mValue)) {
                     return;
@@ -820,8 +933,8 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                 scene.mText.mGreen = progress * 1.0f / seekBar.getMax();
 
                 AVFlowEngine.getInstance().updatePreviewTextParams(mEngineToken,
-                        scene.mText.mPosX,
-                        scene.mText.mPosY,
+                        (int) (scene.mText.mPosX * mSurfaceScaleFactor),
+                        (int) (scene.mText.mPosY * mSurfaceScaleFactor),
                         scene.mText.mRed,
                         scene.mText.mGreen,
                         scene.mText.mBlue);
@@ -841,6 +954,9 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
         changeBlue.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (!fromUser) {
+                    return;
+                }
                 Scene scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
                 if (scene.mText == null || TextUtils.isEmpty(scene.mText.mValue)) {
                     return;
@@ -850,8 +966,74 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
                 scene.mText.mBlue = progress * 1.0f / seekBar.getMax();
 
                 AVFlowEngine.getInstance().updatePreviewTextParams(mEngineToken,
-                        scene.mText.mPosX,
-                        scene.mText.mPosY,
+                        (int) (scene.mText.mPosX * mSurfaceScaleFactor),
+                        (int) (scene.mText.mPosY * mSurfaceScaleFactor),
+                        scene.mText.mRed,
+                        scene.mText.mGreen,
+                        scene.mText.mBlue);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+        SeekBar changePosX = mTextTitlePanel.findViewById(R.id.sb_change_font_posx);
+        changePosX.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (!fromUser) {
+                    return;
+                }
+                Scene scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                if (scene.mText == null || TextUtils.isEmpty(scene.mText.mValue)) {
+                    return;
+                }
+
+                // update params of scene.
+                scene.mText.mPosX = (int) (progress / mSurfaceScaleFactor);
+
+                AVFlowEngine.getInstance().updatePreviewTextParams(mEngineToken,
+                        progress,
+                        (int) (scene.mText.mPosY * mSurfaceScaleFactor),
+                        scene.mText.mRed,
+                        scene.mText.mGreen,
+                        scene.mText.mBlue);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+        SeekBar changePosY = mTextTitlePanel.findViewById(R.id.sb_change_font_posy);
+        changePosY.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (!fromUser) {
+                    return;
+                }
+                Scene scene = SimpleModel.getInstance().getSceneList().get(mCurrentSceneIndex);
+                if (scene.mText == null || TextUtils.isEmpty(scene.mText.mValue)) {
+                    return;
+                }
+
+                // update params of scene.
+                scene.mText.mPosY = (int) (progress / mSurfaceScaleFactor);
+
+                AVFlowEngine.getInstance().updatePreviewTextParams(mEngineToken,
+                        (int) (scene.mText.mPosX * mSurfaceScaleFactor),
+                        progress,
                         scene.mText.mRed,
                         scene.mText.mGreen,
                         scene.mText.mBlue);
@@ -940,5 +1122,17 @@ public class VideoEditActivity extends AppCompatActivity implements View.OnClick
         }
 
         return pathList;
+    }
+
+    private void replayScene(Scene scene) {
+        FileInputConfig inputConfig = new FileInputConfig.Builder()
+                .addFile(scene.mVideo)
+                .loop(true)
+                .speedRate(FileInputConfig.SPEED_RATE_NORMAL)
+                .rotation(FileInputConfig.ROTATION_180)
+                .surfaceSize(mSurfaceWidth, mSurfaceHeight)
+                .listener(mVideoPlayListener)
+                .build();
+        AVFlowEngine.getInstance().configInput(mEngineToken, inputConfig);
     }
 }

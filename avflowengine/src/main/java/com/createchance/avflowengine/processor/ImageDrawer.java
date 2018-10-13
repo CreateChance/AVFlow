@@ -110,14 +110,6 @@ public class ImageDrawer {
 
         glUseProgram(mProgramId);
 
-        mVertexPositionBuffer = OpenGlUtils.createFloatBuffer(
-                new float[]{
-                        -1.0f, 1.0f,
-                        -1.0f, -1.0f,
-                        1.0f, 1.0f,
-                        1.0f, -1.0f,
-                }
-        );
         mTextureCoordinateBuffer = OpenGlUtils.createFloatBuffer(
                 new float[]{
                         0.0f, 0.0f,
@@ -161,14 +153,14 @@ public class ImageDrawer {
                 0);
     }
 
-    public void setImage(List<String> imageList, int posX, int posY) {
+    public void setImage(List<String> imageList, int posX, int posY, float scaleFactor) {
         for (String image : imageList) {
             Bitmap bitmap = BitmapFactory.decodeFile(image);
             if (width == 0) {
-                width = bitmap.getWidth();
+                width = (int) (bitmap.getWidth() * scaleFactor);
             }
             if (height == 0) {
-                height = bitmap.getHeight();
+                height = (int) (bitmap.getHeight() * scaleFactor);
             }
             int textureId = OpenGlUtils.loadTexture(bitmap, OpenGlUtils.NO_TEXTURE, true);
             mTextureIds.add(textureId);
@@ -176,6 +168,15 @@ public class ImageDrawer {
 
         mPosX = posX;
         mPosY = posY;
+
+        mVertexPositionBuffer = OpenGlUtils.createFloatBuffer(
+                new float[]{
+                        -1.0f * scaleFactor, 1.0f * scaleFactor,
+                        -1.0f * scaleFactor, -1.0f * scaleFactor,
+                        1.0f * scaleFactor, 1.0f * scaleFactor,
+                        1.0f * scaleFactor, -1.0f * scaleFactor,
+                }
+        );
     }
 
     public void draw() {

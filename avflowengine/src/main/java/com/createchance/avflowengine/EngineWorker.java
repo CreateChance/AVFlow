@@ -50,6 +50,8 @@ final class EngineWorker extends HandlerThread {
     private static final int MSG_REMOVE_SAVE_TEXT = 14;
     private static final int MSG_SET_PREVIEW_IMAGE = 15;
     private static final int MSG_SET_SAVE_IMAGE = 16;
+    private static final int MSG_REMOVE_PREVIEW_IMAGE = 17;
+    private static final int MSG_REMOVE_SAVE_IMAGE = 18;
 
     private CameraStreamGenerator mCameraGenerator;
     private LocalStreamGenerator mLocalGenerator;
@@ -160,13 +162,21 @@ final class EngineWorker extends HandlerThread {
                         List<Object> setPreviewImageParams = (List<Object>) msg.obj;
                         handleSetPreviewImage((List<String>) setPreviewImageParams.get(0),
                                 (int) setPreviewImageParams.get(1),
-                                (int) setPreviewImageParams.get(2));
+                                (int) setPreviewImageParams.get(2),
+                                (float) setPreviewImageParams.get(3));
                         break;
                     case MSG_SET_SAVE_IMAGE:
                         List<Object> setSaveImageParams = (List<Object>) msg.obj;
-                        handleSetPreviewImage((List<String>) setSaveImageParams.get(0),
+                        handleSetSaveImage((List<String>) setSaveImageParams.get(0),
                                 (int) setSaveImageParams.get(1),
-                                (int) setSaveImageParams.get(2));
+                                (int) setSaveImageParams.get(2),
+                                (float) setSaveImageParams.get(3));
+                        break;
+                    case MSG_REMOVE_PREVIEW_IMAGE:
+                        handleRemovePreviewImage();
+                        break;
+                    case MSG_REMOVE_SAVE_IMAGE:
+                        handleRemoveSaveImage();
                         break;
                     default:
                         break;
@@ -347,7 +357,7 @@ final class EngineWorker extends HandlerThread {
         mHandler.sendEmptyMessage(MSG_REMOVE_SAVE_TEXT);
     }
 
-    void setPreviewImage(List<String> imageList, int posX, int posY) {
+    void setPreviewImage(List<String> imageList, int posX, int posY, float scaleFactor) {
         if (mPreviewOutputConfig == null) {
             Logger.d(TAG, "Preview not initialized!");
             return;
@@ -355,15 +365,16 @@ final class EngineWorker extends HandlerThread {
 
         Message message = Message.obtain();
         message.what = MSG_SET_PREVIEW_IMAGE;
-        List<Object> params = new ArrayList<>(3);
+        List<Object> params = new ArrayList<>(4);
         params.add(imageList);
         params.add(posX);
         params.add(posY);
+        params.add(scaleFactor);
         message.obj = params;
         mHandler.sendMessage(message);
     }
 
-    void setSaveImage(List<String> imageList, int posX, int posY) {
+    void setSaveImage(List<String> imageList, int posX, int posY, float scaleFactor) {
         if (mSaveOutputConfig == null) {
             Logger.d(TAG, "Save not initialized!");
             return;
@@ -371,12 +382,31 @@ final class EngineWorker extends HandlerThread {
 
         Message message = Message.obtain();
         message.what = MSG_SET_SAVE_IMAGE;
-        List<Object> params = new ArrayList<>(3);
+        List<Object> params = new ArrayList<>(4);
         params.add(imageList);
         params.add(posX);
         params.add(posY);
+        params.add(scaleFactor);
         message.obj = params;
         mHandler.sendMessage(message);
+    }
+
+    void removePreviewImage() {
+        if (mPreviewOutputConfig == null) {
+            Logger.d(TAG, "Preview not initialized!");
+            return;
+        }
+
+        mHandler.sendEmptyMessage(MSG_REMOVE_PREVIEW_IMAGE);
+    }
+
+    void removeSaveImage() {
+        if (mSaveOutputConfig == null) {
+            Logger.d(TAG, "Save not initialized!");
+            return;
+        }
+
+        mHandler.sendEmptyMessage(MSG_REMOVE_SAVE_IMAGE);
     }
 
     void finishSave() {
@@ -615,12 +645,12 @@ final class EngineWorker extends HandlerThread {
         mProcessor.updateSaveTextParams(posX, posY, red, green, blue);
     }
 
-    private void handleSetPreviewImage(List<String> imageList, int posX, int posY) {
-        mProcessor.setPreviewImage(imageList, posX, posY);
+    private void handleSetPreviewImage(List<String> imageList, int posX, int posY, float scaleFactor) {
+        mProcessor.setPreviewImage(imageList, posX, posY, scaleFactor);
     }
 
-    private void handleSetSaveImage(List<String> imageList, int posX, int posY) {
-        mProcessor.setSaveImage(imageList, posX, posY);
+    private void handleSetSaveImage(List<String> imageList, int posX, int posY, float scaleFactor) {
+        mProcessor.setSaveImage(imageList, posX, posY, scaleFactor);
     }
 
     private void handleRemovePreviewText() {
@@ -629,6 +659,14 @@ final class EngineWorker extends HandlerThread {
 
     private void handleRemoveSaveText() {
         mProcessor.removeSaveText();
+    }
+
+    private void handleRemovePreviewImage() {
+        mProcessor.removePreviewImage();
+    }
+
+    private void handleRemoveSaveImage() {
+        mProcessor.removeSaveImage();
     }
 
     private void handleFinishSave() {

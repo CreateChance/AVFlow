@@ -181,20 +181,20 @@ public final class AVStreamProcessor implements SurfaceTexture.OnFrameAvailableL
         mSaveTextDrawer.setText(fontPath, text, posX, posY, textSize, red, green, blue, background);
     }
 
-    public void setPreviewImage(List<String> imageList, int posX, int posY) {
+    public void setPreviewImage(List<String> imageList, int posX, int posY, float scaleFactor) {
         if (mPreviewImageDrawer != null) {
             mPreviewImageDrawer.release();
         }
         mPreviewImageDrawer = new ImageDrawer();
-        mPreviewImageDrawer.setImage(imageList, posX, posY);
+        mPreviewImageDrawer.setImage(imageList, posX, posY, scaleFactor);
     }
 
-    public void setSaveImage(List<String> imageList, int posX, int posY) {
+    public void setSaveImage(List<String> imageList, int posX, int posY, float scaleFactor) {
         if (mSaveImageDrawer != null) {
             mSaveImageDrawer.release();
         }
         mSaveImageDrawer = new ImageDrawer();
-        mSaveImageDrawer.setImage(imageList, posX, posY);
+        mSaveImageDrawer.setImage(imageList, posX, posY, scaleFactor);
     }
 
     public void updatePreviewTextParams(int posX,
@@ -228,6 +228,20 @@ public final class AVStreamProcessor implements SurfaceTexture.OnFrameAvailableL
         if (mSaveTextDrawer != null) {
             mSaveTextDrawer.release();
             mSaveTextDrawer = null;
+        }
+    }
+
+    public void removePreviewImage() {
+        if (mPreviewImageDrawer != null) {
+            mPreviewImageDrawer.release();
+            mPreviewImageDrawer = null;
+        }
+    }
+
+    public void removeSaveImage() {
+        if (mSaveImageDrawer != null) {
+            mSaveImageDrawer.release();
+            mSaveImageDrawer = null;
         }
     }
 
